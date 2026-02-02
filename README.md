@@ -4,7 +4,7 @@
 
 A foundry for casting [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configurations across project types and languages. Provides modular rules, agents, skills, hooks, and slash commands that shape how Claude Code works in your projects.
 
-## Bootstrap
+## Installation/Bootstrapping
 
 Requires Python 3.11+. No dependencies beyond stdlib.
 
@@ -80,7 +80,7 @@ claude-foundry/
 
 ## Commands
 
-Available in any project after running `setup.py init`:
+Available in target project after running `setup.py init`:
 
 | Command | Purpose |
 |---------|---------|
