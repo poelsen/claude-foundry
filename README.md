@@ -167,7 +167,7 @@ The `skills/learned/` directory starts empty. Categories are created as you lear
 Every merge to `master` triggers a GitHub Actions workflow that:
 
 1. Computes a [CalVer](https://calver.org/) version (`YYYY.MM.DD`, with `.N` suffix for same-day releases)
-2. Updates the `VERSION` file and creates a git tag
+2. Creates a git tag
 3. Builds a release tarball containing all deployable files
 4. Publishes a [GitHub Release](https://github.com/poelsen/claude-foundry/releases) with the tarball attached
 
@@ -191,8 +191,7 @@ claude-foundry/
 │   ├── hooks.json            # Reference hooks (manual install)
 │   └── library/              # Hook scripts (deployed by setup.py)
 ├── mcp-configs/              # MCP server configurations
-├── tools/setup.py            # Setup and deployment tool
-└── VERSION                   # CalVer version
+└── tools/setup.py            # Setup and deployment tool
 ```
 
 ## Credits

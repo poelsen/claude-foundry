@@ -99,7 +99,21 @@ MCP_SERVERS_FILE = REPO_ROOT / "mcp-configs" / "mcp-servers.json"
 
 
 def read_version() -> str:
-    return (REPO_ROOT / "VERSION").read_text().strip()
+    """Read version from VERSION file (tarball) or git tag (clone)."""
+    version_file = REPO_ROOT / "VERSION"
+    if version_file.exists():
+        return version_file.read_text().strip()
+    # Fall back to latest git tag
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "describe", "--tags", "--abbrev=0"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    return "dev"
 
 
 def toggle_menu(title: str, items: list[str], selected: set[int],
