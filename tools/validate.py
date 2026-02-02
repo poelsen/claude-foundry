@@ -303,6 +303,13 @@ class Validator:
                 if not path.exists():
                     self.error(f"Tarball missing: {item}")
 
+            # VERSION in tarball must be valid CalVer
+            ver_file = root / "VERSION"
+            if ver_file.exists():
+                ver = ver_file.read_text().strip()
+                if not re.match(r"^\d{4}\.\d{2}\.\d{2}(\.\d+)?$", ver):
+                    self.error(f"Tarball VERSION doesn't match CalVer: '{ver}'")
+
             # Smoke test from tarball
             self.check("Tarball smoke test")
             project_dir = Path(tempfile.mkdtemp(prefix="claude-foundry-tarball-proj-"))
