@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -62,17 +64,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Computed version: $version"
 
-      - name: Update VERSION file
-        run: |
-          echo "${{ steps.version.outputs.version }}" > VERSION
-          if git diff --quiet VERSION; then
-            echo "VERSION already up to date"
-          else
-            git add VERSION
-            git commit -m "chore: Bump version to ${{ steps.version.outputs.version }}"
-            git push
-          fi
-
       - name: Create tag
         run: |
           git tag "${{ steps.version.outputs.version }}"
@@ -81,6 +72,10 @@ jobs:
       - name: Build release tarball
         run: |
           version="${{ steps.version.outputs.version }}"
+
+          # Write VERSION file for the tarball (not committed to repo)
+          echo "$version" > VERSION
+
           mkdir -p dist
           tar czf "dist/claude-foundry-${version}.tar.gz" \
             --transform "s,^,claude-foundry-${version}/," \

@@ -159,15 +159,24 @@ class Validator:
             if not skill_md.exists():
                 self.error(f"SKILLS references missing: skills/{skill}/SKILL.md")
 
-    def check_version_file(self) -> None:
-        self.check("VERSION file")
+    def check_version(self) -> None:
+        self.check("Version (file or git tag)")
         ver_path = self.root / "VERSION"
-        if not ver_path.exists():
-            self.error("Missing VERSION file")
+        if ver_path.exists():
+            ver = ver_path.read_text().strip()
+            if not re.match(r"^\d{4}\.\d{2}\.\d{2}(\.\d+)?$", ver):
+                self.error(f"VERSION doesn't match CalVer pattern: '{ver}'")
             return
-        ver = ver_path.read_text().strip()
-        if not re.match(r"^\d{4}\.\d{2}\.\d{2}(\.\d+)?$", ver):
-            self.error(f"VERSION doesn't match CalVer pattern: '{ver}'")
+        # No VERSION file — check git tag
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(self.root), "describe", "--tags", "--abbrev=0"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode != 0:
+                self.warn("No VERSION file and no git tags — version will be 'dev'")
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            self.warn("No VERSION file and git not available — version will be 'dev'")
 
     def check_setup_parse(self) -> None:
         self.check("setup.py syntax")
@@ -209,7 +218,7 @@ class Validator:
                 self.error("Smoke: .claude/VERSION not created")
             else:
                 ver = ver_file.read_text().strip()
-                if not re.match(r"^\d{4}\.\d{2}\.\d{2}(\.\d+)?$", ver):
+                if ver != "dev" and not re.match(r"^\d{4}\.\d{2}\.\d{2}(\.\d+)?$", ver):
                     self.error(f"Smoke: .claude/VERSION invalid: '{ver}'")
 
             # setup-manifest.json
@@ -328,7 +337,7 @@ class Validator:
         self.check_registry_modular_rules()
         self.check_registry_hooks()
         self.check_registry_skills()
-        self.check_version_file()
+        self.check_version()
         self.check_setup_parse()
         self.check_setup_version()
 
