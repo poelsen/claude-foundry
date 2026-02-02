@@ -12,13 +12,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate repo integrity
+        run: python3 tools/validate.py
+
   release:
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Configure git
         run: |
@@ -69,6 +86,10 @@ jobs:
             --transform "s,^,claude-foundry-${version}/," \
             VERSION rules/ rule-library/ agents/ commands/ skills/ \
             hooks/ mcp-configs/ tools/setup.py
+
+      - name: Validate tarball
+        run: |
+          python3 tools/validate.py --tarball "dist/claude-foundry-${{ steps.version.outputs.version }}.tar.gz"
 
       - name: Create GitHub Release
         env:
