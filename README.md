@@ -4,19 +4,25 @@
 
 A foundry for casting [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configurations across project types and languages. Provides modular rules, agents, skills, hooks, and slash commands that shape how Claude Code works in your projects.
 
-## Install
+## Bootstrap
 
-### Option 1: From release tarball (recommended)
+Requires Python 3.11+. No dependencies beyond stdlib.
 
-Download the latest release from the [Releases page](https://github.com/poelsen/claude-foundry/releases), extract, and run:
+### Option A: Download release tarball
 
 ```bash
-tar xzf claude-foundry-*.tar.gz
+# Download latest release
+curl -sL https://github.com/poelsen/claude-foundry/releases/latest/download/claude-foundry-latest.tar.gz -o claude-foundry.tar.gz
+tar xzf claude-foundry.tar.gz
 cd claude-foundry-*
+
+# Configure your project
 python3 tools/setup.py init /path/to/your/project
 ```
 
-### Option 2: Clone the repo
+Or download manually from the [Releases page](https://github.com/poelsen/claude-foundry/releases).
+
+### Option B: Clone the repo
 
 ```bash
 git clone https://github.com/poelsen/claude-foundry.git
@@ -24,25 +30,38 @@ cd claude-foundry
 python3 tools/setup.py init /path/to/your/project
 ```
 
-Requires Python 3.11+. No dependencies beyond stdlib.
+`setup.py init` scans your project, detects languages and frameworks, then presents a toggle menu for rules, agents, hooks, skills, and plugins. Selections are saved to `.claude/setup-manifest.json` for future updates.
 
-## Usage
+## Updating
+
+After a new release is published, update your projects:
+
+**If you cloned the repo:**
 
 ```bash
-# Initialize a project (interactive — detects languages, suggests config)
-python3 tools/setup.py init [project_dir]
+cd claude-foundry
+git pull
 
-# Re-apply saved config to all known projects
+# Update a single project (non-interactive, uses saved selections)
+python3 tools/setup.py init /path/to/your/project
+
+# Or update all known projects at once
 python3 tools/setup.py update-all
-
-# Check for updates against remote
-python3 tools/setup.py check
-
-# Show current version
-python3 tools/setup.py version
 ```
 
-`setup.py init` scans your project, detects languages and frameworks, then presents a toggle menu for rules, agents, hooks, skills, and plugins. Selections are saved to `.claude/setup-manifest.json` so `update-all` can re-apply non-interactively.
+**If you downloaded a tarball:**
+
+Download the latest release and re-run `setup.py init`. Your saved selections in `.claude/setup-manifest.json` are preserved — just confirm or adjust.
+
+**Other commands:**
+
+```bash
+# Check if a newer version exists on GitHub
+python3 tools/setup.py check
+
+# Show installed version
+python3 tools/setup.py version
+```
 
 ## What Gets Installed
 
