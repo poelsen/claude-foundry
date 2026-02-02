@@ -106,7 +106,9 @@ Agents are specialized sub-agents launched via the `Task` tool. Selected per-pro
 
 ## Hooks
 
-### Global (all projects)
+Hooks are defined in `hooks/hooks.json` and installed per-project into `.claude/settings.json` by `setup.py`.
+
+### Included hooks
 
 - **Dev server blocker** — blocks dev servers outside tmux
 - **tmux reminder** — suggests tmux for long-running commands
@@ -116,9 +118,9 @@ Agents are specialized sub-agents launched via the `Task` tool. Selected per-pro
 - **JSON validator** — validates JSON after editing .json files
 - **Auto-snapshot** — captures session context before compaction and on exit
 
-### Per-project (opt-in via `setup.py`)
+### Language-specific hooks (opt-in via `setup.py`)
 
-Located in `hooks/library/`. Activated based on detected languages:
+Located in `hooks/library/`. Selected based on detected languages:
 
 | Hook | Language |
 |------|----------|
