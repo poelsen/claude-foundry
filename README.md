@@ -145,19 +145,6 @@ Hooks are shell scripts that run automatically before or after Claude Code tool 
 | `tsc-check.sh` | After editing `.ts`/`.tsx` files | TypeScript |
 | `cargo-check.sh` | After editing `.rs` files | Rust |
 
-### Reference hooks (`hooks/hooks.json`)
-
-The file `hooks/hooks.json` contains additional hooks that you can manually copy into your project's `.claude/settings.json`:
-
-- **Dev server blocker** — blocks `npm run dev` etc. outside tmux
-- **tmux reminder** — suggests tmux for long-running commands
-- **git push pause** — pauses before `git push` for review
-- **Doc blocker** — blocks creation of unnecessary `.md`/`.txt` files
-- **PR creation logger** — logs PR URL after `gh pr create`
-- **JSON validator** — validates JSON syntax after editing `.json` files
-- **Auto-snapshot** — captures session context before compaction and on session end
-
-These are **not** automatically installed by `setup.py`. Copy the ones you want from `hooks/hooks.json` into your project's `.claude/settings.json` manually.
 
 ## Learned Skills
 
