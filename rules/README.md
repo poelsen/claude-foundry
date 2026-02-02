@@ -1,8 +1,8 @@
 # Rules Overview
 
-## Global Rules (Apply to All Projects)
+## Base Rules (Recommended for All Projects)
 
-These rules are loaded automatically for every project.
+These rules are selected by default during `setup.py init` and copied to each project's `.claude/rules/`.
 
 | Rule | Purpose |
 |------|---------|

@@ -147,7 +147,7 @@ Hooks are shell scripts that run automatically before or after Claude Code tool 
 
 ### Reference hooks (`hooks/hooks.json`)
 
-The file `hooks/hooks.json` contains additional hooks that you can manually copy into your `~/.claude/settings.json` if you want them active globally:
+The file `hooks/hooks.json` contains additional hooks that you can manually copy into your project's `.claude/settings.json`:
 
 - **Dev server blocker** — blocks `npm run dev` etc. outside tmux
 - **tmux reminder** — suggests tmux for long-running commands
@@ -157,7 +157,7 @@ The file `hooks/hooks.json` contains additional hooks that you can manually copy
 - **JSON validator** — validates JSON syntax after editing `.json` files
 - **Auto-snapshot** — captures session context before compaction and on session end
 
-These are **not** automatically installed by `setup.py`. Copy the ones you want from `hooks/hooks.json` into your settings manually.
+These are **not** automatically installed by `setup.py`. Copy the ones you want from `hooks/hooks.json` into your project's `.claude/settings.json` manually.
 
 ## Learned Skills
 
