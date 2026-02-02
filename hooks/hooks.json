@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"(npm run dev|pnpm( run)? dev|yarn dev|bun run dev)\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\ncmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"')\n\n# Block dev servers that aren't run in tmux\necho '[Hook] BLOCKED: Dev server must run in tmux for log access' >&2\necho '[Hook] Use this command instead:' >&2\necho \"[Hook] tmux new-session -d -s dev 'npm run dev'\" >&2\necho '[Hook] Then: tmux attach -t dev' >&2\nexit 1"
+          }
+        ],
+        "description": "Block dev servers outside tmux - ensures you can access logs"
+      },
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"(npm (install|test)|pnpm (install|test)|yarn (install|test)|bun (install|test)|cargo build|make|docker|pytest|vitest|playwright)\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\nif [ -z \"$TMUX\" ]; then\n  echo '[Hook] Consider running in tmux for session persistence' >&2\n  echo '[Hook] tmux new -s dev  |  tmux attach -t dev' >&2\nfi\necho \"$input\""
+          }
+        ],
+        "description": "Reminder to use tmux for long-running commands"
+      },
+      {
+        "matcher": "tool == \"Bash\" && tool_input.command matches \"git push\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\n# Open editor for review before pushing\necho '[Hook] Review changes before push...' >&2\n# Uncomment your preferred editor:\n# zed . 2>/dev/null\n# code . 2>/dev/null\n# cursor . 2>/dev/null\necho '[Hook] Press Enter to continue with push or Ctrl+C to abort...' >&2\nread -r"
+          }
+        ],
+        "description": "Pause before git push to review changes"
+      },
+      {
+        "matcher": "tool == \"Write\" && tool_input.file_path matches \"\\\\.(md|txt)$\" && !(tool_input.file_path matches \"README\\\\.md|CLAUDE\\\\.md|AGENTS\\\\.md|CONTRIBUTING\\\\.md\")",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\n# Block creation of unnecessary documentation files\ninput=$(cat)\nfile_path=$(echo \"$input\" | jq -r '.tool_input.file_path // \"\"')\n\nif [[ \"$file_path\" =~ \\.(md|txt)$ ]] && [[ ! \"$file_path\" =~ (README|CLAUDE|AGENTS|CONTRIBUTING)\\.md$ ]]; then\n  echo \"[Hook] BLOCKED: Unnecessary documentation file creation\" >&2\n  echo \"[Hook] File: $file_path\" >&2\n  echo \"[Hook] Use README.md for documentation instead\" >&2\n  exit 1\nfi\n\necho \"$input\""
+          }
+        ],
+        "description": "Block creation of random .md files - keeps docs consolidated"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "tool == \"Bash\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\n# Auto-detect PR creation and log useful info\ninput=$(cat)\ncmd=$(echo \"$input\" | jq -r '.tool_input.command')\n\nif echo \"$cmd\" | grep -qE 'gh pr create'; then\n  output=$(echo \"$input\" | jq -r '.tool_output.output // \"\"')\n  pr_url=$(echo \"$output\" | grep -oE 'https://github.com/[^/]+/[^/]+/pull/[0-9]+')\n  \n  if [ -n \"$pr_url\" ]; then\n    echo \"[Hook] PR created: $pr_url\" >&2\n    echo \"[Hook] Checking GitHub Actions status...\" >&2\n    repo=$(echo \"$pr_url\" | sed -E 's|https://github.com/([^/]+/[^/]+)/pull/[0-9]+|\\1|')\n    pr_num=$(echo \"$pr_url\" | sed -E 's|.*/pull/([0-9]+)|\\1|')\n    echo \"[Hook] To review PR: gh pr review $pr_num --repo $repo\" >&2\n  fi\nfi\n\necho \"$input\""
+          }
+        ],
+        "description": "Log PR URL and provide review command after PR creation"
+      },
+      {
+        "matcher": "(tool == \"Edit\" || tool == \"Write\") && tool_input.file_path matches \"\\\\.json$\"",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\nfile_path=$(echo \"$input\" | jq -r '.tool_input.file_path // \"\"')\n\nif [ -n \"$file_path\" ] && [ -f \"$file_path\" ]; then\n  if ! jq . \"$file_path\" > /dev/null 2>&1; then\n    echo \"[Hook] ERROR: Invalid JSON in $file_path\" >&2\n    jq . \"$file_path\" 2>&1 | head -3 >&2\n    exit 1\n  fi\nfi\n\necho \"$input\""
+          }
+        ],
+        "description": "Validate JSON syntax after editing .json files"
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\ncommand -v jq >/dev/null 2>&1 || { echo \"$input\"; exit 0; }\nSD=\".claude/snapshots\"\nSF=\"$SD/.last-snapshot\"\nif [ -f \"$SF\" ]; then\n  last=$(cat \"$SF\"); now=$(date +%s)\n  [ $((now - last)) -lt 300 ] && { echo \"$input\"; exit 0; }\nfi\nmkdir -p \"$SD\"\nts=$(date +%Y-%m-%d-%H%M%S)\ntp=$(echo \"$input\" | jq -r '.transcript_path // \"\"')\ncat > \"$SD/${ts}-precompact.md\" << EOF\n---\ncreated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\ntrigger: precompact\ntranscript: ${tp}\ngoal: \"\"\nstatus: in_progress\n---\n\n# Auto-snapshot (pre-compaction)\n\nRun \\`/snapshot --restore\\` to extract session context from the transcript.\nEOF\ndate +%s > \"$SF\"\nls -1t \"$SD\"/*.md 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null\necho \"$input\""
+          }
+        ],
+        "description": "Auto-snapshot before context compaction"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\ncommand -v jq >/dev/null 2>&1 || { echo \"$input\"; exit 0; }\nSD=\".claude/snapshots\"\nmkdir -p \"$SD\"\nts=$(date +%Y-%m-%d-%H%M%S)\ntp=$(echo \"$input\" | jq -r '.transcript_path // \"\"')\ncat > \"$SD/${ts}-session-end.md\" << EOF\n---\ncreated: $(date -u +%Y-%m-%dT%H:%M:%SZ)\ntrigger: session-end\ntranscript: ${tp}\ngoal: \"\"\nstatus: in_progress\n---\n\n# Auto-snapshot (session end)\n\nRun \\`/snapshot --restore\\` to extract session context from the transcript.\nEOF\ndate +%s > \"$SD/.last-snapshot\"\nls -1t \"$SD\"/*.md 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null\necho \"$input\""
+          }
+        ],
+        "description": "Auto-snapshot on session end"
+      }
+    ]
+  }
+}

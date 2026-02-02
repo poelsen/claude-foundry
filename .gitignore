@@ -1,0 +1,9 @@
+# Generated per-project files (created by setup.py init on this repo)
+.claude/rules/
+.claude/agents/
+.claude/skills/
+.claude/hooks/
+.claude/VERSION
+.claude/setup-manifest.json
+.claude/plans/
+.claude/snapshots/
