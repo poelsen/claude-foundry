@@ -8,7 +8,7 @@ This repo contains my Claude Code configuration - rules, agents, skills, hooks, 
 - Push changes to sync across machines
 
 ## Structure
-- `rules/` - Base rules (globally loaded for all projects)
+- `rules/` - Base rules (recommended for all projects)
 - `rule-library/` - Modular rules (copied/symlinked per-project)
 - `agents/` - Custom agent definitions
 - `commands/` - Slash commands
