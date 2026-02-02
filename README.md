@@ -1,4 +1,4 @@
-# Claude Foundry
+# Claude Code Foundry
 
 > **Early alpha.** Under active development. The current rule set is most mature for **Python** and **PySide6/Qt** projects. Other languages (C, C++, Rust, Go, TypeScript) have base rules but are less battle-tested. Expect breaking changes.
 
