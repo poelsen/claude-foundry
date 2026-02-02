@@ -34,34 +34,14 @@ python3 tools/setup.py init /path/to/your/project
 
 ## Updating
 
-After a new release is published, update your projects:
+From any configured project, run the `/update` slash command inside Claude Code:
 
-**If you cloned the repo:**
-
-```bash
-cd claude-foundry
-git pull
-
-# Update a single project (non-interactive, uses saved selections)
-python3 tools/setup.py init /path/to/your/project
-
-# Or update all known projects at once
-python3 tools/setup.py update-all
+```
+/update           # Check for new release, download, and apply
+/update --check   # Just check if an update is available
 ```
 
-**If you downloaded a tarball:**
-
-Download the latest release and re-run `setup.py init`. Your saved selections in `.claude/setup-manifest.json` are preserved — just confirm or adjust.
-
-**Other commands:**
-
-```bash
-# Check if a newer version exists on GitHub
-python3 tools/setup.py check
-
-# Show installed version
-python3 tools/setup.py version
-```
+`/update` fetches the latest release from GitHub, downloads the tarball, and re-runs `setup.py init` non-interactively using your saved selections. Works the same regardless of how you bootstrapped.
 
 ## What Gets Installed
 
