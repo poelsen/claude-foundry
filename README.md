@@ -1,26 +1,22 @@
 # Claude Foundry
 
-> **Early alpha.** This project is under active development. The current rule set focuses on **Python** and **PySide6/Qt** projects — other languages have base rules but are less battle-tested. Expect breaking changes.
+> **Early alpha.** Under active development. The current rule set is most mature for **Python** and **PySide6/Qt** projects. Other languages (C, C++, Rust, Go, TypeScript) have base rules but are less battle-tested. Expect breaking changes.
 
-A foundry for casting [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configurations across project types and languages. Provides modular rules, agents, skills, hooks, and slash commands that shape how Claude Code works in your projects.
+A framework for configuring [Claude Code](https://docs.anthropic.com/en/docs/claude-code) across different project types and programming languages. Provides modular rules, specialized agents, reusable skills, tool hooks, and slash commands — all selected per-project based on what you're building.
 
-## Installation/Bootstrapping
+## Bootstrap
 
-Requires Python 3.11+. No dependencies beyond stdlib.
+Requires Python 3.11+. No external dependencies.
 
-### Option A: Download release tarball
+### Option A: Download a release
+
+Download the latest tarball from the [Releases page](https://github.com/poelsen/claude-foundry/releases) and extract it:
 
 ```bash
-# Download latest release
-curl -sL https://github.com/poelsen/claude-foundry/releases/latest/download/claude-foundry-latest.tar.gz -o claude-foundry.tar.gz
-tar xzf claude-foundry.tar.gz
+tar xzf claude-foundry-*.tar.gz
 cd claude-foundry-*
-
-# Configure your project
 python3 tools/setup.py init /path/to/your/project
 ```
-
-Or download manually from the [Releases page](https://github.com/poelsen/claude-foundry/releases).
 
 ### Option B: Clone the repo
 
@@ -30,114 +26,154 @@ cd claude-foundry
 python3 tools/setup.py init /path/to/your/project
 ```
 
-`setup.py init` scans your project, detects languages and frameworks, then presents a toggle menu for rules, agents, hooks, skills, and plugins. Selections are saved to `.claude/setup-manifest.json` for future updates.
+### What `setup.py init` does
+
+1. Scans your project for languages (file extensions, config files like `pyproject.toml`, `package.json`, `Cargo.toml`)
+2. Presents interactive toggle menus for each component category:
+   - **Base rules** — coding style, security, testing, git workflow, etc.
+   - **Modular rules** — language-specific, domain-specific, architecture patterns
+   - **Hooks** — language-specific formatters and type checkers
+   - **Agents** — specialized sub-agents matched to your languages
+   - **Skills** — domain knowledge modules
+   - **Plugins** — LSP servers, workflow plugins
+3. Copies selected files into your project's `.claude/` directory
+4. Saves selections to `.claude/setup-manifest.json` for future updates
 
 ## Updating
 
-From any configured project, run the `/update` slash command inside Claude Code:
+From any configured project, run the `/update` slash command inside a Claude Code session:
 
 ```
 /update           # Check for new release, download, and apply
 /update --check   # Just check if an update is available
 ```
 
-`/update` fetches the latest release from GitHub, downloads the tarball, and re-runs `setup.py init` non-interactively using your saved selections. Works the same regardless of how you bootstrapped.
+`/update` checks the GitHub releases API, downloads the latest tarball, and re-runs `setup.py init` non-interactively using your saved selections from the manifest. Works the same regardless of how you bootstrapped.
+
+You can also update manually:
+
+```bash
+# If you cloned the repo
+cd claude-foundry && git pull
+python3 tools/setup.py init /path/to/your/project
+
+# Batch update all known projects
+python3 tools/setup.py update-all
+```
 
 ## What Gets Installed
 
-Everything is copied into your project's `.claude/` directory:
+Everything is copied into `<project>/.claude/`:
 
-| Component | Source | Purpose |
-|-----------|--------|---------|
-| **Rules** | `rules/` + `rule-library/` | Coding standards, security, git workflow, testing |
-| **Agents** | `agents/` | Specialized sub-agents (TDD, code review, security, architecture) |
-| **Commands** | `commands/` | Slash commands (`/snapshot`, `/learn`, `/recall`, `/update-codemaps`) |
-| **Skills** | `skills/` | Domain knowledge (GUI threading, ClickHouse, learned patterns) |
-| **Hooks** | `hooks/` | Pre/post tool hooks (formatters, type checkers, git guards) |
-| **Plugins** | — | LSP servers, workflow plugins (feature-dev, PR review) |
+| Component | Source | What it does |
+|-----------|--------|--------------|
+| **Rules** | `rules/` + `rule-library/` | Markdown files that instruct Claude on coding standards, security, git workflow, testing methodology |
+| **Agents** | `agents/` | Specialized sub-agents for TDD, code review, security analysis, architecture design |
+| **Commands** | `commands/` | Slash commands: `/snapshot`, `/learn`, `/recall`, `/update`, `/update-codemaps` |
+| **Skills** | `skills/` | Domain knowledge modules (GUI threading patterns, ClickHouse, learned patterns) |
+| **Hooks** | `hooks/library/` | Shell scripts that run before/after Claude Code tool calls (formatters, type checkers) |
+| **Plugins** | configured in `settings.json` | LSP servers and workflow plugins (feature-dev, PR review toolkit) |
 
-## Structure
+## Rules
 
-```
-claude-foundry/
-├── rules/                    # Base rules (loaded for all projects)
-├── rule-library/             # Modular rules (selected per-project)
-│   ├── lang/                 # Python, C, C++, Rust, Go, React, Node.js, etc.
-│   ├── domain/               # Embedded, DSP/audio, GUI, GUI threading
-│   ├── style/                # Backend, scripts, library, data pipeline
-│   ├── arch/                 # REST API, React app, monolith
-│   ├── platform/             # GitHub
-│   └── security/             # Sandbox, internal, enterprise
-├── agents/                   # Agent definitions (16 agents)
-├── commands/                 # Slash commands
-├── skills/                   # Domain skills + learned patterns
-│   └── learned/              # Patterns extracted via /learn
-├── hooks/                    # Global hooks + per-project hook library
-├── mcp-configs/              # MCP server configurations
-├── tools/setup.py            # Setup and deployment tool
-└── VERSION                   # CalVer version (YYYY.MM.DD[.N])
-```
+Rules are markdown files loaded by Claude Code at session start. They shape how Claude writes code, handles errors, makes commits, and reviews changes.
+
+**Base rules** (`rules/`) are recommended for all projects:
+
+- `coding-style.md` — KISS/YAGNI/DRY, small functions, minimal diffs
+- `git-workflow.md` — branch naming, commit message format, PR workflow
+- `security.md` — mandatory security checks before commits
+- `testing.md` — TDD workflow, 80% coverage target
+- `architecture.md` — composition over inheritance, module boundaries
+- `performance.md` — model selection strategy, context window management
+- `agents.md` — when and how to use specialized sub-agents
+- `codemaps.md` — architecture documentation system
+- `hooks.md` — documents available hooks
+- `skills.md` — points Claude to learned patterns when stuck
+
+**Modular rules** (`rule-library/`) are selected per-project:
+
+| Category | Examples |
+|----------|----------|
+| `lang/` | Python, C, C++, Rust, Go, React, Node.js, MATLAB |
+| `domain/` | Embedded, DSP/audio, GUI, GUI threading |
+| `style/` | Backend, scripts, library, data pipeline |
+| `arch/` | REST API, React app, monolith |
+| `platform/` | GitHub (auto-detected) |
+| `security/` | Sandbox, internal, enterprise |
 
 ## Commands
 
-Available in target project after running `setup.py init`:
+Slash commands are available inside Claude Code after running `setup.py init`:
 
-| Command | Purpose |
-|---------|---------|
-| `/snapshot` | Capture, restore, or list session context snapshots |
-| `/learn` | Extract reusable patterns from the current session |
-| `/recall` | Search and surface previously learned patterns |
-| `/update-codemaps` | Generate or refresh architecture codemaps |
+| Command | What it does |
+|---------|--------------|
+| `/snapshot` | Saves current session state (task, decisions, files modified, next steps) to a markdown file. Use `/snapshot --restore` to resume after a restart or context compaction. Use `/snapshot --list` to see all snapshots. |
+| `/learn` | After solving a non-trivial problem, extracts the pattern into a reusable skill file. Asks you to pick a category and save location. See [Learned Skills](#learned-skills) below. |
+| `/recall` | Lists or searches all learned skills. `/recall python` searches for Python-related patterns. |
+| `/update` | Checks GitHub for a newer release and applies it. See [Updating](#updating). |
+| `/update-codemaps` | Generates or refreshes architecture documentation (one markdown file per module with key components, public API, dependencies, and data flow). |
 
 ## Agents
 
-Agents are specialized sub-agents launched via the `Task` tool. Selected per-project based on language:
+Agents are specialized sub-agents that Claude Code launches for specific tasks. During `setup.py init`, agents are selected based on your project's languages.
 
-| Agent | Languages |
-|-------|-----------|
-| `architect-*` | Python, TypeScript |
-| `tdd-guide-*` | Python, TypeScript |
-| `code-reviewer-*` | Python, TypeScript |
-| `security-reviewer-*` | Python, TypeScript |
-| `build-error-resolver-*` | Python, TypeScript |
-| `e2e-test-*` | Python (web + Qt), TypeScript |
-| `refactor-cleaner-*` | Python, TypeScript |
-| `doc-updater` | All |
+| Agent | Purpose | Languages |
+|-------|---------|-----------|
+| `architect-*` | System design and architectural decisions | Python, TypeScript |
+| `tdd-guide-*` | Test-driven development (write tests first) | Python, TypeScript |
+| `code-reviewer-*` | Code quality, security, maintainability review | Python, TypeScript |
+| `security-reviewer-*` | OWASP scanning, vulnerability detection | Python, TypeScript |
+| `build-error-resolver-*` | Fix build/lint/type errors with minimal diffs | Python, TypeScript |
+| `e2e-test-*` | End-to-end browser or GUI testing | Python (Playwright + pytest-qt), TypeScript (Playwright) |
+| `refactor-cleaner-*` | Dead code removal, consolidation | Python, TypeScript |
+| `doc-updater` | Documentation and codemap updates | All |
 
 ## Hooks
 
-Hooks are defined in `hooks/hooks.json` and installed per-project into `.claude/settings.json` by `setup.py`.
+Hooks are shell scripts that run automatically before or after Claude Code tool calls.
 
-### Included hooks
+### What `setup.py` installs
 
-- **Dev server blocker** — blocks dev servers outside tmux
+`setup.py` writes hook entries into your project's `.claude/settings.json` based on detected languages. Only language-specific hooks from `hooks/library/` are installed:
+
+| Hook script | Trigger | Language |
+|-------------|---------|----------|
+| `ruff-format.sh` | After editing `.py` files | Python |
+| `mypy-check.sh` | After editing `.py` files | Python |
+| `prettier-format.sh` | After editing `.ts`/`.tsx`/`.js`/`.jsx` files | JS/TS |
+| `tsc-check.sh` | After editing `.ts`/`.tsx` files | TypeScript |
+| `cargo-check.sh` | After editing `.rs` files | Rust |
+
+### Reference hooks (`hooks/hooks.json`)
+
+The file `hooks/hooks.json` contains additional hooks that you can manually copy into your `~/.claude/settings.json` if you want them active globally:
+
+- **Dev server blocker** — blocks `npm run dev` etc. outside tmux
 - **tmux reminder** — suggests tmux for long-running commands
-- **git push pause** — pauses before push for review
-- **doc blocker** — blocks creation of unnecessary documentation files
+- **git push pause** — pauses before `git push` for review
+- **Doc blocker** — blocks creation of unnecessary `.md`/`.txt` files
 - **PR creation logger** — logs PR URL after `gh pr create`
-- **JSON validator** — validates JSON after editing .json files
-- **Auto-snapshot** — captures session context before compaction and on exit
+- **JSON validator** — validates JSON syntax after editing `.json` files
+- **Auto-snapshot** — captures session context before compaction and on session end
 
-### Language-specific hooks (opt-in via `setup.py`)
-
-Located in `hooks/library/`. Selected based on detected languages:
-
-| Hook | Language |
-|------|----------|
-| `ruff-format.sh` | Python |
-| `mypy-check.sh` | Python |
-| `prettier-format.sh` | JS/TS |
-| `tsc-check.sh` | TypeScript |
-| `cargo-check.sh` | Rust |
+These are **not** automatically installed by `setup.py`. Copy the ones you want from `hooks/hooks.json` into your settings manually.
 
 ## Learned Skills
 
-The `/learn` command extracts reusable patterns from your sessions and saves them as skills:
+Claude Code sessions often produce solutions worth remembering. The `/learn` and `/recall` commands turn these into persistent, searchable knowledge.
 
-- **Shared** (`skills/learned/<category>/`): Committed to this repo, deployed to all projects
-- **Project-local** (`.claude/skills/learned-local/`): Stays in the project
+### How it works
 
-Use `/recall` to search learned skills. Claude also checks them automatically when stuck (via `rules/skills.md`).
+1. After solving a non-trivial problem, run `/learn`
+2. Claude analyzes the session and drafts a skill file (problem → solution → example → when to use)
+3. You pick a **category** (e.g. `python`, `debugging`, `pyside6`) and a **save location**:
+   - **Claude-foundry repo** (default): `skills/learned/<category>/<name>.md` — commit and push to share across machines. Deployed to projects via `setup.py init`.
+   - **Project-local**: `.claude/skills/learned-local/<category>/<name>.md` — stays in this project only.
+4. When Claude gets stuck on a problem, it checks these directories automatically (via `rules/skills.md`)
+5. Run `/recall` to list all learned skills, or `/recall <keyword>` to search
+
+The `skills/learned/` directory starts empty. Categories are created as you learn patterns.
 
 ## Releases
 
@@ -145,10 +181,32 @@ Every merge to `master` triggers a GitHub Actions workflow that:
 
 1. Computes a [CalVer](https://calver.org/) version (`YYYY.MM.DD`, with `.N` suffix for same-day releases)
 2. Updates the `VERSION` file and creates a git tag
-3. Builds a release tarball with all deployable files
+3. Builds a release tarball containing all deployable files
 4. Publishes a [GitHub Release](https://github.com/poelsen/claude-foundry/releases) with the tarball attached
 
-To update your projects after a new release, download the latest tarball and re-run `setup.py init`, or pull the repo and run `setup.py update-all`.
+## Project Structure
+
+```
+claude-foundry/
+├── rules/                    # Base rules (selected during init)
+├── rule-library/             # Modular rules by category
+│   ├── lang/                 # Language-specific rules
+│   ├── domain/               # Domain-specific rules
+│   ├── style/                # Project style rules
+│   ├── arch/                 # Architecture pattern rules
+│   ├── platform/             # Platform rules (GitHub)
+│   └── security/             # Security level rules
+├── agents/                   # Sub-agent definitions
+├── commands/                 # Slash commands
+├── skills/                   # Domain skills
+│   └── learned/              # Patterns extracted via /learn
+├── hooks/
+│   ├── hooks.json            # Reference hooks (manual install)
+│   └── library/              # Hook scripts (deployed by setup.py)
+├── mcp-configs/              # MCP server configurations
+├── tools/setup.py            # Setup and deployment tool
+└── VERSION                   # CalVer version
+```
 
 ## Credits
 

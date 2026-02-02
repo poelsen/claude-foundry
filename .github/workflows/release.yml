@@ -75,7 +75,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version="${{ steps.version.outputs.version }}"
+          # Create a stable "latest" filename alongside the versioned one
+          cp "dist/claude-foundry-${version}.tar.gz" "dist/claude-foundry-latest.tar.gz"
           gh release create "$version" \
             "dist/claude-foundry-${version}.tar.gz" \
+            "dist/claude-foundry-latest.tar.gz" \
             --title "v${version}" \
             --generate-notes
