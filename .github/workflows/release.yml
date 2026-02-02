@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Compute CalVer version
+        id: version
+        run: |
+          today=$(date -u +%Y.%m.%d)
+
+          # Find existing tags for today to determine patch number
+          # Base tag is just $today, subsequent are $today.1, $today.2, etc.
+          if git tag -l "$today" | grep -q .; then
+            patch=1
+            while git tag -l "${today}.${patch}" | grep -q .; do
+              patch=$((patch + 1))
+            done
+            version="${today}.${patch}"
+          else
+            version="$today"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Computed version: $version"
+
+      - name: Update VERSION file
+        run: |
+          echo "${{ steps.version.outputs.version }}" > VERSION
+          if git diff --quiet VERSION; then
+            echo "VERSION already up to date"
+          else
+            git add VERSION
+            git commit -m "chore: Bump version to ${{ steps.version.outputs.version }}"
+            git push
+          fi
+
+      - name: Create tag
+        run: |
+          git tag "${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
