@@ -25,7 +25,7 @@ Run `/learn` after solving a non-trivial problem.
 2. Draft the skill file (see format below)
 3. **Ask user to pick a category** — suggest based on context (e.g., `python`, `git`, `debugging`, `pyside6`). User can pick an existing category or create a new one.
 4. **Save locations** (not mutually exclusive):
-   - **claude_config repo** (always selected by default): Save to `<config_repo>/skills/learned/<category>/<skill-name>.md`. The `config_repo` path is in `.claude/setup-manifest.json` under the `config_repo` key. If not found, ask user for the path.
+   - **claude-foundry repo** (always selected by default): Save to `<config_repo>/skills/learned/<category>/<skill-name>.md`. The `config_repo` path is in `.claude/setup-manifest.json` under the `config_repo` key. If not found, ask user for the path.
    - **Project-local** (ask user): Save to `<project>/.claude/skills/learned-local/<category>/<skill-name>.md`. Use this for patterns specific to this codebase.
 5. Ask user to confirm content before saving
 6. Save to chosen locations. Create directories if needed.
@@ -55,5 +55,5 @@ Save as `<category>/<kebab-case-name>.md`:
 
 ## After Saving
 
-- Remind user to commit and push claude_config repo if saved there
+- Remind user to commit and push claude-foundry repo if saved there
 - Remind user to run `setup.py init` or `update-all` to deploy to projects

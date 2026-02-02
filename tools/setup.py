@@ -2,7 +2,7 @@
 """Claude Code per-project setup tool.
 
 Configures a project's .claude/ directory with selected rules, hooks,
-agents, skills, plugins, and MCP servers from the claude_config repo.
+agents, skills, plugins, and MCP servers from the claude-foundry repo.
 
 Usage:
     python3 tools/setup.py init [project_dir]
@@ -486,7 +486,7 @@ def write_mcp_servers(project: Path, servers: list[str]) -> None:
 
 
 def cmd_version() -> None:
-    print(f"claude_config version: {read_version()}")
+    print(f"claude-foundry version: {read_version()}")
 
 
 def cmd_check() -> None:
@@ -774,6 +774,7 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
     save_manifest(project, {
         "version": version,
         "config_repo": str(REPO_ROOT),
+        "repo_url": "poelsen/claude-foundry",
         "base_rules": selected_base,
         "modular_rules": selected_modular,
         "hooks": selected_hooks,
@@ -793,7 +794,7 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
         print(f"  Created CLAUDE.md")
 
     # Summary
-    print(f"\n✓ Project configured with claude_config v{version}")
+    print(f"\n✓ Project configured with claude-foundry v{version}")
     print(f"  Rules: {len(selected_base)} base + {sum(len(v) for v in selected_modular.values())} modular")
     print(f"  Hooks: {len(selected_hooks)}")
     cmd_count = len([f for f in (COMMANDS_DIR).iterdir() if f.suffix == ".md"]) if COMMANDS_DIR.is_dir() else 0
@@ -910,8 +911,10 @@ def main() -> None:
     elif command == "check":
         cmd_check()
     elif command == "init":
-        project = Path(sys.argv[2]) if len(sys.argv) > 2 else Path.cwd()
-        cmd_init(project)
+        interactive = "--non-interactive" not in sys.argv
+        args = [a for a in sys.argv[2:] if a != "--non-interactive"]
+        project = Path(args[0]) if args else Path.cwd()
+        cmd_init(project, interactive=interactive)
     elif command == "update-all":
         cmd_update_all()
     else:
