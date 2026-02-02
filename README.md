@@ -4,23 +4,45 @@
 
 A foundry for casting [Claude Code](https://docs.anthropic.com/en/docs/claude-code) configurations across project types and languages. Provides modular rules, agents, skills, hooks, and slash commands that shape how Claude Code works in your projects.
 
-## Quick Start
+## Install
+
+### Option 1: From release tarball (recommended)
+
+Download the latest release from the [Releases page](https://github.com/poelsen/claude-foundry/releases), extract, and run:
+
+```bash
+tar xzf claude-foundry-*.tar.gz
+cd claude-foundry-*
+python3 tools/setup.py init /path/to/your/project
+```
+
+### Option 2: Clone the repo
+
+```bash
+git clone https://github.com/poelsen/claude-foundry.git
+cd claude-foundry
+python3 tools/setup.py init /path/to/your/project
+```
 
 Requires Python 3.11+. No dependencies beyond stdlib.
 
-```bash
-# Clone
-git clone https://github.com/poelsen/claude-foundry.git
-cd claude-foundry
+## Usage
 
+```bash
 # Initialize a project (interactive — detects languages, suggests config)
-python3 tools/setup.py init /path/to/your/project
+python3 tools/setup.py init [project_dir]
 
 # Re-apply saved config to all known projects
 python3 tools/setup.py update-all
+
+# Check for updates against remote
+python3 tools/setup.py check
+
+# Show current version
+python3 tools/setup.py version
 ```
 
-`setup.py init` scans your project, detects languages and frameworks, then presents a selection menu for rules, agents, hooks, skills, and plugins. Selections are saved to `.claude/setup-manifest.json` so `update-all` can re-apply non-interactively.
+`setup.py init` scans your project, detects languages and frameworks, then presents a toggle menu for rules, agents, hooks, skills, and plugins. Selections are saved to `.claude/setup-manifest.json` so `update-all` can re-apply non-interactively.
 
 ## What Gets Installed
 
@@ -116,9 +138,16 @@ The `/learn` command extracts reusable patterns from your sessions and saves the
 
 Use `/recall` to search learned skills. Claude also checks them automatically when stuck (via `rules/skills.md`).
 
-## Versioning
+## Releases
 
-CalVer: `YYYY.MM.DD` with `.N` suffix for same-day releases. Bumped automatically by GitHub Actions on merge to `master`.
+Every merge to `master` triggers a GitHub Actions workflow that:
+
+1. Computes a [CalVer](https://calver.org/) version (`YYYY.MM.DD`, with `.N` suffix for same-day releases)
+2. Updates the `VERSION` file and creates a git tag
+3. Builds a release tarball with all deployable files
+4. Publishes a [GitHub Release](https://github.com/poelsen/claude-foundry/releases) with the tarball attached
+
+To update your projects after a new release, download the latest tarball and re-run `setup.py init`, or pull the repo and run `setup.py update-all`.
 
 ## Credits
 

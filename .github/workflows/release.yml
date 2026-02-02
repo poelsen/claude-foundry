@@ -60,3 +60,22 @@ jobs:
         run: |
           git tag "${{ steps.version.outputs.version }}"
           git push origin "${{ steps.version.outputs.version }}"
+
+      - name: Build release tarball
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          mkdir -p dist
+          tar czf "dist/claude-foundry-${version}.tar.gz" \
+            --transform "s,^,claude-foundry-${version}/," \
+            VERSION rules/ rule-library/ agents/ commands/ skills/ \
+            hooks/ mcp-configs/ tools/setup.py
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          gh release create "$version" \
+            "dist/claude-foundry-${version}.tar.gz" \
+            --title "v${version}" \
+            --generate-notes
