@@ -2,6 +2,8 @@
 
 Search and surface learned patterns from previous sessions.
 
+**Model:** Use haiku for this command — it's mechanical (glob files, read, display).
+
 ## Usage
 
 - `/recall` — List all learned skills

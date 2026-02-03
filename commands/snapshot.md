@@ -73,6 +73,8 @@ status: in_progress | completed | blocked
 
 ## List Mode (`--list`)
 
+**Model:** Use haiku for `--list` — it's mechanical (list files, read frontmatter, display).
+
 1. **List all snapshots** in `.claude/snapshots/` sorted by filename (newest first).
 2. For each, show: filename, created date, goal, status.
 3. If none exist: "No snapshots found."
