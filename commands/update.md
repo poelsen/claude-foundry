@@ -2,6 +2,8 @@
 
 Check for new releases and apply updates to the current project.
 
+**Model:** Use haiku for this command — it's mechanical (fetch, extract, run script).
+
 ## Usage
 
 - `/update` — Check for update and apply if available
