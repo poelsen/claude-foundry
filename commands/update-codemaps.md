@@ -2,6 +2,8 @@
 
 Generate or refresh architecture codemaps for the current project.
 
+**Model:** Use opus for this command — it requires architectural judgment (analyzing code structure, extracting APIs, mapping data flow).
+
 ## Workflow
 
 1. **Detect project language** from config files:

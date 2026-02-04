@@ -2,7 +2,7 @@
 name: doc-updater
 description: Language-agnostic documentation and codemap specialist. Use PROACTIVELY for updating codemaps and documentation. Runs /update-codemaps, updates READMEs and guides.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 # Documentation & Codemap Specialist
