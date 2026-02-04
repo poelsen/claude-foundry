@@ -2,6 +2,8 @@
 
 Capture, restore, or list session context snapshots for recovery after compaction or restart.
 
+**Model:** Use opus for capture and restore (requires session analysis and judgment). Use haiku for `--list` (mechanical).
+
 ## Usage
 
 - `/snapshot` — Capture current session state (default)
@@ -72,8 +74,6 @@ status: in_progress | completed | blocked
 5. **Ask the user** which threads to continue or if they want to restore a different snapshot.
 
 ## List Mode (`--list`)
-
-**Model:** Use haiku for `--list` — it's mechanical (list files, read frontmatter, display).
 
 1. **List all snapshots** in `.claude/snapshots/` sorted by filename (newest first).
 2. For each, show: filename, created date, goal, status.

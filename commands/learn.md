@@ -2,6 +2,8 @@
 
 Analyze the current session and extract patterns worth saving as learned skills.
 
+**Model:** Use opus for this command — it requires judgment (identifying valuable patterns, evaluating reusability, drafting skill files).
+
 ## Trigger
 
 Run `/learn` after solving a non-trivial problem.
