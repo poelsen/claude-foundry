@@ -24,6 +24,7 @@ This repo contains my Claude Code configuration - rules, agents, skills, hooks, 
 | `/update-codemaps` | Generate or refresh architecture codemaps |
 | `/learn` | Extract reusable patterns from current session |
 | `/recall` | Search and surface learned skills |
+| `/update-foundry` | Check for new releases and apply updates |
 | `/snapshot` | Capture/restore session context snapshots |
 
 ## Modular Rules
