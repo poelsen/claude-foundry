@@ -101,18 +101,15 @@ Then compare old state with new state:
 **Compare and warn:**
 
 **Commands** (compare `old_commands` vs `new_commands` file lists):
-- If commands were added or removed: "Commands changed. **Restart Claude Code** to load new commands."
+- If commands were added or removed: "Commands changed (<list>). New commands are available immediately."
 
 **Rules** (compare `base_rules` and `modular_rules` fields):
-- If rules changed: "Rules updated. They take effect on next interaction."
-
-**Skills** (compare `skills` and `learned_categories` fields):
-- If skills changed: "Skills updated. They take effect on next interaction."
+- If rules changed: "Rules updated (<list>). They take effect on next interaction."
 
 **Agents** (compare `agents` field):
-- If agents changed: "Agents updated. They load on demand, no restart needed."
+- If agents changed: "Agents updated (<list>). They load on demand."
 
-**Hooks/plugins** (compare `hooks` and `plugins` fields):
-- If changed: "Hooks/plugins updated."
+**Skills/hooks/plugins** (compare remaining fields):
+- If changed: "Skills/hooks/plugins updated (<list>)."
 
 If nothing changed besides version: "Version bumped, configuration unchanged."
