@@ -41,14 +41,14 @@ python3 tools/setup.py init /path/to/your/project
 
 ## Updating
 
-From any configured project, run the `/update` slash command inside a Claude Code session:
+From any configured project, run the `/update-foundry` slash command inside a Claude Code session:
 
 ```
-/update           # Check for new release, download, and apply
-/update --check   # Just check if an update is available
+/update-foundry           # Check for new release, download, and apply
+/update-foundry --check   # Just check if an update is available
 ```
 
-`/update` checks the GitHub releases API, downloads the latest tarball, and re-runs `setup.py init` non-interactively using your saved selections from the manifest. Works the same regardless of how you bootstrapped.
+`/update-foundry` checks the GitHub releases API, downloads the latest tarball, and re-runs `setup.py init` non-interactively using your saved selections from the manifest. Works the same regardless of how you bootstrapped.
 
 You can also update manually:
 
@@ -69,7 +69,7 @@ Everything is copied into `<project>/.claude/`:
 |-----------|--------|--------------|
 | **Rules** | `rules/` + `rule-library/` | Markdown files that instruct Claude on coding standards, security, git workflow, testing methodology |
 | **Agents** | `agents/` | Specialized sub-agents for TDD, code review, security analysis, architecture design |
-| **Commands** | `commands/` | Slash commands: `/snapshot`, `/learn`, `/recall`, `/update`, `/update-codemaps` |
+| **Commands** | `commands/` | Slash commands: `/snapshot`, `/learn`, `/recall`, `/update-foundry`, `/update-codemaps` |
 | **Skills** | `skills/` | Domain knowledge modules (GUI threading patterns, ClickHouse, learned patterns) |
 | **Hooks** | `hooks/library/` | Shell scripts that run before/after Claude Code tool calls (formatters, type checkers) |
 | **Plugins** | configured in `settings.json` | LSP servers and workflow plugins (feature-dev, PR review toolkit) |
@@ -111,7 +111,7 @@ Slash commands are available inside Claude Code after running `setup.py init`:
 | `/snapshot` | Saves current session state (task, decisions, files modified, next steps) to a markdown file. Use `/snapshot --restore` to resume after a restart or context compaction. Use `/snapshot --list` to see all snapshots. |
 | `/learn` | After solving a non-trivial problem, extracts the pattern into a reusable skill file. Asks you to pick a category and save location. See [Learned Skills](#learned-skills) below. |
 | `/recall` | Lists or searches all learned skills. `/recall python` searches for Python-related patterns. |
-| `/update` | Checks GitHub for a newer release and applies it. See [Updating](#updating). |
+| `/update-foundry` | Checks GitHub for a newer release and applies it. See [Updating](#updating). |
 | `/update-codemaps` | Generates or refreshes architecture documentation (one markdown file per module with key components, public API, dependencies, and data flow). |
 
 ## Agents
