@@ -46,11 +46,9 @@ Run `/update-codemaps` after significant structural changes.
 
 ## Documentation
 
-Project documentation belongs in `docs/`:
-- Move architecture details from CLAUDE.md to `docs/ARCHITECTURE.md`
-- Keep CLAUDE.md minimal (just pointers and environment)
-
-If you have existing documentation in CLAUDE.md.old, migrate it to `docs/`.
+Read `docs/` for detailed project documentation (if it exists).
+- `docs/ARCHITECTURE.md` — design decisions and patterns
+- `docs/DEVELOPMENT.md` — setup and workflow guides
 {marker_end}
 """
 
