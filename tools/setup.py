@@ -702,8 +702,14 @@ def cmd_check() -> None:
         print(f"Could not check remote: {e}")
 
 
-def cmd_init(project: Path, interactive: bool = True) -> bool:
-    """Initialize or update a project. Returns True on success."""
+def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bool:
+    """Initialize or update a project. Returns True on success.
+
+    Args:
+        project: Path to the project directory
+        interactive: Whether to prompt for choices
+        force: Force update even if CLAUDE.md has no marker (with confirmation)
+    """
     version = read_version()
     project = project.resolve()
     project_name = project.name
@@ -918,6 +924,29 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
             mcp_selected = mcp_auto
         mcp_servers = [mcp_names[i] for i in sorted(mcp_selected)]
 
+    # ── Pre-check CLAUDE.md for non-interactive mode ──
+    claude_md = project / "CLAUDE.md"
+    force_merge = False
+    if not interactive and claude_md.exists():
+        existing_content = claude_md.read_text()
+        if not has_claude_foundry_header(existing_content):
+            if force:
+                # Force flag — ask for confirmation before proceeding
+                print(f"\n  WARNING: CLAUDE.md exists without claude-foundry marker.")
+                print(f"  Force will merge the header into your existing CLAUDE.md.")
+                if not confirm("  Proceed with force merge?", default=False):
+                    print("  Aborted.")
+                    return False
+                force_merge = True
+            else:
+                # Non-interactive and no marker — skip entire project
+                print(f"\n  CLAUDE.md exists without claude-foundry marker — skipping project")
+                print(f"")
+                print(f"  To add the marker, run setup.py init interactively:")
+                print(f"    python3 <claude-foundry>/tools/setup.py init {project}")
+                print(f"  Or use --force to merge the header (with confirmation).")
+                return False
+
     # ── Generate ──
     print("\nGenerating project configuration...")
 
@@ -1020,13 +1049,14 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
                 merged = prepend_claude_foundry_header(existing_content, header)
                 claude_md.write_text(merged)
                 print(f"  Merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
-        else:
-            # Non-interactive and no marker — skip and tell user how to fix
-            print(f"  CLAUDE.md exists without claude-foundry marker — skipping")
-            print(f"")
-            print(f"  To add the marker, run setup.py init interactively:")
-            print(f"    python3 <claude-foundry>/tools/setup.py init {project}")
-            print(f"  Then choose [M]erge to prepend the header while keeping your content.")
+        elif force_merge:
+            # Force merge — prepend header (confirmed earlier)
+            backup = project / "CLAUDE.md.old"
+            backup.write_text(existing_content)
+            merged = prepend_claude_foundry_header(existing_content, header)
+            claude_md.write_text(merged)
+            print(f"  Force-merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
+        # Note: non-interactive + no marker without force case is handled earlier (skips entire project)
     else:
         claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
         print(f"  Created CLAUDE.md")
@@ -1046,8 +1076,12 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
     return True
 
 
-def cmd_update_all() -> None:
-    """Batch update all known projects."""
+def cmd_update_all(force: bool = False) -> None:
+    """Batch update all known projects.
+
+    Args:
+        force: Force update even if CLAUDE.md has no marker (with confirmation per project)
+    """
     version = read_version()
     print(f"Claude Config v{version} — Update All Projects\n")
 
@@ -1091,7 +1125,7 @@ def cmd_update_all() -> None:
             # Non-interactive update using saved choices
             print("Using saved manifest for non-interactive update...")
             try:
-                success = cmd_init(path, interactive=False)
+                success = cmd_init(path, interactive=False, force=force)
                 if success:
                     results["updated"].append(str(path))
                 else:
@@ -1103,7 +1137,7 @@ def cmd_update_all() -> None:
             # Interactive init needed
             print("No manifest found — running interactive setup...")
             try:
-                success = cmd_init(path, interactive=True)
+                success = cmd_init(path, interactive=True, force=force)
                 if success:
                     results["interactive"].append(str(path))
                 else:
@@ -1150,11 +1184,13 @@ def main() -> None:
         cmd_check()
     elif command == "init":
         interactive = "--non-interactive" not in sys.argv
-        args = [a for a in sys.argv[2:] if a != "--non-interactive"]
+        force = "--force" in sys.argv
+        args = [a for a in sys.argv[2:] if a not in ("--non-interactive", "--force")]
         project = Path(args[0]) if args else Path.cwd()
-        cmd_init(project, interactive=interactive)
+        cmd_init(project, interactive=interactive, force=force)
     elif command == "update-all":
-        cmd_update_all()
+        force = "--force" in sys.argv
+        cmd_update_all(force=force)
     else:
         print(f"Unknown command: {command}")
         print(__doc__)
