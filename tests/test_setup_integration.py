@@ -123,29 +123,44 @@ After header
 class TestExistingClaudeMdWithoutMarker:
     """Tests for projects with existing CLAUDE.md without marker."""
 
-    def test_non_interactive_skips_without_marker(self, temp_project):
-        """Non-interactive mode should skip CLAUDE.md without marker."""
+    def test_non_interactive_skips_for_unknown_project(self, temp_project):
+        """Non-interactive mode should skip CLAUDE.md for unknown projects (no VERSION)."""
         old_content = """# My Project
 
 Existing content without marker
 """
         (temp_project / "CLAUDE.md").write_text(old_content)
 
+        # Don't pre-create VERSION - simulates unknown project
         result = cmd_init(temp_project, interactive=False)
 
-        # Should still succeed (just skips CLAUDE.md)
+        # Should succeed but CLAUDE.md stays unchanged (first init creates VERSION after check)
         assert result is True
+        # On FIRST init, was_claude_foundry_project is False, so it skips
         # CLAUDE.md should be unchanged
         assert (temp_project / "CLAUDE.md").read_text() == old_content
+        # No backup created
+        assert not (temp_project / "CLAUDE.md.old").exists()
 
-    def test_no_backup_created_on_skip(self, temp_project):
-        """No backup should be created when skipping."""
-        old_content = "# Existing\n\nNo marker"
+    def test_known_project_replaces_claude_md(self, temp_project):
+        """Known claude-foundry project should replace CLAUDE.md in non-interactive mode."""
+        # Pre-create VERSION to simulate existing claude-foundry project
+        (temp_project / ".claude").mkdir(parents=True)
+        (temp_project / ".claude" / "VERSION").write_text("2024.01.01\n")
+
+        old_content = "# Old Project\n\nOld content without marker"
         (temp_project / "CLAUDE.md").write_text(old_content)
 
-        cmd_init(temp_project, interactive=False)
+        result = cmd_init(temp_project, interactive=False)
 
-        assert not (temp_project / "CLAUDE.md.old").exists()
+        assert result is True
+        # Should have created backup
+        assert (temp_project / "CLAUDE.md.old").exists()
+        assert (temp_project / "CLAUDE.md.old").read_text() == old_content
+        # New CLAUDE.md should have marker
+        new_content = (temp_project / "CLAUDE.md").read_text()
+        assert has_claude_foundry_header(new_content)
+        assert "Old content without marker" not in new_content
 
 
 class TestRulesInHeader:
@@ -263,17 +278,31 @@ class TestContextLoadConfigurations:
 class TestEdgeCases:
     """Edge case tests."""
 
-    def test_empty_claude_md_file(self, temp_project):
-        """Empty CLAUDE.md should be treated as existing without marker."""
+    def test_empty_claude_md_file_unknown_project(self, temp_project):
+        """Empty CLAUDE.md in unknown project should be skipped."""
         (temp_project / "CLAUDE.md").write_text("")
 
         result = cmd_init(temp_project, interactive=False)
 
-        # Should succeed but not modify (no marker)
+        # Should succeed but skip (unknown project)
         assert result is True
         content = (temp_project / "CLAUDE.md").read_text()
-        # Empty file stays empty in non-interactive mode
+        # Empty file stays empty for unknown project
         assert content == ""
+
+    def test_empty_claude_md_file_known_project(self, temp_project):
+        """Empty CLAUDE.md in known claude-foundry project should be replaced."""
+        # Pre-create VERSION
+        (temp_project / ".claude").mkdir(parents=True)
+        (temp_project / ".claude" / "VERSION").write_text("2024.01.01\n")
+        (temp_project / "CLAUDE.md").write_text("")
+
+        result = cmd_init(temp_project, interactive=False)
+
+        # Should succeed and replace empty file
+        assert result is True
+        content = (temp_project / "CLAUDE.md").read_text()
+        assert has_claude_foundry_header(content)
 
     def test_whitespace_only_claude_md(self, temp_project):
         """Whitespace-only CLAUDE.md should be handled."""
