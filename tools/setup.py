@@ -1029,9 +1029,8 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
             print()
             print("  Note: claude-foundry recommends keeping CLAUDE.md minimal.")
             print("  Move detailed project documentation to docs/ARCHITECTURE.md.")
-            print("  The codemaps/ directory (via /update-codemaps) is preferred for architecture docs.")
+            print("  The docs/ directory is preferred for project documentation.")
             print()
-
             choice = input("  Choice [R/M/Q]: ").strip().upper()
             if choice == "Q":
                 print("\n  Aborted. No changes made to CLAUDE.md.")
