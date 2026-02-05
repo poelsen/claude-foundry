@@ -1023,8 +1023,12 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
                 claude_md.write_text(merged)
                 print(f"  Merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
         else:
-            # Non-interactive and no marker — skip to avoid breaking user's file
-            print(f"  CLAUDE.md exists without marker — skipping (run interactive init to merge)")
+            # Non-interactive and no marker — skip and tell user how to fix
+            print(f"  CLAUDE.md exists without claude-foundry marker — skipping")
+            print(f"")
+            print(f"  To add the marker, run setup.py init interactively:")
+            print(f"    python3 <claude-foundry>/tools/setup.py init {project}")
+            print(f"  Then choose [M]erge to prepend the header while keeping your content.")
     else:
         claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
         print(f"  Created CLAUDE.md")
