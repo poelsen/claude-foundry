@@ -22,6 +22,80 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# ── CLAUDE.md Header ────────────────────────────────────────────────────
+
+CLAUDE_FOUNDRY_MARKER_START = "<!-- claude-foundry -->"
+CLAUDE_FOUNDRY_MARKER_END = "<!-- /claude-foundry -->"
+
+CLAUDE_FOUNDRY_HEADER_TEMPLATE = """{marker_start}
+## Rules
+
+Read rules in `.claude/rules/` before making changes:
+{rules_list}
+
+## Environment
+
+```bash
+{env_commands}
+```
+
+## Architecture
+
+Read `codemaps/INDEX.md` before modifying unfamiliar modules.
+Run `/update-codemaps` after significant structural changes.
+
+## Documentation
+
+Project documentation belongs in `docs/`:
+- Move architecture details from CLAUDE.md to `docs/ARCHITECTURE.md`
+- Keep CLAUDE.md minimal (just pointers and environment)
+
+If you have existing documentation in CLAUDE.md.old, migrate it to `docs/`.
+{marker_end}
+"""
+
+ENVIRONMENT_SNIPPETS = {
+    "python.md": {
+        "setup": "uv venv && uv pip install -e .[dev]",
+        "test": "uv run pytest",
+        "lint": "uv run ruff check src tests",
+        "format": "uv run ruff format src tests",
+    },
+    "rust.md": {
+        "setup": "cargo build",
+        "test": "cargo test",
+        "lint": "cargo clippy",
+        "format": "cargo fmt",
+    },
+    "go.md": {
+        "setup": "go mod download",
+        "test": "go test ./...",
+        "lint": "golangci-lint run",
+        "format": "go fmt ./...",
+    },
+    "nodejs.md": {
+        "setup": "npm install",
+        "test": "npm test",
+        "lint": "npm run lint",
+    },
+    "react.md": {
+        "setup": "npm install",
+        "test": "npm test",
+        "lint": "npm run lint",
+        "dev": "npm run dev",
+    },
+    "c.md": {
+        "setup": "mkdir -p build && cd build && cmake ..",
+        "build": "cmake --build build",
+        "test": "ctest --test-dir build",
+    },
+    "cpp.md": {
+        "setup": "mkdir -p build && cd build && cmake ..",
+        "build": "cmake --build build",
+        "test": "ctest --test-dir build",
+    },
+}
+
 # ── Registry ────────────────────────────────────────────────────────────
 
 BASE_RULES = [
@@ -174,6 +248,80 @@ def load_manifest(project: Path) -> dict | None:
         except (json.JSONDecodeError, OSError):
             return None
     return None
+
+
+def generate_claude_foundry_header(
+    deployed_rules: list[str],
+    selected_langs: set[str],
+) -> str:
+    """Generate the claude-foundry header for CLAUDE.md."""
+    # Build rules list
+    rule_descriptions = {
+        "python.md": "Python tooling (uv, pytest, ruff)",
+        "rust.md": "Rust tooling (cargo, clippy)",
+        "go.md": "Go tooling (go mod, golangci-lint)",
+        "nodejs.md": "Node.js tooling (npm)",
+        "react.md": "React/TypeScript tooling",
+        "c.md": "C tooling (CMake, clang)",
+        "cpp.md": "C++ tooling (CMake, clang)",
+        "coding-style.md": "Code style guidelines",
+        "git-workflow.md": "Git workflow and commit conventions",
+        "security.md": "Security checks and practices",
+        "testing.md": "Testing requirements (TDD, 80% coverage)",
+        "architecture.md": "Architecture principles",
+        "performance.md": "Performance and model selection",
+        "agents.md": "Agent orchestration",
+        "codemaps.md": "Codemap system",
+        "hooks.md": "Hooks system",
+    }
+
+    rules_lines = []
+    for rule in sorted(deployed_rules):
+        desc = rule_descriptions.get(rule, rule.replace(".md", "").replace("-", " ").title())
+        rules_lines.append(f"- `{rule}` — {desc}")
+    rules_list = "\n".join(rules_lines) if rules_lines else "- (none deployed)"
+
+    # Build environment commands
+    env_lines = []
+    for lang in sorted(selected_langs):
+        if lang in ENVIRONMENT_SNIPPETS:
+            snippets = ENVIRONMENT_SNIPPETS[lang]
+            if "setup" in snippets:
+                env_lines.append(f"{snippets['setup']}  # Setup")
+            if "test" in snippets:
+                env_lines.append(f"{snippets['test']}  # Tests")
+    env_commands = "\n".join(env_lines) if env_lines else "# No language-specific commands configured"
+
+    return CLAUDE_FOUNDRY_HEADER_TEMPLATE.format(
+        marker_start=CLAUDE_FOUNDRY_MARKER_START,
+        marker_end=CLAUDE_FOUNDRY_MARKER_END,
+        rules_list=rules_list,
+        env_commands=env_commands,
+    )
+
+
+def has_claude_foundry_header(content: str) -> bool:
+    """Check if content has claude-foundry marker."""
+    return CLAUDE_FOUNDRY_MARKER_START in content
+
+
+def update_claude_foundry_header(content: str, new_header: str) -> str:
+    """Replace existing claude-foundry header with new one."""
+    start_idx = content.find(CLAUDE_FOUNDRY_MARKER_START)
+    end_idx = content.find(CLAUDE_FOUNDRY_MARKER_END)
+
+    if start_idx == -1 or end_idx == -1:
+        return content
+
+    # Include the end marker in the replacement
+    end_idx += len(CLAUDE_FOUNDRY_MARKER_END)
+
+    return content[:start_idx] + new_header.strip() + content[end_idx:]
+
+
+def prepend_claude_foundry_header(content: str, header: str) -> str:
+    """Prepend header to content with blank line separator."""
+    return header + "\n" + content
 
 
 def resolve_project_path(encoded_name: str) -> Path | None:
@@ -368,14 +516,16 @@ def generate_settings_json(
     return settings
 
 
-def generate_claude_md(project_name: str) -> str:
+def generate_claude_md(
+    project_name: str,
+    deployed_rules: list[str],
+    selected_langs: set[str],
+) -> str:
+    """Generate a new CLAUDE.md with claude-foundry header."""
+    header = generate_claude_foundry_header(deployed_rules, selected_langs)
     return f"""# {project_name}
 
-## Architecture
-Read codemaps/INDEX.md before making changes to unfamiliar modules.
-
-## Rules
-All rules in .claude/rules/ are loaded automatically.
+{header}
 """
 
 
@@ -809,12 +959,60 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
         "mcp_servers": mcp_servers,
     })
 
+    # Compute deployed rules list for CLAUDE.md header
+    deployed_rules = selected_base.copy()
+    for rules in selected_modular.values():
+        deployed_rules.extend(rules)
+
     # CLAUDE.md
     claude_md = project / "CLAUDE.md"
+    header = generate_claude_foundry_header(deployed_rules, selected_langs)
+
     if claude_md.exists():
-        print(f"  CLAUDE.md already exists — not overwriting")
+        existing_content = claude_md.read_text()
+        lines = existing_content.count("\n")
+        chars = len(existing_content)
+
+        if has_claude_foundry_header(existing_content):
+            # Has marker — update header silently
+            updated_content = update_claude_foundry_header(existing_content, header)
+            claude_md.write_text(updated_content)
+            print(f"  Updated claude-foundry header in CLAUDE.md")
+        elif interactive:
+            # No marker — offer options
+            print(f"\n  CLAUDE.md exists ({lines} lines, {chars} chars)")
+            print("  Options:")
+            print("    [R] Replace — Generate new CLAUDE.md (saves original as .old)")
+            print("    [M] Merge — Prepend claude-foundry header (saves original as .old)")
+            print("    [Q] Quit — Abort setup entirely")
+            print()
+            print("  Note: claude-foundry recommends keeping CLAUDE.md minimal.")
+            print("  Move detailed project documentation to docs/ARCHITECTURE.md.")
+            print("  The codemaps/ directory (via /update-codemaps) is preferred for architecture docs.")
+            print()
+
+            choice = input("  Choice [R/M/Q]: ").strip().upper()
+            if choice == "Q":
+                print("\n  Aborted. No changes made to CLAUDE.md.")
+                return False
+            elif choice == "R":
+                # Save original and replace
+                backup = project / "CLAUDE.md.old"
+                backup.write_text(existing_content)
+                claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
+                print(f"  Replaced CLAUDE.md (original saved to CLAUDE.md.old)")
+            else:  # M or anything else defaults to Merge
+                # Save original and prepend header
+                backup = project / "CLAUDE.md.old"
+                backup.write_text(existing_content)
+                merged = prepend_claude_foundry_header(existing_content, header)
+                claude_md.write_text(merged)
+                print(f"  Merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
+        else:
+            # Non-interactive and no marker — skip to avoid breaking user's file
+            print(f"  CLAUDE.md exists without marker — skipping (run interactive init to merge)")
     else:
-        claude_md.write_text(generate_claude_md(project_name))
+        claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
         print(f"  Created CLAUDE.md")
 
     # Summary

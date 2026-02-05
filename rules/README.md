@@ -15,6 +15,7 @@ These rules are selected by default during `setup.py init` and copied to each pr
 | security.md | Security checklist and protocols |
 | testing.md | TDD workflow, 80% coverage |
 | codemaps.md | Codemap system, LSP plugins, architecture docs |
+| skills.md | Learned skill discovery and reuse |
 
 ## Modular Rules (Choose Per-Project)
 
