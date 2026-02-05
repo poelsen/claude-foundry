@@ -1,79 +1,49 @@
 # /update-codemaps - Generate/Refresh Architecture Documentation
 
-Generate or refresh architecture codemaps for the current project.
-
-**Model:** Use opus for this command — it requires architectural judgment (analyzing code structure, extracting APIs, mapping data flow).
+**Model:** opus (requires architectural judgment)
 
 ## Workflow
 
-1. **Detect project language** from config files:
-   - Python: pyproject.toml, setup.py
-   - TypeScript: tsconfig.json, package.json
-   - C/C++: CMakeLists.txt, Makefile
-   - Go: go.mod
-   - Rust: Cargo.toml
+1. **Detect language**: pyproject.toml (Python), tsconfig.json (TS), CMakeLists.txt (C++), go.mod (Go), Cargo.toml (Rust)
 
-2. **Check staleness** of existing codemaps/:
-   - If codemaps/ doesn't exist: generate all codemaps from scratch (first run)
-   - Read YAML frontmatter from each codemap
-   - Run `git diff <source_hash>..HEAD -- <files_covered>` per codemap
-   - Report which are stale vs current
-   - If none stale: "All codemaps current" and stop
+2. **Check staleness**: If codemaps/ exists, read frontmatter `source_hash`, run `git diff <hash>..HEAD -- <files>`. Skip current ones.
 
-3. **Regenerate stale codemaps:**
-   - Read source files in the affected module
-   - Extract: module purpose, key classes/functions, public API, dependencies, data flow
-   - Write compact codemap (30-50 lines per module)
+3. **Regenerate stale**: Read source, extract purpose/components/API/dependencies/data flow, write 30-50 line codemap.
 
-4. **Write codemaps/** with YAML frontmatter:
+4. **Write with frontmatter**:
    ```yaml
    ---
    generated: YYYY-MM-DDTHH:MM:SSZ
-   source_hash: <git rev-parse HEAD>
-   files_covered:
-     - src/module/*.py
+   source_hash: <commit>
+   files_covered: [src/module/*.py]
    ---
    ```
 
-5. **Report:** "X/Y codemaps updated, Z still current"
+5. **Report**: "X/Y updated, Z current"
 
-## Codemap Format (per module)
+## Codemap Format
 
 ```markdown
 # Module: [name]
-**Path:** src/myproject/module/
-**Purpose:** [1-2 sentences]
+**Path:** src/module/ | **Purpose:** [1-2 sentences]
 
 ## Key Components
 - ClassName — responsibility (file.py:line)
-- function_name — responsibility (file.py:line)
 
 ## Public API
 - method(args) → return — description
-- signal_name(payload) — when emitted
 
 ## Dependencies
-- module_a — what it uses
+- module_a — usage
 
 ## Data Flow
-[1-3 lines: how data enters, transforms, exits]
+[1-3 lines]
 ```
 
-## INDEX.md Format
+## INDEX.md
 
-```markdown
-# Project: [name]
-**Language:** [Python/TypeScript/C++/etc.]
-**Modules:** [count]
-
-| Module | Path | Purpose |
-|--------|------|---------|
-| workers | src/workers/ | Background job execution |
-| models | src/models/ | Data models and validation |
-| ...    | ...          | ...                       |
-```
+Table: Module | Path | Purpose
 
 ## Output
-- codemaps/ in project root (git-tracked)
-- One file per architectural area (5-10 files typical)
-- codemaps/INDEX.md — overview with 1-line per module
+
+`codemaps/` in project root, one file per module, INDEX.md overview.

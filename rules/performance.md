@@ -1,38 +1,24 @@
 # Performance Optimization
 
-## Model Selection Strategy
+## Model Selection
 
-- **Opus** (default): All primary work — planning, architecture, debugging, code review, anything requiring judgment
-- **Sonnet**: Well-scoped, low-ambiguity tasks — single-file edits, straightforward bug fixes, docs updates
-- **Haiku**: Only where agent definition explicitly specifies it — formatting, linting, mechanical transforms
+- **Opus**: Planning, architecture, debugging, code review, judgment tasks
+- **Sonnet**: Single-file edits, straightforward fixes, docs
+- **Haiku**: Formatting, linting, mechanical transforms (only if agent specifies)
 
 ## Search Strategy
 
-Claude Code's built-in Grep tool uses ripgrep (`rg`). No external search tools needed.
+- **Grep/Glob**: Exact patterns, known symbols, specific files
+- **Explore agent**: Open-ended, multi-round, uncertain scope
+- **Sonnet/Haiku agents**: Mechanical search loops
 
-- **Direct Grep/Glob**: Exact pattern matches, known symbol names, specific file lookups
-- **Explore agent**: Open-ended exploration, multi-round searches, "where is X handled?"
-- **Sonnet/Haiku agents**: Delegate mechanical search loops (grep + read) to lower-cost models
+Use Opus for judgment-based research. Prefer Explore over repeated Grep.
 
-Use Opus for research requiring judgment (viability analysis, architecture review, pattern evaluation). Prefer Explore agents over repeated Grep calls when the search scope is uncertain.
+## Context Window
 
-## Context Window Management
+Avoid last 20% for: large refactors, multi-file features, complex debugging.
+OK for: single-file edits, utilities, docs, simple fixes.
 
-Avoid last 20% of context window for:
-- Large-scale refactoring
-- Feature implementation spanning multiple files
-- Debugging complex interactions
+## Deep Reasoning
 
-Lower context sensitivity tasks:
-- Single-file edits
-- Independent utility creation
-- Documentation updates
-- Simple bug fixes
-
-## Ultrathink + Plan Mode
-
-For complex tasks requiring deep reasoning:
-1. Use `ultrathink` for enhanced thinking
-2. Enable **Plan Mode** for structured approach
-3. "Rev the engine" with multiple critique rounds
-4. Use split role sub-agents for diverse analysis
+For complex tasks: `ultrathink` + **Plan Mode** + multiple critique rounds.
