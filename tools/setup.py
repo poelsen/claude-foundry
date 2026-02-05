@@ -716,7 +716,6 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
 
     # ── Pre-checks ──
     version_file = project / ".claude" / "VERSION"
-    was_claude_foundry_project = version_file.exists()  # Track before we write VERSION
     if version_file.exists() and interactive:
         existing = version_file.read_text().strip()
         if existing == version:
@@ -1024,16 +1023,8 @@ def cmd_init(project: Path, interactive: bool = True) -> bool:
                 claude_md.write_text(merged)
                 print(f"  Merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
         else:
-            # Non-interactive and no marker
-            if was_claude_foundry_project:
-                # Known claude-foundry project (had VERSION) — safe to replace
-                backup = project / "CLAUDE.md.old"
-                backup.write_text(existing_content)
-                claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
-                print(f"  Replaced CLAUDE.md (original saved to CLAUDE.md.old)")
-            else:
-                # Unknown project — skip to avoid breaking user's file
-                print(f"  CLAUDE.md exists without marker — skipping (run interactive init to merge)")
+            # Non-interactive and no marker — skip to avoid breaking user's file
+            print(f"  CLAUDE.md exists without marker — skipping (run interactive init to merge)")
     else:
         claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
         print(f"  Created CLAUDE.md")
