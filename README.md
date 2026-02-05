@@ -61,6 +61,60 @@ python3 tools/setup.py init /path/to/your/project
 python3 tools/setup.py update-all
 ```
 
+## CLAUDE.md Convention
+
+When `setup.py init` runs, it handles `CLAUDE.md` intelligently:
+
+### For new projects (no CLAUDE.md)
+
+Creates a minimal `CLAUDE.md` with a **claude-foundry header** containing:
+- List of deployed rules with descriptions
+- Environment commands for detected languages (setup, test, lint)
+- Pointers to `codemaps/INDEX.md` for architecture
+- Documentation conventions
+
+### For existing projects
+
+If `CLAUDE.md` already exists, setup.py offers three options:
+
+| Option | Behavior |
+|--------|----------|
+| **Replace** | Generate new CLAUDE.md, save original as `CLAUDE.md.old` |
+| **Merge** | Prepend claude-foundry header to existing, save original as `CLAUDE.md.old` |
+| **Quit** | Abort setup entirely |
+
+### Header updates
+
+The claude-foundry header is wrapped in marker comments (`<!-- claude-foundry -->` ... `<!-- /claude-foundry -->`). On subsequent runs:
+- If the marker exists, the header is **updated silently** with current rules/languages
+- If no marker exists, setup.py asks before modifying (interactive) or skips (non-interactive)
+
+### Best practices
+
+- Keep `CLAUDE.md` minimal — just pointers and environment commands
+- Move detailed architecture documentation to `docs/ARCHITECTURE.md`
+- Use `codemaps/` (via `/update-codemaps`) for auto-generated architecture docs
+- The header points Claude to the right places automatically
+
+## Codemaps
+
+Codemaps are auto-generated architecture documentation. Each module gets a markdown file describing key components, public APIs, dependencies, and data flow.
+
+### Using codemaps
+
+1. Run `/update-codemaps` to generate or refresh architecture docs
+2. Files are created in `codemaps/` with an `INDEX.md` overview
+3. The command checks staleness — only stale codemaps regenerate
+
+### When to update
+
+Run `/update-codemaps` after:
+- Adding new modules or packages
+- Changing public APIs
+- Adding significant new dependencies
+
+Claude automatically reads `codemaps/INDEX.md` before modifying unfamiliar modules (per the `codemaps.md` rule).
+
 ## What Gets Installed
 
 Everything is copied into `<project>/.claude/`:

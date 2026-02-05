@@ -1,4 +1,4 @@
-# Update Codemaps
+# /update-codemaps - Generate/Refresh Architecture Documentation
 
 Generate or refresh architecture codemaps for the current project.
 
