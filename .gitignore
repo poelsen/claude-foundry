@@ -7,3 +7,13 @@
 .claude/setup-manifest.json
 .claude/plans/
 .claude/snapshots/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.coverage
+.pytest_cache/
+*.egg-info/
+dist/
+build/
