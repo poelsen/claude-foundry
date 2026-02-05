@@ -1,36 +1,38 @@
-# Claude Config Project
+# claude-foundry
 
-This repo contains my Claude Code configuration - rules, agents, skills, hooks, and commands.
+<!-- claude-foundry -->
+## Rules
 
-## Project Context
-- Use `tools/setup.py init` to deploy config to projects
-- Edits here take effect after re-running `setup.py init` or `update-all`
-- Push changes to sync across machines
+Read rules in `.claude/rules/` before making changes:
+- `github.md` — GitHub workflow (gh CLI, PR conventions)
+- `python.md` — Python tooling (uv, pytest, ruff)
+- `agents.md` — Agent orchestration
+- `architecture.md` — Architecture principles
+- `codemaps.md` — Codemap system
+- `coding-style.md` — Code style guidelines
+- `enterprise.md` — Enterprise
+- `git-workflow.md` — Git workflow and commit conventions
+- `hooks.md` — Hooks system
+- `performance.md` — Performance and model selection
+- `security.md` — Security checks and practices
+- `testing.md` — Testing requirements (TDD, 80% coverage)
 
-## Structure
-- `rules/` - Base rules (recommended for all projects)
-- `rule-library/` - Modular rules (copied/symlinked per-project)
-- `agents/` - Custom agent definitions
-- `commands/` - Slash commands
-- `skills/` - Custom skills
-- `skills/learned/` - Learned patterns (deployed to projects by category)
-- `hooks/` - Pre/post tool hooks
-- `mcp-configs/` - MCP server configurations
+## Environment
 
-## Commands
+```bash
+uv venv && uv pip install -e .[dev]  # Setup
+uv run pytest  # Tests
+```
 
-| Command | Purpose |
-|---------|---------|
-| `/update-codemaps` | Generate or refresh architecture codemaps |
-| `/learn` | Extract reusable patterns from current session |
-| `/recall` | Search and surface learned skills |
-| `/update-foundry` | Check for new releases and apply updates |
-| `/snapshot` | Capture/restore session context snapshots |
+## Architecture
 
-## Modular Rules
-- rule-library/platform/github.md
+Read `codemaps/INDEX.md` before modifying unfamiliar modules.
+Run `/update-codemaps` after significant structural changes.
 
-## Common Tasks
-- Edit rules in `rules/` or `rule-library/`
-- Test changes by re-running `tools/setup.py init`
-- Commit and push to sync across machines
+## Documentation
+
+Read `docs/` for detailed project documentation (if it exists).
+- `docs/ARCHITECTURE.md` — design decisions and patterns
+- `docs/DEVELOPMENT.md` — setup and workflow guides
+<!-- /claude-foundry -->
+
