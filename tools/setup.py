@@ -275,8 +275,13 @@ def generate_claude_foundry_header(
         "hooks.md": "Hooks system",
     }
 
+    # Sort rules with language rules first, then alphabetically
+    lang_rules = sorted(r for r in deployed_rules if r in MODULAR_RULES.get("lang", {}))
+    other_rules = sorted(r for r in deployed_rules if r not in MODULAR_RULES.get("lang", {}))
+    ordered_rules = lang_rules + other_rules
+
     rules_lines = []
-    for rule in sorted(deployed_rules):
+    for rule in ordered_rules:
         desc = rule_descriptions.get(rule, rule.replace(".md", "").replace("-", " ").title())
         rules_lines.append(f"- `{rule}` — {desc}")
     rules_list = "\n".join(rules_lines) if rules_lines else "- (none deployed)"
