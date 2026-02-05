@@ -174,7 +174,7 @@ def read_version() -> str:
     """Read version from VERSION file (tarball) or git tag (clone)."""
     version_file = REPO_ROOT / "VERSION"
     if version_file.exists():
-        return version_file.read_text().strip()
+        return version_file.read_text(encoding='utf-8').strip()
     # Fall back to latest git tag
     try:
         result = subprocess.run(
@@ -234,7 +234,7 @@ def save_manifest(project: Path, manifest: dict) -> None:
     """Save selection manifest for future re-init / update-all."""
     dest = project / ".claude" / "setup-manifest.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(json.dumps(manifest, indent=2) + "\n")
+    dest.write_text(json.dumps(manifest, indent=2) + "\n", encoding='utf-8')
 
 
 def load_manifest(project: Path) -> dict | None:
@@ -242,7 +242,7 @@ def load_manifest(project: Path) -> dict | None:
     src = project / ".claude" / "setup-manifest.json"
     if src.exists():
         try:
-            return json.loads(src.read_text())
+            return json.loads(src.read_text(encoding='utf-8'))
         except (json.JSONDecodeError, OSError):
             return None
     return None
@@ -455,7 +455,7 @@ def _read_dep_files(project: Path) -> str:
         p = project / name
         if p.exists():
             try:
-                text += p.read_text(errors="ignore")
+                text += p.read_text(encoding='utf-8', errors="ignore")
             except OSError:
                 pass
     return text
@@ -652,7 +652,7 @@ def copy_hooks(project: Path, hooks: list[str]) -> None:
 def write_mcp_servers(project: Path, servers: list[str]) -> None:
     if not servers or not MCP_SERVERS_FILE.exists():
         return
-    all_servers = json.loads(MCP_SERVERS_FILE.read_text())["mcpServers"]
+    all_servers = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
     selected = {k: v for k, v in all_servers.items() if k in servers}
     # Remove description fields (not valid in .claude.json)
     for srv in selected.values():
@@ -661,11 +661,11 @@ def write_mcp_servers(project: Path, servers: list[str]) -> None:
     data = {}
     if claude_json.exists():
         try:
-            data = json.loads(claude_json.read_text())
+            data = json.loads(claude_json.read_text(encoding='utf-8'))
         except json.JSONDecodeError:
             pass
     data.setdefault("mcpServers", {}).update(selected)
-    claude_json.write_text(json.dumps(data, indent=2) + "\n")
+    claude_json.write_text(json.dumps(data, indent=2) + "\n", encoding='utf-8')
 
 
 # ── Commands ────────────────────────────────────────────────────────────
@@ -721,7 +721,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     # ── Pre-checks ──
     version_file = project / ".claude" / "VERSION"
     if version_file.exists() and interactive:
-        existing = version_file.read_text().strip()
+        existing = version_file.read_text(encoding='utf-8').strip()
         if existing == version:
             if not confirm("Already configured with current version. Reconfigure?", default=False):
                 return False
@@ -908,7 +908,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     # ── 8. MCP servers ──
     mcp_servers: list[str] = []
     if MCP_SERVERS_FILE.exists():
-        all_mcp = json.loads(MCP_SERVERS_FILE.read_text())["mcpServers"]
+        all_mcp = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
         mcp_names = list(all_mcp.keys())
         mcp_descs = [f"{k} — {v.get('description', '')}" for k, v in all_mcp.items()]
 
@@ -928,7 +928,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     claude_md = project / "CLAUDE.md"
     force_merge = False
     if not interactive and claude_md.exists():
-        existing_content = claude_md.read_text()
+        existing_content = claude_md.read_text(encoding='utf-8')
         if not has_claude_foundry_header(existing_content):
             if force:
                 # Force flag — ask for confirmation before proceeding
@@ -954,7 +954,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     claude_dir.mkdir(parents=True, exist_ok=True)
 
     # VERSION
-    (claude_dir / "VERSION").write_text(version + "\n")
+    (claude_dir / "VERSION").write_text(version + "\n", encoding='utf-8')
 
     # Rules
     copy_rules(project, selected_base, selected_modular)
@@ -979,7 +979,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
 
     # settings.json
     settings = generate_settings_json(selected_hooks, selected_plugins)
-    (claude_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n")
+    (claude_dir / "settings.json").write_text(json.dumps(settings, indent=2) + "\n", encoding='utf-8')
 
     # MCP servers
     if mcp_servers:
@@ -1010,14 +1010,14 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     header = generate_claude_foundry_header(deployed_rules, selected_langs)
 
     if claude_md.exists():
-        existing_content = claude_md.read_text()
+        existing_content = claude_md.read_text(encoding='utf-8')
         lines = existing_content.count("\n")
         chars = len(existing_content)
 
         if has_claude_foundry_header(existing_content):
             # Has marker — update header silently
             updated_content = update_claude_foundry_header(existing_content, header)
-            claude_md.write_text(updated_content)
+            claude_md.write_text(updated_content, encoding='utf-8')
             print(f"  Updated claude-foundry header in CLAUDE.md")
         elif interactive:
             # No marker — offer options
@@ -1039,26 +1039,26 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
             elif choice == "R":
                 # Save original and replace
                 backup = project / "CLAUDE.md.old"
-                backup.write_text(existing_content)
-                claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
+                backup.write_text(existing_content, encoding='utf-8')
+                claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs), encoding='utf-8')
                 print(f"  Replaced CLAUDE.md (original saved to CLAUDE.md.old)")
             else:  # M or anything else defaults to Merge
                 # Save original and prepend header
                 backup = project / "CLAUDE.md.old"
-                backup.write_text(existing_content)
+                backup.write_text(existing_content, encoding='utf-8')
                 merged = prepend_claude_foundry_header(existing_content, header)
-                claude_md.write_text(merged)
+                claude_md.write_text(merged, encoding='utf-8')
                 print(f"  Merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
         elif force_merge:
             # Force merge — prepend header (confirmed earlier)
             backup = project / "CLAUDE.md.old"
-            backup.write_text(existing_content)
+            backup.write_text(existing_content, encoding='utf-8')
             merged = prepend_claude_foundry_header(existing_content, header)
-            claude_md.write_text(merged)
+            claude_md.write_text(merged, encoding='utf-8')
             print(f"  Force-merged claude-foundry header into CLAUDE.md (original saved to CLAUDE.md.old)")
         # Note: non-interactive + no marker without force case is handled earlier (skips entire project)
     else:
-        claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs))
+        claude_md.write_text(generate_claude_md(project_name, deployed_rules, selected_langs), encoding='utf-8')
         print(f"  Created CLAUDE.md")
 
     # Summary
@@ -1099,7 +1099,7 @@ def cmd_update_all(force: bool = False) -> None:
         if has_setup:
             ver_file = path / ".claude" / "VERSION"
             if ver_file.exists():
-                proj_ver = ver_file.read_text().strip()
+                proj_ver = ver_file.read_text(encoding='utf-8').strip()
         status = f"v{proj_ver}" if proj_ver else "not configured"
         has_manifest = " +manifest" if manifest else ""
         labels.append(f"{path}  ({status}{has_manifest})")
