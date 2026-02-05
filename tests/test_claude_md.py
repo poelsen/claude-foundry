@@ -109,7 +109,8 @@ class TestGenerateClaudeFoundryHeader:
     def test_includes_documentation_section(self):
         header = generate_claude_foundry_header(["python.md"], {"python.md"})
         assert "docs/" in header
-        assert "CLAUDE.md.old" in header
+        assert "docs/ARCHITECTURE.md" in header
+        assert "docs/DEVELOPMENT.md" in header
 
 
 class TestUpdateClaudeFoundryHeader:
