@@ -92,9 +92,45 @@ The claude-foundry header is wrapped in marker comments (`<!-- claude-foundry --
 ### Best practices
 
 - Keep `CLAUDE.md` minimal — just pointers and environment commands
-- Move detailed architecture documentation to `docs/ARCHITECTURE.md`
-- Use `codemaps/` (via `/update-codemaps`) for auto-generated architecture docs
 - The header points Claude to the right places automatically
+
+## Documentation Structure
+
+Claude-foundry recommends a three-tier documentation approach:
+
+| Location | Purpose | Maintained by |
+|----------|---------|---------------|
+| `CLAUDE.md` | Pointers and environment setup | claude-foundry (auto-updated) |
+| `codemaps/` | Architecture overview per module | `/update-codemaps` (auto-generated) |
+| `docs/` | Detailed project documentation | You (manual) |
+
+### CLAUDE.md
+
+Keep minimal. The claude-foundry header provides:
+- Links to `.claude/rules/` for coding standards
+- Environment commands (setup, test, lint)
+- Pointer to `codemaps/INDEX.md`
+
+Don't put detailed documentation here — it gets out of sync and wastes context.
+
+### codemaps/
+
+Auto-generated architecture docs. Run `/update-codemaps` to create/refresh. Each module gets:
+- Purpose and responsibilities
+- Key components with file:line references
+- Public API surface
+- Dependencies and data flow
+
+Claude reads these before modifying unfamiliar code.
+
+### docs/
+
+Your detailed documentation:
+- `docs/ARCHITECTURE.md` — design decisions, patterns, rationale
+- `docs/DEVELOPMENT.md` — setup guide, workflow, conventions
+- `docs/API.md` — detailed API documentation
+
+If you have existing documentation in `CLAUDE.md`, migrate it to `docs/` after running setup.py init
 
 ## Codemaps
 
