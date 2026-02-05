@@ -302,7 +302,7 @@ class TestContextLoad:
 
 
 class TestRulesOrdering:
-    """Tests for rules ordering in header (language rules first)."""
+    """Tests for rules ordering in header (tooling rules first)."""
 
     def test_language_rules_come_first(self):
         """Language rules should appear before other rules."""
@@ -321,20 +321,50 @@ class TestRulesOrdering:
         assert rust_pos < coding_pos
         assert rust_pos < security_pos
 
-    def test_language_rules_sorted_alphabetically(self):
-        """Language rules should be sorted alphabetically among themselves."""
-        rules = ["rust.md", "python.md", "go.md"]
+    def test_platform_rules_come_first(self):
+        """Platform rules (github.md) should appear before non-tooling rules."""
+        rules = ["coding-style.md", "github.md", "security.md"]
+        header = generate_claude_foundry_header(rules, set())
+
+        github_pos = header.find("`github.md`")
+        coding_pos = header.find("`coding-style.md`")
+        security_pos = header.find("`security.md`")
+
+        # Platform rules should come before other rules
+        assert github_pos < coding_pos
+        assert github_pos < security_pos
+
+    def test_tooling_rules_grouped_together(self):
+        """Language and platform rules should both come before other rules."""
+        rules = ["python.md", "github.md", "coding-style.md", "security.md"]
+        header = generate_claude_foundry_header(rules, {"python.md"})
+
+        python_pos = header.find("`python.md`")
+        github_pos = header.find("`github.md`")
+        coding_pos = header.find("`coding-style.md`")
+        security_pos = header.find("`security.md`")
+
+        # Both tooling rules should come before non-tooling rules
+        assert python_pos < coding_pos
+        assert github_pos < coding_pos
+        assert python_pos < security_pos
+        assert github_pos < security_pos
+
+    def test_tooling_rules_sorted_alphabetically(self):
+        """Tooling rules should be sorted alphabetically among themselves."""
+        rules = ["rust.md", "python.md", "go.md", "github.md"]
         header = generate_claude_foundry_header(rules, {"python.md", "rust.md", "go.md"})
 
+        github_pos = header.find("`github.md`")
         go_pos = header.find("`go.md`")
         python_pos = header.find("`python.md`")
         rust_pos = header.find("`rust.md`")
 
-        # go < python < rust alphabetically
-        assert go_pos < python_pos < rust_pos
+        # github < go < python < rust alphabetically
+        assert github_pos < go_pos < python_pos < rust_pos
 
     def test_other_rules_sorted_alphabetically(self):
-        """Non-language rules should be sorted alphabetically."""
+        """Non-tooling rules should be sorted alphabetically."""
         rules = ["testing.md", "coding-style.md", "security.md"]
         header = generate_claude_foundry_header(rules, set())
 

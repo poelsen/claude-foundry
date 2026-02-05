@@ -257,6 +257,7 @@ def generate_claude_foundry_header(
     """Generate the claude-foundry header for CLAUDE.md."""
     # Build rules list
     rule_descriptions = {
+        # Language/tooling rules
         "python.md": "Python tooling (uv, pytest, ruff)",
         "rust.md": "Rust tooling (cargo, clippy)",
         "go.md": "Go tooling (go mod, golangci-lint)",
@@ -264,6 +265,10 @@ def generate_claude_foundry_header(
         "react.md": "React/TypeScript tooling",
         "c.md": "C tooling (CMake, clang)",
         "cpp.md": "C++ tooling (CMake, clang)",
+        "matlab.md": "MATLAB tooling",
+        # Platform rules
+        "github.md": "GitHub workflow (gh CLI, PR conventions)",
+        # Base rules
         "coding-style.md": "Code style guidelines",
         "git-workflow.md": "Git workflow and commit conventions",
         "security.md": "Security checks and practices",
@@ -275,10 +280,14 @@ def generate_claude_foundry_header(
         "hooks.md": "Hooks system",
     }
 
-    # Sort rules with language rules first, then alphabetically
-    lang_rules = sorted(r for r in deployed_rules if r in MODULAR_RULES.get("lang", {}))
-    other_rules = sorted(r for r in deployed_rules if r not in MODULAR_RULES.get("lang", {}))
-    ordered_rules = lang_rules + other_rules
+    # Sort rules with tooling rules first (language + platform), then alphabetically
+    lang_rules = set(MODULAR_RULES.get("lang", {}).keys())
+    platform_rules = set(MODULAR_RULES.get("platform", {}).keys())
+    tooling_rules = lang_rules | platform_rules
+
+    tooling_first = sorted(r for r in deployed_rules if r in tooling_rules)
+    other_rules = sorted(r for r in deployed_rules if r not in tooling_rules)
+    ordered_rules = tooling_first + other_rules
 
     rules_lines = []
     for rule in ordered_rules:
