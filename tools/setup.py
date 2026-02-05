@@ -406,6 +406,11 @@ def copy_rules(project: Path, base: list[str], modular: dict[str, list[str]]) ->
 def copy_agents(project: Path, agents: list[str]) -> None:
     dest = project / ".claude" / "agents"
     dest.mkdir(parents=True, exist_ok=True)
+    # Remove stale agents not in current selection
+    wanted = set(agents)
+    for existing in dest.iterdir():
+        if existing.suffix == ".md" and existing.name not in wanted:
+            existing.unlink()
     for agent in agents:
         src = AGENTS_DIR / agent
         if src.exists():
@@ -418,6 +423,11 @@ def copy_commands(project: Path) -> None:
         return
     dest = project / ".claude" / "commands"
     dest.mkdir(parents=True, exist_ok=True)
+    # Remove stale commands not in source
+    source_names = {f.name for f in COMMANDS_DIR.iterdir() if f.suffix == ".md"}
+    for existing in dest.iterdir():
+        if existing.suffix == ".md" and existing.name not in source_names:
+            existing.unlink()
     for src in COMMANDS_DIR.iterdir():
         if src.suffix == ".md":
             shutil.copy2(src, dest / src.name)
