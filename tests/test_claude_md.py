@@ -301,6 +301,51 @@ class TestContextLoad:
         assert ratio_20_10 < 2.5
 
 
+class TestRulesOrdering:
+    """Tests for rules ordering in header (language rules first)."""
+
+    def test_language_rules_come_first(self):
+        """Language rules should appear before other rules."""
+        rules = ["coding-style.md", "python.md", "security.md", "rust.md"]
+        header = generate_claude_foundry_header(rules, {"python.md", "rust.md"})
+
+        # Find positions of rules in the header
+        python_pos = header.find("`python.md`")
+        rust_pos = header.find("`rust.md`")
+        coding_pos = header.find("`coding-style.md`")
+        security_pos = header.find("`security.md`")
+
+        # Language rules should come before other rules
+        assert python_pos < coding_pos
+        assert python_pos < security_pos
+        assert rust_pos < coding_pos
+        assert rust_pos < security_pos
+
+    def test_language_rules_sorted_alphabetically(self):
+        """Language rules should be sorted alphabetically among themselves."""
+        rules = ["rust.md", "python.md", "go.md"]
+        header = generate_claude_foundry_header(rules, {"python.md", "rust.md", "go.md"})
+
+        go_pos = header.find("`go.md`")
+        python_pos = header.find("`python.md`")
+        rust_pos = header.find("`rust.md`")
+
+        # go < python < rust alphabetically
+        assert go_pos < python_pos < rust_pos
+
+    def test_other_rules_sorted_alphabetically(self):
+        """Non-language rules should be sorted alphabetically."""
+        rules = ["testing.md", "coding-style.md", "security.md"]
+        header = generate_claude_foundry_header(rules, set())
+
+        coding_pos = header.find("`coding-style.md`")
+        security_pos = header.find("`security.md`")
+        testing_pos = header.find("`testing.md`")
+
+        # coding-style < security < testing alphabetically
+        assert coding_pos < security_pos < testing_pos
+
+
 class TestEdgeCases:
     """Edge case tests for CLAUDE.md handling."""
 
