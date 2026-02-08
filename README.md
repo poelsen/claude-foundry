@@ -284,6 +284,85 @@ claude-foundry/
 └── tools/setup.py            # Setup and deployment tool
 ```
 
+## Megamind Skills
+
+The megamind skills are reasoning enhancers that improve Claude's performance on complex tasks. Each mode targets a different thinking style.
+
+### Modes
+
+| Mode | Purpose | Best For |
+|------|---------|----------|
+| **megamind-deep** | Systematic analysis — surface assumptions, consider alternatives, assess risks | Architecture decisions, debugging, scope clarification |
+| **megamind-creative** | Structured creative chaos — pattern-mining, analogies, constraint mutation | Creative problem-solving, brainstorming, unconventional solutions |
+| **megamind-adversarial** | Red-team — attack the obvious approach, find failure modes, stress-test | Security review, design review, finding weaknesses |
+
+`megamind-deep` and `megamind-creative` are auto-selected during `setup.py init`. The adversarial variant is opt-in.
+
+### Benchmark (Opus 4.6, 30 challenges, 5 runs each)
+
+Skills are evaluated using a Claude-as-judge benchmark. Each challenge has a rubric with required elements and anti-patterns. The judge scores each response and the benchmark reports hit rates, pass rates, and averages.
+
+**Overall:**
+
+| Mode | Avg Score | Pass Rate | Delta vs Baseline |
+|------|-----------|-----------|-------------------|
+| Baseline (no skill) | 5.0 | 62% | — |
+| megamind-deep | 6.7 | 82% | +1.7 |
+| megamind-creative | 6.4 | 78% | +1.4 |
+| megamind-adversarial | 6.5 | 80% | +1.5 |
+
+**Per-category winners:**
+
+| Category | Description | Best Mode | Score |
+|----------|-------------|-----------|-------|
+| adversarial | Red-team designs (auth, caching, pipelines, feature flags) | adversarial | 7.7 |
+| arch | Architecture under ambiguity (DR, build-vs-buy, event-driven, gateways) | deep | 7.3 |
+| creative | Creative problem-solving (alert fatigue, code review, onboarding, CLI) | creative | 8.0 |
+| cross | Cross-cutting (stakeholder conflicts, incidents, security breaches, tech debt) | deep | 9.5 |
+| deep | Deep reasoning (DB migration, refactoring, API design, testing, deploys) | deep | 7.0 |
+| scope | Scope clarification for vague requests ("make it faster", "fix search") | adversarial | 2.6 |
+
+Each skill dominates its target category. Deep mode is the best all-rounder. Scope challenges expose a fundamental weakness — Opus jumps to solutions instead of asking clarifying questions for vague prompts, even with skills active.
+
+### Challenge Format
+
+Challenges are YAML files in `tests/challenges/`:
+
+```yaml
+id: arch-001
+name: "Architecture Decision Under Ambiguity"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Add real-time notifications to our Django app...
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about scale, notification types"
+    considers_alternatives: "Mentions at least 2 architectural approaches"
+  anti_patterns:
+    jumps_to_code: "Immediately writes implementation code"
+  passing_score: 6
+```
+
+### Running the Benchmark
+
+```bash
+# Full run (30 challenges x 4 modes x 5 runs)
+python3 tools/run_benchmark.py --local --workers 24 --runs 5 --save results/output.json
+
+# Single challenge
+python3 tools/run_benchmark.py --local --runs 1 --challenges arch-001
+
+# Specific skill (always includes baseline for comparison)
+python3 tools/run_benchmark.py --local --skill megamind-deep --runs 3
+
+# Compare against saved baseline
+python3 tools/run_benchmark.py --local --runs 5 --save results/new.json --compare results/old.json
+
+# API mode (no CLI needed, requires ANTHROPIC_API_KEY)
+ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --runs 2
+```
+
 ## Credits
 
 Inspired by [everything-claude-code](https://github.com/affaan-m/everything-claude-code) by Affaan M.
