@@ -1,0 +1,18 @@
+id: scope-004
+name: "Make it More Secure"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  The app needs to be more secure. Fix it.
+rubric:
+  required_elements:
+    clarifies_intent: "Asks what 'more secure' means (specific threat, audit finding, compliance, general hardening)"
+    identifies_assumptions: "Lists assumptions about current security posture and context"
+    proposes_approach: "Suggests a concrete security assessment approach before making changes"
+    asks_before_acting: "Asks for confirmation on priorities and scope before proceeding"
+    measurement_plan: "Proposes specific security assessment steps (threat model, dependency audit, pen test)"
+    success_criteria: "Asks about or proposes what 'secure enough' looks like (compliance standard, threat model)"
+  anti_patterns:
+    jumps_to_hardening: "Immediately starts implementing security measures without assessment"
+    assumes_scope: "Assumes what 'more secure' means without asking"
+  passing_score: 4

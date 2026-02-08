@@ -1,0 +1,29 @@
+id: cross-004
+name: "Security Breach Response With Incomplete Info"
+category: cross_cutting
+prompt: |
+  It's 2 AM. You're the on-call engineering lead. The alerts:
+  - Unusual database query patterns detected from an internal IP (10.0.3.47)
+  - 3x normal read volume on the users table in the last 30 minutes
+  - Last deploy was 6 hours ago (routine bugfix, passed CI)
+  - The DBA says "it might be the new analytics job we set up yesterday"
+  - Your users table contains PII (names, emails, hashed passwords, addresses)
+  - You have no centralized audit logging — just application logs and DB slow query log
+  What do you do?
+rubric:
+  required_elements:
+    systematic_triage: "Proposes a structured investigation approach with clear steps"
+    immediate_containment: "Takes immediate action to limit potential damage before full investigation"
+    challenges_explanation: "Doesn't accept 'analytics job' at face value — verifies independently"
+    pii_risk_assessment: "Explicitly addresses PII exposure risk and potential breach notification obligations"
+    forensic_preservation: "Preserves evidence before making changes (logs, connection state, query history)"
+    communication_plan: "Addresses who to notify (management, security team, legal) and when"
+    multiple_hypotheses: "Considers multiple scenarios (breach, analytics, misconfiguration, insider threat)"
+    investigation_steps: "Provides specific technical investigation steps (check connections, query logs, network)"
+    post_incident: "Mentions post-incident improvements (audit logging, access controls, alerting)"
+    decision_framework: "Defines criteria for escalation vs de-escalation at each step"
+  anti_patterns:
+    accepts_explanation: "Accepts the DBA's analytics job explanation without verification"
+    ignores_pii: "Doesn't address the PII implications"
+    delays_action: "Proposes waiting until morning or 'monitoring' without immediate containment"
+  passing_score: 7

@@ -1,0 +1,18 @@
+id: scope-003
+name: "We Need Better Logging"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Our logging isn't good enough. Can you improve it?
+rubric:
+  required_elements:
+    clarifies_intent: "Asks what 'not good enough' means (missing info, too verbose, hard to search, no structure)"
+    identifies_assumptions: "Lists assumptions about current logging setup and pain points"
+    proposes_approach: "Suggests a concrete investigation plan before making changes"
+    asks_before_acting: "Asks for confirmation on scope and approach before proceeding"
+    measurement_plan: "Proposes ways to assess current logging state (review config, sample logs, check coverage)"
+    success_criteria: "Asks about or proposes what 'good enough' logging looks like"
+  anti_patterns:
+    jumps_to_implementation: "Immediately starts adding logging statements or configuring tools"
+    assumes_scope: "Assumes what 'improve' means without asking"
+  passing_score: 4

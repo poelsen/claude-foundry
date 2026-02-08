@@ -1,0 +1,26 @@
+id: deep-004
+name: "Testing Strategy for Untested System"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We have a 50,000-line Python codebase with zero tests. It's a payment processing
+  system that handles $2M/month in transactions. We're seeing about 3 production bugs
+  per month. The code is tightly coupled — most functions call other functions that
+  call the database directly. No dependency injection, no interfaces. The team of 4
+  developers is afraid to refactor because there's no safety net. How do we introduce
+  testing to this system?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about the codebase, team skill, and constraints"
+    prioritization_strategy: "Proposes where to start testing (critical paths, bug-prone areas, not 'everything')"
+    characterization_tests: "Suggests characterization/golden-master tests to capture existing behavior"
+    decoupling_approach: "Addresses the tight coupling problem with specific refactoring techniques"
+    risk_based_approach: "Prioritizes payment-critical paths given the $2M/month exposure"
+    phased_plan: "Proposes incremental phases, not 'stop everything and write tests'"
+    considers_team: "Addresses team skill and fear of refactoring"
+    quantifies_tradeoffs: "Provides concrete estimates of effort vs risk reduction"
+  anti_patterns:
+    test_everything: "Recommends testing everything at once or setting a coverage target first"
+    ignores_coupling: "Proposes unit tests without addressing the coupling problem"
+    stops_features: "Recommends halting all feature work to write tests"
+  passing_score: 6

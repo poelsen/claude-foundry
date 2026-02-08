@@ -1,0 +1,23 @@
+id: deep-001
+name: "Database Migration Strategy"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We need to migrate our PostgreSQL database from a single server to a sharded
+  setup. We have 500GB of data, 200 tables, and the app can't have more than
+  30 minutes of downtime. Plan this migration.
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about data distribution, query patterns, consistency needs"
+    considers_alternatives: "Compares at least 2 sharding strategies (hash, range, geographic, etc.)"
+    identifies_risks: "Discusses data consistency, rollback plan, query routing complexity"
+    migration_plan: "Proposes a phased migration approach"
+    asks_clarification: "Asks about data access patterns, growth projections, or consistency needs"
+    considers_downtime: "Addresses the 30-minute downtime constraint specifically"
+    rollback_plan: "Describes what happens if the migration fails partway through"
+    testing_strategy: "Mentions how to validate the migration (shadow reads, dual writes, etc.)"
+  anti_patterns:
+    jumps_to_implementation: "Immediately writes migration scripts"
+    single_strategy: "Only considers one sharding approach"
+    ignores_downtime: "Doesn't address the downtime constraint"
+  passing_score: 6

@@ -1,0 +1,23 @@
+id: creative-003
+name: "Solve Onboarding Without Documentation"
+category: creative_thinking
+skill: megamind-creative
+prompt: |
+  New engineers take 3 weeks to become productive on our codebase. We've tried
+  writing docs but they go stale within a month. How can we make onboarding
+  fast without relying on documentation that needs constant maintenance?
+rubric:
+  required_elements:
+    reframes_problem: "Identifies the real problem (not 'bad docs' but 'knowledge transfer')"
+    inverts_assumption: "Challenges the assumption that docs are the solution"
+    cross_domain: "Borrows from education, gaming, apprenticeship, or other fields"
+    multiple_ideas: "Generates at least 3 distinct approaches"
+    idea_count_5_plus: "Generates 5+ ideas before filtering"
+    self_maintaining: "At least one idea that doesn't require ongoing maintenance"
+    unconventional_option: "Includes a surprising or counter-intuitive approach"
+    hybrid_synthesis: "Combines ideas into a practical composite solution"
+  anti_patterns:
+    better_docs: "Primary solution is 'write better docs' or 'keep docs updated'"
+    single_approach: "Only considers one solution"
+    ignores_staleness: "Doesn't address the maintenance/staleness problem"
+  passing_score: 6

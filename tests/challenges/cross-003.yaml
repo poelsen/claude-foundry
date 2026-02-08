@@ -1,0 +1,29 @@
+id: cross-003
+name: "Legacy System Rewrite Stakeholder Conflict"
+category: cross_cutting
+prompt: |
+  You're leading the backend team. The situation:
+  - VP of Engineering wants a full rewrite from Python to Go for "performance and hiring"
+  - Your team estimates 18 months for the rewrite, during which feature work stops
+  - Sales has already promised a key client three new features shipping in 3 months
+  - Finance flagged that the current system has a 0.3% transaction error rate costing ~$50k/month
+  - The Python codebase is 8 years old, has some tech debt, but works
+  - Your team of 6 is split: 3 want the rewrite, 3 want to keep iterating
+  What do you recommend?
+rubric:
+  required_elements:
+    systematic_triage: "Proposes a structured framework for the decision, not just an opinion"
+    stakeholder_mapping: "Identifies and addresses each stakeholder's concerns (VP, Sales, Finance, team)"
+    considers_multiple_paths: "Evaluates at least 3 options (full rewrite, strangler fig, fix-in-place, hybrid)"
+    timeline_reality: "Addresses the 18-month estimate vs 3-month sales commitment conflict"
+    error_rate_analysis: "Analyzes whether the 0.3% error rate is a rewrite problem or a fixable bug"
+    team_dynamics: "Addresses the team split and morale implications"
+    risk_assessment: "Identifies risks of each approach (rewrite fails, clients churn, talent leaves)"
+    quantifies_impact: "Uses the $50k/month and other numbers to support analysis"
+    recommends_with_nuance: "Makes a clear recommendation while acknowledging tradeoffs"
+    escalation_criteria: "Defines decision points or milestones for revisiting the approach"
+  anti_patterns:
+    picks_side: "Immediately picks rewrite or keep-iterating without analysis"
+    ignores_stakeholder: "Ignores one or more stakeholder perspectives"
+    false_consensus: "Pretends there's an easy solution that satisfies everyone"
+  passing_score: 7

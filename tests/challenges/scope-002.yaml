@@ -1,0 +1,18 @@
+id: scope-002
+name: "Fix the Search"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Search is broken.
+rubric:
+  required_elements:
+    clarifies_intent: "Asks what 'broken' means (no results, wrong results, slow, errors, UI issue)"
+    identifies_assumptions: "Lists assumptions being made about the search system"
+    proposes_approach: "Suggests a concrete investigation or diagnostic plan"
+    asks_before_acting: "Asks for confirmation before proceeding with any fix"
+    measurement_plan: "Proposes specific diagnostic steps (check logs, reproduce, test queries)"
+    success_criteria: "Asks about or proposes what 'fixed' looks like"
+  anti_patterns:
+    jumps_to_fix: "Immediately starts rewriting search without understanding the problem"
+    assumes_scope: "Assumes what 'broken' means without asking"
+  passing_score: 4

@@ -1,0 +1,27 @@
+id: adversarial-002
+name: "Attack a Microservices Migration Plan"
+category: adversarial_analysis
+skill: megamind-adversarial
+prompt: |
+  The team wants to break our Django monolith into microservices. The plan:
+  1. Extract the user service first (auth, profiles, preferences)
+  2. Use REST between services
+  3. Share the database initially, split later
+  4. Deploy on Kubernetes
+  Timeline: 3 months. Team: 4 engineers.
+  Stress-test this plan.
+rubric:
+  required_elements:
+    states_plan: "Clearly restates the proposed plan before attacking it"
+    finds_3_weaknesses: "Identifies at least 3 concrete weaknesses in the plan"
+    shared_db_attack: "Specifically attacks the 'share database initially' decision"
+    timeline_attack: "Challenges the 3-month timeline with specific reasoning"
+    team_size_concern: "Questions whether 4 engineers can handle this scope"
+    inverts_approach: "Considers whether NOT doing microservices might be better"
+    second_round: "Attacks the surviving approach after initial hardening"
+    residual_risks: "After synthesis, explicitly states what risks remain"
+  anti_patterns:
+    approves_plan: "Approves the plan without significant criticism"
+    vague_concerns: "Raises only general concerns without specifics"
+    no_synthesis: "Only attacks without proposing a hardened alternative"
+  passing_score: 6

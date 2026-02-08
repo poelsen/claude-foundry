@@ -1,0 +1,23 @@
+id: creative-001
+name: "Unconventional Solution to Rate Limiting"
+category: creative_thinking
+skill: megamind-creative
+prompt: |
+  Our API is getting hammered by scrapers. Traditional rate limiting (token bucket,
+  sliding window) isn't working because they rotate IPs and API keys. We need a
+  creative solution that doesn't hurt legitimate users.
+rubric:
+  required_elements:
+    reframes_problem: "Restates the problem in a non-obvious way"
+    multiple_ideas: "Generates at least 3 distinct approaches"
+    cross_domain: "Borrows from another field (biology, economics, game theory, etc.)"
+    unconventional: "Includes at least one surprising or unconventional approach"
+    tradeoffs: "Discusses tradeoffs for proposed approaches"
+    idea_count_5_plus: "Generates 5 or more distinct ideas before filtering"
+    feasibility_gradient: "Ranks ideas by feasibility or effort, not just listing them"
+    hybrid_synthesis: "Combines elements from multiple ideas into a novel hybrid"
+  anti_patterns:
+    only_traditional: "Only suggests standard rate limiting variations"
+    single_approach: "Proposes only one solution"
+    no_analogy: "No cross-domain thinking or analogies"
+  passing_score: 6

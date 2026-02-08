@@ -1,0 +1,29 @@
+id: adversarial-005
+name: "Red-Team a Data Pipeline Architecture"
+category: adversarial_analysis
+skill: megamind-adversarial
+prompt: |
+  We built a data pipeline for our analytics team:
+  - CSV files uploaded daily by partners via SFTP
+  - Python script reads CSV with pandas, transforms, loads into Postgres
+  - No schema validation — we trust partner format since "it's always the same"
+  - No idempotency — if the script crashes, we rerun it manually
+  - Currently 500k rows/day, projected to hit 2M rows/day in 6 months
+  - Single Postgres instance, no read replicas
+  - Script runs as a cron job at 2am, takes ~45 minutes currently
+  Red-team this pipeline.
+rubric:
+  required_elements:
+    states_design: "Clearly restates the pipeline architecture before attacking"
+    schema_trust: "Attacks the 'trust partner format' assumption — schema drift, encoding, nulls"
+    idempotency_risk: "Identifies crash-and-rerun leading to duplicate data"
+    scale_projection: "Analyzes 4x growth impact on 45-min processing window and single Postgres"
+    data_integrity: "Finds data integrity risks (partial loads, no checksums, no row counts)"
+    security_surface: "Identifies SFTP + CSV as attack surface (injection, malformed data, path traversal)"
+    failure_modes: "Maps specific failure cascades (disk full, OOM on pandas, connection pool exhaustion)"
+    hardened_synthesis: "Proposes specific mitigations for the most critical vulnerabilities"
+  anti_patterns:
+    approves_design: "Says the pipeline is acceptable for current scale"
+    checklist_only: "Just lists data engineering best practices without engaging specifics"
+    no_mitigations: "Finds problems but doesn't suggest fixes"
+  passing_score: 6

@@ -1,0 +1,25 @@
+id: arch-004
+name: "Event-Driven Order Processing"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We have a synchronous Django monolith handling orders. The flow:
+  POST /orders → validate → charge Stripe → update inventory → send email → return 201
+  Average response time is 3.2 seconds. We process ~1000 orders/hour at peak.
+  The CTO wants to "go event-driven" for reliability and speed. But we need exactly-once
+  processing guarantees — duplicate charges would be catastrophic. How do we get there?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about current architecture and constraints"
+    considers_alternatives: "Evaluates multiple approaches (message queue, outbox pattern, saga, etc.)"
+    exactly_once_analysis: "Deeply addresses exactly-once semantics (idempotency keys, deduplication)"
+    migration_strategy: "Proposes incremental migration path from synchronous to event-driven"
+    failure_modes: "Analyzes failure modes (message loss, duplicate delivery, ordering)"
+    stripe_specific: "Addresses Stripe-specific concerns (idempotency keys, webhook handling)"
+    asks_priorities: "Asks about priorities or constraints before committing to an approach"
+    quantifies_tradeoffs: "Provides concrete comparisons of complexity, latency, and reliability"
+  anti_patterns:
+    ignores_exactly_once: "Glosses over the exactly-once requirement"
+    big_bang_migration: "Proposes rewriting everything at once instead of incremental migration"
+    over_engineers: "Proposes Kafka + microservices for 1000 orders/hour"
+  passing_score: 6

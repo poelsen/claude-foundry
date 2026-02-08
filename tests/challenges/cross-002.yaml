@@ -1,0 +1,25 @@
+id: cross-002
+name: "Production Incident: Intermittent Failures"
+category: cross_cutting
+prompt: |
+  Production is intermittently returning 500 errors. It started 2 hours ago.
+  Affects about 5% of requests. No recent deploys. The on-call engineer says
+  "the logs look normal." Customer support is getting complaints.
+  What do you do?
+rubric:
+  required_elements:
+    systematic_triage: "Proposes a structured investigation approach (not random guessing)"
+    asks_right_questions: "Asks about infrastructure, dependencies, traffic patterns, error details"
+    considers_multiple_causes: "Lists at least 3 possible root causes"
+    considers_intermittent: "Specifically addresses why it's intermittent, not constant"
+    immediate_mitigation: "Suggests immediate actions to reduce customer impact"
+    challenges_normal_logs: "Questions the 'logs look normal' claim — what else to check?"
+    correlation_analysis: "Suggests correlating with time, endpoints, users, regions, etc."
+    considers_external: "Considers external dependencies (DNS, CDN, cloud provider, third-party APIs)"
+    escalation_criteria: "Defines when to escalate or roll back"
+    post_mortem: "Mentions post-incident review or blameless retrospective"
+  anti_patterns:
+    guesses_cause: "Jumps to a specific root cause without investigation"
+    ignores_customers: "Focuses only on technical investigation, ignores customer impact"
+    single_hypothesis: "Only considers one possible cause"
+  passing_score: 7

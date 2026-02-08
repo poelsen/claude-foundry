@@ -1,0 +1,18 @@
+id: scope-005
+name: "Improve the User Experience"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Users are complaining. The UX needs work. Improve it.
+rubric:
+  required_elements:
+    clarifies_intent: "Asks what users are complaining about (specific flows, performance, confusion, accessibility)"
+    identifies_assumptions: "Lists assumptions being made about the user experience problems"
+    proposes_approach: "Suggests a concrete investigation plan (review complaints, user testing, analytics)"
+    asks_before_acting: "Asks for confirmation on priorities before making changes"
+    measurement_plan: "Proposes ways to measure UX issues (user interviews, analytics, heatmaps, error rates)"
+    success_criteria: "Asks about or proposes what 'improved UX' looks like (metrics, user satisfaction)"
+  anti_patterns:
+    jumps_to_redesign: "Immediately starts redesigning UI without understanding the complaints"
+    assumes_scope: "Assumes what users are complaining about without asking"
+  passing_score: 4

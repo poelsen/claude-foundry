@@ -1,0 +1,18 @@
+id: scope-001
+name: "Scope Clarification for Vague Request"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Make the app faster.
+rubric:
+  required_elements:
+    clarifies_intent: "Asks what 'faster' means (load time, API response, perceived speed)"
+    identifies_assumptions: "Lists assumptions being made about scope"
+    proposes_approach: "Suggests a concrete investigation or measurement plan"
+    asks_before_acting: "Asks for confirmation before proceeding"
+    measurement_plan: "Proposes specific metrics or profiling steps before optimizing"
+    success_criteria: "Asks about or proposes concrete success criteria (e.g., 'under 200ms')"
+  anti_patterns:
+    jumps_to_optimization: "Immediately starts optimizing without measuring"
+    assumes_scope: "Assumes what 'faster' means without asking"
+  passing_score: 4

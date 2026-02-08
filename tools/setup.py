@@ -146,6 +146,7 @@ LEARNED_SKILLS_DIR = REPO_ROOT / "skills" / "learned"
 
 SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
+    "megamind-deep", "megamind-creative", "megamind-adversarial",
 ]
 
 LSP_PLUGINS = {
@@ -853,6 +854,8 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
             if skill == "gui-threading" and "python-qt.md" in selected_langs:
                 skill_auto.add(i)
             if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
+                skill_auto.add(i)
+            if skill in ("megamind-deep", "megamind-creative"):
                 skill_auto.add(i)
 
     if interactive:

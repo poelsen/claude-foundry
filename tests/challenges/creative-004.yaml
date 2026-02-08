@@ -1,0 +1,25 @@
+id: creative-004
+name: "Reduce Alert Fatigue Without Missing Incidents"
+category: creative_thinking
+skill: megamind-creative
+prompt: |
+  Our on-call engineers get 200+ alerts per day. About 95% are noise (resolved
+  automatically or not actionable). But last month we missed a real P0 because
+  it was buried in the noise. We've already tried threshold tuning and it helped
+  a little but the fundamental problem remains. How do we fix alert fatigue
+  without risking missing real incidents?
+rubric:
+  required_elements:
+    reframes_problem: "Identifies the real problem (signal-to-noise ratio, not just volume)"
+    inverts_assumption: "Challenges assumptions about alerting (e.g., 'every metric needs an alert')"
+    cross_domain: "Borrows ideas from other fields (triage, signal processing, air traffic control, etc.)"
+    multiple_ideas: "Generates at least 3 distinct approaches"
+    idea_count_5_plus: "Generates 5+ ideas before filtering"
+    self_maintaining: "At least one idea that adapts automatically (ML-based, feedback loops, etc.)"
+    unconventional_option: "Includes a surprising or counter-intuitive approach"
+    hybrid_synthesis: "Combines ideas into a practical composite solution"
+  anti_patterns:
+    just_tune_thresholds: "Primary solution is 'tune thresholds better' or 'add more rules'"
+    single_approach: "Only considers one solution"
+    ignores_p0_risk: "Doesn't address the risk of missing real incidents"
+  passing_score: 6

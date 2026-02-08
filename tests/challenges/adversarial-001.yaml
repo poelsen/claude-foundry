@@ -1,0 +1,23 @@
+id: adversarial-001
+name: "Stress-Test a Caching Strategy"
+category: adversarial_analysis
+skill: megamind-adversarial
+prompt: |
+  We're adding Redis caching to our user profile endpoint. The plan is to cache
+  user profiles for 5 minutes with cache-aside pattern. Invalidate on profile update.
+  What could go wrong?
+rubric:
+  required_elements:
+    states_obvious: "Clearly states the proposed approach before attacking it"
+    finds_weaknesses: "Identifies at least 3 concrete weaknesses"
+    considers_edge_cases: "Discusses cache stampede, race conditions, or stale data"
+    inverts_approach: "Considers whether the opposite approach might work better"
+    specific_scenarios: "Provides specific failure scenarios, not vague concerns"
+    quantifies_risk: "Gives concrete numbers or thresholds where the approach breaks"
+    residual_risk_acknowledgment: "After hardening, explicitly states what risks remain"
+    second_round_attack: "Attacks the hardened approach a second time to find deeper issues"
+  anti_patterns:
+    approves_uncritically: "Approves the approach without finding problems"
+    vague_concerns: "Only raises vague concerns without specific scenarios"
+    no_alternatives: "Doesn't suggest any alternative or hardened approach"
+  passing_score: 6

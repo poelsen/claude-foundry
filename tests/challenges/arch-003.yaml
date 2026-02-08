@@ -1,0 +1,27 @@
+id: arch-003
+name: "Build vs Buy for Internal Tool"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We need an admin dashboard for our customer support team. Options on the table:
+  1. Extend our existing React app with admin pages
+  2. Use Django Admin (our backend is Django)
+  3. Buy Retool or similar low-code platform
+  We have 6 weeks, a team of 2 (one backend, one frontend), and the dashboard needs
+  to handle CRUD for users, orders, and subscriptions plus some custom workflows
+  (refunds, account merges). What should we do?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about complexity, longevity, and team skills"
+    evaluates_all_options: "Genuinely evaluates all three options with pros/cons"
+    timeline_analysis: "Assesses whether 6 weeks is realistic for each option"
+    custom_workflow_fit: "Specifically addresses how each option handles refunds/account merges"
+    total_cost_ownership: "Considers ongoing maintenance cost, not just build cost"
+    asks_clarification: "Asks about usage patterns, user count, or future requirements"
+    decision_framework: "Provides a framework or criteria for making the decision"
+    recommends_with_reasoning: "Makes a clear recommendation with explicit reasoning"
+  anti_patterns:
+    dismisses_options: "Dismisses one or more options without genuine evaluation"
+    ignores_constraints: "Ignores the 6-week timeline or 2-person team"
+    over_engineers: "Proposes building a custom framework instead of using available options"
+  passing_score: 6
