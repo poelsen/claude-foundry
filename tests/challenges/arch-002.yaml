@@ -1,0 +1,25 @@
+id: arch-002
+name: "Multi-Region Disaster Recovery Strategy"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We run a B2B SaaS platform (Django + Postgres) in a single AWS region (us-east-1).
+  We've had two outages this year from regional issues. The CEO wants "disaster recovery"
+  but we have a limited budget and a team of 4 engineers. Our RPO/RTO requirements
+  aren't formally defined, but customers expect <15min recovery. We have about 500GB
+  of data and 2000 daily active users. What's our DR strategy?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about budget, team capacity, and actual requirements"
+    rpo_rto_definition: "Helps define RPO and RTO targets before proposing solutions"
+    considers_alternatives: "Evaluates multiple DR approaches (active-passive, active-active, pilot light, backup-restore)"
+    cost_analysis: "Discusses cost implications of different DR tiers"
+    phased_approach: "Proposes incremental steps rather than a single big-bang migration"
+    data_replication: "Addresses Postgres replication strategy specifically"
+    considers_existing: "Considers the small team size and Django-specific constraints"
+    quantifies_tradeoffs: "Provides concrete comparisons of RTO/RPO/cost for each approach"
+  anti_patterns:
+    jumps_to_solution: "Immediately recommends multi-region active-active without analysis"
+    ignores_budget: "Proposes expensive solutions without addressing limited budget"
+    ignores_team_size: "Recommends complex architecture that a 4-person team can't maintain"
+  passing_score: 6

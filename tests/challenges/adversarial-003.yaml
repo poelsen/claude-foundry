@@ -1,0 +1,27 @@
+id: adversarial-003
+name: "Red-Team an Auth System Design"
+category: adversarial_analysis
+skill: megamind-adversarial
+prompt: |
+  We're building auth for our SaaS platform. The design:
+  - JWT tokens with 1-hour expiry, refresh tokens in httpOnly cookies
+  - bcrypt for password hashing
+  - OAuth2 for Google/GitHub SSO
+  - Rate limiting: 5 failed logins then 15-min lockout
+  - All endpoints require auth except /login, /register, /health
+  Red-team this design.
+rubric:
+  required_elements:
+    states_design: "Clearly restates the auth design before attacking"
+    token_attacks: "Finds weaknesses in JWT implementation (secret rotation, token revocation, etc.)"
+    session_attacks: "Identifies session management risks (fixation, hijacking, refresh token theft)"
+    edge_case_attacks: "Finds edge cases (race conditions in lockout, timing attacks, etc.)"
+    enumeration_risks: "Identifies user/account enumeration vectors"
+    inversion: "Considers fundamentally different auth approaches"
+    specific_scenarios: "Provides concrete attack scenarios, not just category names"
+    hardened_synthesis: "Proposes specific mitigations for found vulnerabilities"
+  anti_patterns:
+    approves_design: "Says the design is secure without finding issues"
+    checklist_only: "Just runs through OWASP categories without depth"
+    no_mitigations: "Finds problems but doesn't suggest fixes"
+  passing_score: 6

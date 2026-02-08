@@ -1,0 +1,24 @@
+id: creative-005
+name: "Code Review Process People Want to Do"
+category: creative_thinking
+skill: megamind-creative
+prompt: |
+  Our code review process is broken. PRs sit for 3-5 days before getting reviewed.
+  Large PRs get rubber-stamped. We tried a 24-hour SLA but it just led to superficial
+  approvals. Senior engineers say they don't have time. Junior engineers say reviews
+  are intimidating. How do we make code review a process people actually want to do?
+rubric:
+  required_elements:
+    reframes_problem: "Identifies the real problem (incentive/culture, not just process)"
+    inverts_assumption: "Challenges assumptions about code review (e.g., 'review must be async' or 'review = gate')"
+    cross_domain: "Borrows from other fields (pair programming, editing, peer feedback, game design, etc.)"
+    multiple_ideas: "Generates at least 3 distinct approaches"
+    idea_count_5_plus: "Generates 5+ ideas before filtering"
+    self_maintaining: "At least one idea that naturally sustains itself without enforcement"
+    unconventional_option: "Includes a surprising or counter-intuitive approach"
+    hybrid_synthesis: "Combines ideas into a practical composite solution"
+  anti_patterns:
+    more_rules: "Primary solution is stricter enforcement or more process"
+    single_approach: "Only considers one solution"
+    ignores_culture: "Focuses only on tooling without addressing the human/cultural aspects"
+  passing_score: 6

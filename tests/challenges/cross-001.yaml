@@ -1,0 +1,24 @@
+id: cross-001
+name: "Ambiguous Feature Request From Non-Technical Stakeholder"
+category: cross_cutting
+prompt: |
+  The CEO says: "We need AI in our product. Competitors have it. Our customers
+  are asking for it. Make it happen, but don't blow the budget." That's all
+  the context you have.
+rubric:
+  required_elements:
+    clarifies_what_ai_means: "Asks what 'AI' means in this context (chatbot, recommendations, automation, etc.)"
+    identifies_stakeholders: "Considers CEO, customers, engineering team, and budget holder perspectives"
+    surfaces_assumptions: "Lists assumptions about budget, timeline, team capability, data availability"
+    explores_alternatives: "Considers multiple approaches at different cost/complexity levels"
+    questions_premise: "Challenges whether AI is actually what customers want vs. what competitors have"
+    considers_risks: "Identifies what could go wrong (cost overruns, poor UX, data privacy)"
+    proposes_investigation: "Suggests concrete steps to de-risk before committing (prototype, survey, etc.)"
+    asks_before_acting: "Asks for confirmation before proposing a solution"
+    considers_mvp: "Suggests a minimum viable approach to test the concept"
+    competitive_analysis: "Asks about or discusses what competitors actually did"
+  anti_patterns:
+    jumps_to_solution: "Immediately proposes a specific AI implementation"
+    accepts_premise: "Doesn't question whether AI is the right answer"
+    ignores_budget: "Proposes expensive solutions without addressing budget constraint"
+  passing_score: 7

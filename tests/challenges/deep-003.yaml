@@ -1,0 +1,26 @@
+id: deep-003
+name: "API Design With Conflicting Requirements"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Design a REST API for a multi-tenant SaaS app. Requirements from different teams:
+  - Mobile team: needs fast, minimal responses (<100ms)
+  - Analytics team: needs full audit trails on every mutation
+  - Enterprise clients: need field-level permissions per tenant
+  - DevOps: wants stateless services with no server-side sessions
+  How do you reconcile these?
+rubric:
+  required_elements:
+    identifies_conflicts: "Explicitly names the tensions between requirements"
+    stakeholder_analysis: "Considers each team's perspective and priorities"
+    constraint_decomposition: "Breaks down which constraints are hard vs soft"
+    versioning_strategy: "Discusses API versioning or evolution approach"
+    layered_solution: "Proposes different layers handling different concerns"
+    asks_priorities: "Asks which requirements take precedence or asks for more context"
+    concrete_patterns: "Suggests specific patterns (CQRS, middleware, field masks, etc.)"
+    breaking_change_assessment: "Considers how the design affects existing clients"
+  anti_patterns:
+    ignores_conflicts: "Treats all requirements as compatible without addressing tensions"
+    single_perspective: "Only considers one team's needs"
+    over_engineers: "Proposes unnecessarily complex architecture for all cases"
+  passing_score: 6

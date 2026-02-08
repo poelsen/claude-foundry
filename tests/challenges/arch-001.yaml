@@ -1,0 +1,22 @@
+id: arch-001
+name: "Architecture Decision Under Ambiguity"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Add real-time notifications to our Django app. Users should get notified
+  when something happens. We have about 50k daily active users.
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about scale, notification types, delivery channels"
+    considers_alternatives: "Mentions at least 2 architectural approaches (e.g., WebSockets vs SSE vs polling)"
+    identifies_risks: "Discusses what could go wrong (scale, reliability, cost)"
+    asks_clarification: "Asks before committing to an approach"
+    considers_existing: "Considers existing infrastructure and constraints"
+    proposes_phased_approach: "Suggests incremental rollout or phased implementation"
+    considers_monitoring: "Mentions observability, monitoring, or metrics for the new system"
+    quantifies_tradeoffs: "Provides concrete comparisons (latency, cost, complexity) not just vague pros/cons"
+  anti_patterns:
+    jumps_to_code: "Immediately writes implementation code"
+    single_solution: "Only considers one approach without alternatives"
+    ignores_scale: "Doesn't consider the 50k DAU constraint"
+  passing_score: 6

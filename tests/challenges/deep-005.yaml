@@ -1,0 +1,25 @@
+id: deep-005
+name: "Zero-Downtime Deployment From Scratch"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Our deployment process: SSH into the server, git pull, pip install, restart gunicorn.
+  We have 45 minutes of downtime per week from deployments (3 deploys x 15 minutes each).
+  No CI/CD pipeline. Stack: Django + Celery + Postgres + Redis on 2 servers behind nginx.
+  The team (3 devs) wants zero-downtime deployments but nobody has done this before
+  and we don't have a dedicated DevOps person. How do we get there?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about current setup, team skills, and constraints"
+    considers_alternatives: "Evaluates multiple deployment approaches (blue-green, rolling, canary, containers)"
+    phased_approach: "Proposes incremental steps from current state to zero-downtime"
+    migration_handling: "Addresses database migrations during zero-downtime deploys"
+    celery_consideration: "Specifically addresses Celery worker deployment (graceful shutdown, task draining)"
+    ci_cd_pipeline: "Includes CI/CD pipeline as part of the solution"
+    considers_team: "Accounts for the team having no DevOps experience"
+    quantifies_tradeoffs: "Compares complexity, setup time, and operational overhead of approaches"
+  anti_patterns:
+    jumps_to_kubernetes: "Immediately recommends Kubernetes or complex orchestration"
+    ignores_database: "Proposes deployment strategy without addressing migration handling"
+    big_bang: "Suggests implementing everything at once instead of incrementally"
+  passing_score: 6

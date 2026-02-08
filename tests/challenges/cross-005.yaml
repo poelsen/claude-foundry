@@ -1,0 +1,30 @@
+id: cross-005
+name: "Technical Debt Prioritization Under Pressure"
+category: cross_cutting
+prompt: |
+  You're the tech lead. Budget: 1 engineer-month to address technical debt. Three candidates:
+  1. Test coverage: Core payment service has 0% test coverage. It breaks in production
+     about once a week, requiring 2-4 hours of manual fixing each time.
+  2. Scaling bottleneck: The recommendation engine uses an O(n^2) algorithm. Currently
+     handles 10k products fine, but the catalog is growing 20%/month. At current growth,
+     it'll timeout at ~50k products (roughly 6 months from now).
+  3. Security vulnerability: A deprecated authentication library has a known CVE
+     (CVSS 7.5). No known exploits in the wild yet, but it's in the NVD.
+  Pick one. Justify why the other two can wait.
+rubric:
+  required_elements:
+    systematic_triage: "Uses a structured framework (risk x impact x urgency) for prioritization"
+    analyzes_all_three: "Provides substantive analysis of each debt item, not just the chosen one"
+    quantifies_impact: "Uses the given numbers to calculate costs (e.g., weekly hours lost, months to failure)"
+    timeline_assessment: "Assesses when each problem becomes critical"
+    risk_calibration: "Distinguishes between current impact and future risk for each item"
+    considers_dependencies: "Considers whether fixing one helps or blocks fixing others"
+    justifies_deferrals: "Explicitly justifies why the unchosen items can wait with specific reasoning"
+    mitigation_for_deferred: "Proposes stopgap measures for the items not chosen"
+    recommends_clearly: "Makes a clear, defensible choice with explicit reasoning"
+    acknowledges_uncertainty: "Acknowledges what could change the priority (e.g., exploit published)"
+  anti_patterns:
+    picks_without_analysis: "Picks one without analyzing the others"
+    refuses_to_choose: "Tries to do all three or refuses to prioritize"
+    ignores_numbers: "Doesn't use the provided quantitative data in the analysis"
+  passing_score: 7

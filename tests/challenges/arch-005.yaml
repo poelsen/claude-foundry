@@ -1,0 +1,25 @@
+id: arch-005
+name: "API Gateway Strategy for Growing Org"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  We have 12 microservices, each exposing REST APIs directly to clients. Each service
+  manages its own authentication, rate limiting, and API versioning. The frontend team
+  is frustrated because they need to know about all 12 service URLs. The platform team
+  wants to introduce an API gateway, but senior engineers are worried about creating
+  a single point of failure and a deployment bottleneck. How should we approach this?
+rubric:
+  required_elements:
+    identifies_assumptions: "Lists assumptions about current pain points and team structure"
+    considers_alternatives: "Evaluates multiple gateway approaches (centralized, BFF, mesh, lightweight proxy)"
+    spof_analysis: "Directly addresses the single-point-of-failure concern with specific mitigations"
+    bottleneck_analysis: "Addresses the deployment bottleneck concern (config-driven vs code-driven)"
+    migration_path: "Proposes incremental adoption strategy, not big-bang"
+    considers_existing: "Accounts for 12 services already having their own auth/rate-limiting"
+    asks_priorities: "Asks about priorities, team ownership, or deployment frequency"
+    quantifies_tradeoffs: "Provides concrete comparisons of latency overhead, operational complexity"
+  anti_patterns:
+    jumps_to_product: "Immediately recommends a specific product (Kong, Envoy) without analysis"
+    ignores_concerns: "Dismisses the SPOF and bottleneck concerns without addressing them"
+    over_engineers: "Proposes service mesh for a 12-service org without considering simpler options"
+  passing_score: 6

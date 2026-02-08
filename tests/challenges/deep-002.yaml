@@ -1,0 +1,23 @@
+id: deep-002
+name: "Refactoring a Tangled Codebase"
+category: reasoning_depth
+skill: megamind-deep
+prompt: |
+  Our main Django app has a 3000-line views.py with 40 view functions, circular
+  imports between 5 modules, and no tests. Business logic is mixed into views.
+  The team wants to refactor but can't stop shipping features. Plan the refactor.
+rubric:
+  required_elements:
+    maps_dependencies: "Identifies or asks about the dependency graph between modules"
+    surfaces_assumptions: "Lists assumptions about team size, deployment, feature velocity"
+    phased_approach: "Proposes incremental refactoring, not a big-bang rewrite"
+    risk_assessment: "Identifies what could break during refactoring"
+    test_strategy: "Proposes adding tests before or during refactoring"
+    prioritization: "Suggests which modules to refactor first and why"
+    rollback_safety: "Describes how to revert if a refactoring step breaks production"
+    parallel_work: "Addresses how to continue shipping features during the refactor"
+  anti_patterns:
+    big_bang_rewrite: "Proposes rewriting everything from scratch"
+    no_tests_mentioned: "Doesn't mention testing at all"
+    ignores_team_constraints: "Doesn't consider the team's need to ship features"
+  passing_score: 6

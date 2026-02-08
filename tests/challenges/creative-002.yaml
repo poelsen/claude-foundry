@@ -1,0 +1,23 @@
+id: creative-002
+name: "Redesign a Legacy CLI as Something Better"
+category: creative_thinking
+skill: megamind-creative
+prompt: |
+  Our internal deployment tool is a 50-command CLI that nobody can remember how to use.
+  The team spends 30 minutes per deploy looking up flags. Redesign the interface.
+  Don't just add --help — think bigger.
+rubric:
+  required_elements:
+    reframes_problem: "Identifies the real problem beyond 'bad CLI' (cognitive load, discoverability, etc.)"
+    multiple_paradigms: "Considers at least 3 different interface paradigms (TUI, chat, wizard, visual, etc.)"
+    cross_domain_analogy: "Draws from another domain (games, cooking, music, etc.) for inspiration"
+    idea_count_5_plus: "Generates 5+ distinct ideas before filtering"
+    unconventional_option: "Includes at least one truly surprising approach"
+    feasibility_gradient: "Ranks approaches by implementation effort"
+    hybrid_synthesis: "Combines elements from multiple ideas"
+    preserves_power: "Ensures power users aren't slowed down by the redesign"
+  anti_patterns:
+    just_better_help: "Only suggests improving --help or adding docs"
+    single_paradigm: "Only considers one interface approach"
+    ignores_power_users: "Redesign only helps beginners, slows experts"
+  passing_score: 6

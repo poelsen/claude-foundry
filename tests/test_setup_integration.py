@@ -124,7 +124,7 @@ class TestExistingClaudeMdWithoutMarker:
     """Tests for projects with existing CLAUDE.md without marker."""
 
     def test_non_interactive_skips_without_marker(self, temp_project):
-        """Non-interactive mode should skip CLAUDE.md without marker."""
+        """Non-interactive mode should skip entire project without marker."""
         old_content = """# My Project
 
 Existing content without marker
@@ -133,7 +133,7 @@ Existing content without marker
 
         result = cmd_init(temp_project, interactive=False)
 
-        assert result is True
+        assert result is False
         # CLAUDE.md should be unchanged
         assert (temp_project / "CLAUDE.md").read_text() == old_content
         # No backup created
@@ -256,22 +256,22 @@ class TestEdgeCases:
     """Edge case tests."""
 
     def test_empty_claude_md_file_skipped(self, temp_project):
-        """Empty CLAUDE.md without marker should be skipped in non-interactive."""
+        """Empty CLAUDE.md without marker should skip entire project."""
         (temp_project / "CLAUDE.md").write_text("")
 
         result = cmd_init(temp_project, interactive=False)
 
-        assert result is True
+        assert result is False
         # Empty file stays empty (skipped)
         assert (temp_project / "CLAUDE.md").read_text() == ""
 
     def test_whitespace_only_claude_md(self, temp_project):
-        """Whitespace-only CLAUDE.md should be handled."""
+        """Whitespace-only CLAUDE.md should skip entire project."""
         (temp_project / "CLAUDE.md").write_text("   \n\n   \n")
 
         result = cmd_init(temp_project, interactive=False)
 
-        assert result is True
+        assert result is False
 
     def test_unicode_in_claude_md(self, temp_project):
         """Unicode in existing CLAUDE.md should be preserved."""

@@ -1,0 +1,28 @@
+id: adversarial-004
+name: "Stress-Test a Feature Flag Rollout"
+category: adversarial_analysis
+skill: megamind-adversarial
+prompt: |
+  We're rolling out a new payment flow behind feature flags. The system:
+  - Percentage-based rollout: 5% → 25% → 50% → 100% over 4 weeks
+  - Flag evaluation: hash(user_id) % 100 < percentage
+  - Sticky per user-id so users don't flip between old/new
+  - No kill switch — to roll back we redeploy with flag removed
+  - Payment flow: cart → checkout → Stripe charge → confirmation
+  - Flags cached in memory, refreshed every 60 seconds
+  Stress-test this rollout plan. Find everything that could go wrong.
+rubric:
+  required_elements:
+    states_design: "Clearly restates the rollout mechanism before attacking"
+    kill_switch_gap: "Identifies the lack of kill switch as a critical risk (60s cache + redeploy = minutes of exposure)"
+    hash_distribution: "Questions the hash function for uniform distribution across small percentages"
+    payment_consistency: "Finds risk of flag changing mid-payment-flow (between cart and charge)"
+    cache_staleness: "Identifies 60s cache as a window for inconsistent behavior across instances"
+    rollback_scenarios: "Explores what happens to in-flight transactions during rollback"
+    monitoring_gaps: "Identifies missing monitoring for flag-specific error rates"
+    specific_scenarios: "Provides concrete failure scenarios with step-by-step sequences"
+  anti_patterns:
+    approves_plan: "Says the rollout plan is solid without finding issues"
+    generic_advice: "Gives generic feature flag advice without engaging the specifics"
+    no_mitigations: "Finds problems but doesn't suggest fixes"
+  passing_score: 6

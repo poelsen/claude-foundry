@@ -13,6 +13,78 @@ Skills are reusable knowledge modules that provide domain-specific patterns, bes
 
 **Relationship:** `python-qt-gui` extends `gui-threading`. Read the base skill first.
 
+### Megamind Reasoning
+
+| Skill | Purpose | When to Use |
+|-------|---------|-------------|
+| [megamind-deep](megamind-deep/) | Systematic analysis, multiple approaches, risk assessment | Complex or ambiguous problems |
+| [megamind-creative](megamind-creative/) | Structured creative chaos — pattern-mining, mutation, analogies, compression | Creative tasks, hard problems, when conventional approaches fail |
+| [megamind-adversarial](megamind-adversarial/) | Red-team — attack the obvious approach, stress-test | When you need to find weaknesses |
+
+**Auto-selected:** `megamind-deep`, `megamind-creative`. The adversarial variant is opt-in.
+
+#### Benchmark Results (Opus 4.6, 30 challenges, 5 runs each)
+
+The megamind skills are evaluated against a benchmark suite of 30 challenges across 6 categories. Each challenge has a rubric with required elements and anti-patterns, scored by a Claude-as-judge pipeline.
+
+**Overall Performance:**
+
+| Mode | Avg Score | Pass Rate | Variance | Delta vs Baseline |
+|---|---|---|---|---|
+| Baseline (no skill) | 5.0 | 62% | high | — |
+| megamind-deep | 6.7 | 82% | low | +1.7 |
+| megamind-creative | 6.4 | 78% | low | +1.4 |
+| megamind-adversarial | 6.5 | 80% | low | +1.5 |
+
+**Per-Category Breakdown (best mode bolded):**
+
+| Category | Challenges | Baseline | Deep | Creative | Adversarial | Winner |
+|---|---|---|---|---|---|---|
+| adversarial | 5 | 6.5 | 7.5 | 7.6 | **7.7** | adversarial |
+| arch | 5 | 6.2 | **7.3** | 6.5 | 6.6 | deep |
+| creative | 5 | 4.7 | 7.0 | **8.0** | 7.0 | creative |
+| cross | 5 | 9.0 | **9.5** | 9.0 | 9.3 | deep |
+| deep | 5 | 5.6 | **7.0** | 6.6 | 6.9 | deep |
+| scope | 5 | 1.4 | 2.4 | 1.8 | **2.6** | adversarial |
+
+**Key findings:**
+- Each skill dominates its target category (creative on creative tasks, adversarial on adversarial tasks, deep on arch/deep/cross)
+- All skills dramatically reduce variance vs baseline — more consistent results
+- Scope challenges expose a fundamental weakness: Opus jumps to solutions instead of asking clarifying questions for vague prompts, even with skills active
+- Cross-cutting challenges (stakeholder conflicts, incident response) score highest across all modes
+
+**Running the benchmark:**
+
+```bash
+# Full run (30 challenges x 4 modes x 5 runs = 600 combos)
+python3 tools/run_benchmark.py --local --workers 24 --runs 5 --save results/output.json
+
+# Single challenge smoke test
+python3 tools/run_benchmark.py --local --workers 1 --runs 1 --challenges arch-001
+
+# Specific skill only (always includes baseline)
+python3 tools/run_benchmark.py --local --skill megamind-deep --runs 3
+
+# Compare against saved baseline
+python3 tools/run_benchmark.py --local --runs 5 --save results/new.json --compare results/old.json
+
+# API mode (requires ANTHROPIC_API_KEY)
+ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --runs 2
+```
+
+#### Challenge Categories
+
+Challenges are YAML files in `tests/challenges/`. Each defines a prompt, required rubric elements, anti-patterns, and a passing score.
+
+| Category | Count | Elements | Anti-patterns | Passing | Tests |
+|---|---|---|---|---|---|
+| adversarial | 5 | 8 | 3 | 6 | Red-teaming designs (caching, auth, feature flags, migrations, pipelines) |
+| arch | 5 | 8 | 3 | 6 | Architecture decisions under ambiguity (DR strategy, build vs buy, event-driven, API gateway) |
+| creative | 5 | 8 | 3 | 6 | Creative problem-solving (rate limiting, CLI redesign, onboarding, alert fatigue, code review) |
+| cross | 5 | 10 | 3 | 7 | Cross-cutting concerns (stakeholder conflicts, incidents, security breaches, tech debt) |
+| deep | 5 | 8 | 3 | 6 | Deep reasoning (DB migration, refactoring, API design, testing strategy, zero-downtime deploys) |
+| scope | 5 | 6 | 2 | 4 | Scope clarification for vague requests ("make it faster", "fix search", "improve UX") |
+
 ### Specialized Domains
 
 | Skill | Purpose | When to Use |
