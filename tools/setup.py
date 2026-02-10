@@ -147,7 +147,7 @@ LEARNED_SKILLS_DIR = REPO_ROOT / "skills" / "learned"
 SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
     "megamind-deep", "megamind-creative", "megamind-adversarial",
-    "update-foundry",
+    "update-foundry", "learn", "learn-recall", "snapshot-list",
 ]
 
 LSP_PLUGINS = {
@@ -581,11 +581,28 @@ def copy_agents(project: Path, agents: list[str]) -> None:
             shutil.copy2(src, dest / agent)
 
 
+def _command_skill_parent(command_stem: str) -> str | None:
+    """Return the parent skill name for a command, or None if not skill-associated.
+
+    A command is skill-associated if its stem matches a skill name exactly,
+    or if its stem starts with a skill name followed by a hyphen (e.g.,
+    'update-foundry-check' belongs to the 'update-foundry' skill).
+    """
+    if command_stem in SKILLS:
+        return command_stem
+    # Check for prefix match (longest match first to handle nested names)
+    for skill in sorted(SKILLS, key=len, reverse=True):
+        if command_stem.startswith(skill + "-"):
+            return skill
+    return None
+
+
 def copy_commands(project: Path, selected_skills: list[str] | None = None) -> None:
     """Copy slash commands to the project.
 
-    Skill-associated commands (those matching a skill name in SKILLS) are only
-    copied when the corresponding skill is selected.
+    Skill-associated commands are only copied when the corresponding skill is
+    selected. A command is skill-associated if its name matches a skill exactly
+    or starts with a skill name (e.g., update-foundry-check → update-foundry).
     """
     if not COMMANDS_DIR.is_dir():
         return
@@ -597,9 +614,9 @@ def copy_commands(project: Path, selected_skills: list[str] | None = None) -> No
     for src in COMMANDS_DIR.iterdir():
         if src.suffix != ".md":
             continue
-        name = src.stem
-        # Skip skill-associated commands unless the skill is selected
-        if name in SKILLS and name not in selected_skills:
+        parent_skill = _command_skill_parent(src.stem)
+        # Skip skill-associated commands unless the parent skill is selected
+        if parent_skill and parent_skill not in selected_skills:
             continue
         eligible.add(src.name)
     # Remove stale commands not in eligible set
@@ -871,7 +888,9 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
             skill_auto.add(i)
         if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
             skill_auto.add(i)
-        if skill.startswith("megamind-") or skill == "update-foundry":
+        if skill.startswith("megamind-") or skill in (
+            "update-foundry", "learn", "learn-recall", "snapshot-list",
+        ):
             skill_auto.add(i)
 
     if interactive:

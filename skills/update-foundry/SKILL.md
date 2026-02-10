@@ -9,13 +9,13 @@ allowed-tools: Bash(bash *)
 
 ## Usage
 
-- `/update-foundry` — Check and apply update
-- `/update-foundry --check` — Check only
-- `/update-foundry --interactive` — Full interactive menu
+- `/update-foundry` — Check for updates and apply if available
+- `/update-foundry-check` — Check only (separate command)
+- `/update-foundry-interactive` — Full interactive menu (separate command)
 
 ## Instructions
 
-Run the update script, passing through user arguments:
+Run the update script:
 
 ```bash
 bash .claude/skills/update-foundry/scripts/update-foundry.sh $ARGUMENTS
