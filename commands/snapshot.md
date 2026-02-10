@@ -1,14 +1,12 @@
-# /snapshot - Session Context Snapshots
+# /snapshot - Capture Session Context
 
-**Model:** opus for capture/restore (judgment), haiku for --list (mechanical)
+**Model:** opus (requires judgment to identify important context)
 
-## Usage
+Capture the current session state to a snapshot file for later resumption.
 
-- `/snapshot` — Capture current session
-- `/snapshot --restore` — Resume from most recent
-- `/snapshot --list` — Show all snapshots
+**Related commands:** `/snapshot-list` to view all snapshots, `/snapshot-restore` to resume from one.
 
-## Capture (default)
+## Process
 
 Extract from session: active task, key decisions, files modified, open questions, next steps, user preferences.
 
@@ -38,11 +36,3 @@ status: in_progress | completed | blocked
 ```
 
 Guidelines: ~5KB max, summarize don't transcribe, use `file:line` refs not code snippets, max 5 decisions / 10 files / 5 questions. Keep 10 most recent, prune older.
-
-## Restore (`--restore`)
-
-Read most recent snapshot, present contents. If auto-generated with `trigger:` frontmatter, also read referenced transcript. Ask user which threads to continue.
-
-## List (`--list`)
-
-Show all snapshots: filename, date, goal, status.
