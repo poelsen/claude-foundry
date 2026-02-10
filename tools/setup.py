@@ -33,7 +33,7 @@ CLAUDE_FOUNDRY_HEADER_TEMPLATE = """{marker_start}
 Read rules in `.claude/rules/` before making changes:
 {rules_list}
 
-## Environment
+## Foundry Defaults
 
 ```bash
 {env_commands}
@@ -52,45 +52,22 @@ Read `docs/` for detailed project documentation (if it exists).
 {marker_end}
 """
 
+# Only languages with near-universal toolchains get default commands.
+# Languages with fragmented build systems (C, C++, Node.js, React) are
+# omitted — users add their own commands in the ## Environment section
+# above the claude-foundry marker.
 ENVIRONMENT_SNIPPETS = {
     "python.md": {
         "setup": "uv venv && uv pip install -e .[dev]",
         "test": "uv run pytest",
-        "lint": "uv run ruff check src tests",
-        "format": "uv run ruff format src tests",
     },
     "rust.md": {
         "setup": "cargo build",
         "test": "cargo test",
-        "lint": "cargo clippy",
-        "format": "cargo fmt",
     },
     "go.md": {
         "setup": "go mod download",
         "test": "go test ./...",
-        "lint": "golangci-lint run",
-        "format": "go fmt ./...",
-    },
-    "nodejs.md": {
-        "setup": "npm install",
-        "test": "npm test",
-        "lint": "npm run lint",
-    },
-    "react.md": {
-        "setup": "npm install",
-        "test": "npm test",
-        "lint": "npm run lint",
-        "dev": "npm run dev",
-    },
-    "c.md": {
-        "setup": "mkdir -p build && cd build && cmake ..",
-        "build": "cmake --build build",
-        "test": "ctest --test-dir build",
-    },
-    "cpp.md": {
-        "setup": "mkdir -p build && cd build && cmake ..",
-        "build": "cmake --build build",
-        "test": "ctest --test-dir build",
     },
 }
 
@@ -535,9 +512,20 @@ def generate_claude_md(
     deployed_rules: list[str],
     selected_langs: set[str],
 ) -> str:
-    """Generate a new CLAUDE.md with claude-foundry header."""
+    """Generate a new CLAUDE.md with claude-foundry header.
+
+    Includes a user-editable Environment section above the marker for
+    project-specific build/test/lint commands. This section is never
+    overwritten by setup.py on subsequent runs.
+    """
     header = generate_claude_foundry_header(deployed_rules, selected_langs)
     return f"""# {project_name}
+
+## Environment
+
+```bash
+# Add your project's build, test, and lint commands here
+```
 
 {header}
 """

@@ -79,18 +79,20 @@ class TestGenerateClaudeFoundryHeader:
         assert "go mod download" in header
         assert "go test" in header
 
-    def test_includes_nodejs_env_commands(self):
+    def test_nodejs_has_no_env_commands(self):
+        """Node.js has fragmented tooling — no default snippets."""
         header = generate_claude_foundry_header(["nodejs.md"], {"nodejs.md"})
-        assert "npm install" in header
-        assert "npm test" in header
+        assert "npm install" not in header
+        assert "npm test" not in header
+        assert "No language-specific commands" in header
 
     def test_multiple_languages(self):
         header = generate_claude_foundry_header(
-            ["python.md", "nodejs.md"],
-            {"python.md", "nodejs.md"},
+            ["python.md", "rust.md"],
+            {"python.md", "rust.md"},
         )
         assert "uv" in header
-        assert "npm" in header
+        assert "cargo" in header
 
     def test_empty_rules_list(self):
         header = generate_claude_foundry_header([], set())
@@ -219,6 +221,22 @@ class TestGenerateClaudeMd:
         assert "`python.md`" in result
         assert "`security.md`" in result
 
+    def test_user_environment_section_above_marker(self):
+        """New CLAUDE.md has user Environment section above the foundry marker."""
+        result = generate_claude_md("test", ["python.md"], {"python.md"})
+        env_pos = result.find("## Environment")
+        marker_pos = result.find(CLAUDE_FOUNDRY_MARKER_START)
+        assert env_pos < marker_pos
+        assert "Add your project" in result
+
+    def test_foundry_defaults_inside_marker(self):
+        """Foundry Defaults section is inside the marker."""
+        result = generate_claude_md("test", ["python.md"], {"python.md"})
+        marker_start = result.find(CLAUDE_FOUNDRY_MARKER_START)
+        marker_end = result.find(CLAUDE_FOUNDRY_MARKER_END)
+        foundry_pos = result.find("## Foundry Defaults")
+        assert marker_start < foundry_pos < marker_end
+
 
 class TestContextLoad:
     """Tests for context load of different configurations.
@@ -257,6 +275,7 @@ class TestContextLoad:
         result = generate_claude_md("fullstack", rules, langs)
 
         # Should be under 3000 chars even with many rules
+        # (includes user Environment section above marker)
         assert len(result) < 3000
         lines = result.count("\n")
         assert lines < 80
