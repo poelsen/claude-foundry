@@ -44,8 +44,9 @@ python3 tools/setup.py init /path/to/your/project
 From any configured project, run the `/update-foundry` slash command inside a Claude Code session:
 
 ```
-/update-foundry           # Check for new release, download, and apply
-/update-foundry --check   # Just check if an update is available
+/update-foundry                # Check for new release, download, and apply
+/update-foundry --check        # Just check if an update is available
+/update-foundry --interactive  # Full interactive menu to add/change selections
 ```
 
 `/update-foundry` checks the GitHub releases API, downloads the latest tarball, and re-runs `setup.py init` non-interactively using your saved selections from the manifest. Works the same regardless of how you bootstrapped.
