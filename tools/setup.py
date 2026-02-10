@@ -580,20 +580,34 @@ def copy_agents(project: Path, agents: list[str]) -> None:
             shutil.copy2(src, dest / agent)
 
 
-def copy_commands(project: Path) -> None:
-    """Copy all slash commands to the project."""
+def copy_commands(project: Path, selected_skills: list[str] | None = None) -> None:
+    """Copy slash commands to the project.
+
+    Skill-associated commands (those matching a skill name in SKILLS) are only
+    copied when the corresponding skill is selected.
+    """
     if not COMMANDS_DIR.is_dir():
         return
+    selected_skills = selected_skills or []
     dest = project / ".claude" / "commands"
     dest.mkdir(parents=True, exist_ok=True)
-    # Remove stale commands not in source
-    source_names = {f.name for f in COMMANDS_DIR.iterdir() if f.suffix == ".md"}
-    for existing in dest.iterdir():
-        if existing.suffix == ".md" and existing.name not in source_names:
-            existing.unlink()
+    # Determine which commands to copy
+    eligible = set()
     for src in COMMANDS_DIR.iterdir():
-        if src.suffix == ".md":
-            shutil.copy2(src, dest / src.name)
+        if src.suffix != ".md":
+            continue
+        name = src.stem
+        # Skip skill-associated commands unless the skill is selected
+        if name in SKILLS and name not in selected_skills:
+            continue
+        eligible.add(src.name)
+    # Remove stale commands not in eligible set
+    for existing in dest.iterdir():
+        if existing.suffix == ".md" and existing.name not in eligible:
+            existing.unlink()
+    # Copy eligible commands
+    for name in eligible:
+        shutil.copy2(COMMANDS_DIR / name, dest / name)
 
 
 def discover_learned_categories() -> list[str]:
@@ -850,13 +864,14 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
         skill_auto = _manifest_indices(SKILLS, "skills")
     else:
         skill_auto = set()
-        for i, skill in enumerate(SKILLS):
-            if skill == "gui-threading" and "python-qt.md" in selected_langs:
-                skill_auto.add(i)
-            if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
-                skill_auto.add(i)
-            if skill in ("megamind-deep", "megamind-creative"):
-                skill_auto.add(i)
+    # Always include megamind skills and context-dependent skills
+    for i, skill in enumerate(SKILLS):
+        if skill == "gui-threading" and "python-qt.md" in selected_langs:
+            skill_auto.add(i)
+        if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
+            skill_auto.add(i)
+        if skill.startswith("megamind-"):
+            skill_auto.add(i)
 
     if interactive:
         skill_selected = toggle_menu("Skills", SKILLS, skill_auto)
@@ -966,8 +981,8 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     if selected_agents:
         copy_agents(project, selected_agents)
 
-    # Commands
-    copy_commands(project)
+    # Commands (pass selected_skills so skill commands are conditionally included)
+    copy_commands(project, selected_skills)
 
     # Skills
     if selected_skills:
