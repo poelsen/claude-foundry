@@ -147,6 +147,7 @@ LEARNED_SKILLS_DIR = REPO_ROOT / "skills" / "learned"
 SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
     "megamind-deep", "megamind-creative", "megamind-adversarial",
+    "update-foundry",
 ]
 
 LSP_PLUGINS = {
@@ -864,13 +865,13 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
         skill_auto = _manifest_indices(SKILLS, "skills")
     else:
         skill_auto = set()
-    # Always include megamind skills and context-dependent skills
+    # Always include megamind skills, update-foundry, and context-dependent skills
     for i, skill in enumerate(SKILLS):
         if skill == "gui-threading" and "python-qt.md" in selected_langs:
             skill_auto.add(i)
         if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
             skill_auto.add(i)
-        if skill.startswith("megamind-"):
+        if skill.startswith("megamind-") or skill == "update-foundry":
             skill_auto.add(i)
 
     if interactive:
