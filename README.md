@@ -208,6 +208,8 @@ Slash commands are available inside Claude Code after running `setup.py init`:
 | `/update-foundry-check` | Checks if an update is available without applying changes. |
 | `/update-foundry-interactive` | Full interactive menu to add or change component selections. |
 | `/update-codemaps` | Generates or refreshes architecture documentation per module. |
+| `/private-list` | Lists registered private config sources with status. |
+| `/private-remove` | Removes a private source by prefix. `/private-remove company` removes all `company-*` files. |
 
 ## Agents
 
@@ -256,6 +258,60 @@ Claude Code sessions often produce solutions worth remembering. The `/learn` and
 5. Run `/recall` to list all learned skills, or `/recall <keyword>` to search
 
 The `skills/learned/` directory starts empty. Categories are created as you learn patterns.
+
+## Private Sources
+
+Private sources let you add company-specific or team-specific rules, commands, skills, agents, and hooks alongside the public claude-foundry config. Register once, and they're automatically re-applied on every `/update-foundry`.
+
+### Directory structure
+
+A private source follows the same layout as claude-foundry:
+
+```
+my-company-config/
+├── rule-library/          # Rules deployed to .claude/rules/
+│   └── lang/
+│       └── custom-dsp.md
+├── commands/              # Optional slash commands
+├── skills/                # Optional skill directories
+├── agents/                # Optional agents
+└── hooks/
+    └── library/           # Optional hooks
+```
+
+### Registering a private source
+
+**During interactive init:**
+```bash
+python3 tools/setup.py init /path/to/project
+# ... normal setup ...
+# Add a private config source? (path or Enter to skip): /path/to/company-config
+# Prefix [company-config]: company
+# ... toggle menu for available items ...
+```
+
+**Via CLI flags:**
+```bash
+python3 tools/setup.py init /path/to/project \
+  --private /path/to/company-config --prefix company
+```
+
+Multiple sources can be registered. Files are deployed with the prefix to avoid collisions (e.g., `company-custom-dsp.md`).
+
+### Managing private sources
+
+| Command | What it does |
+|---------|--------------|
+| `/private-list` | Show registered sources with deployed file counts |
+| `/private-remove <prefix>` | Remove all files with that prefix and unregister |
+
+### How it works
+
+- Selections are saved in `setup-manifest.json` under `"private_sources"`
+- `setup.py init --non-interactive` re-deploys from the manifest automatically
+- `/update-foundry` calls `setup.py init --non-interactive`, so private sources survive updates
+- Foundry's cleanup functions skip private-prefixed files
+- Paths are absolute and machine-specific — each team member registers their own local path
 
 ## Releases
 

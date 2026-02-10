@@ -6,6 +6,7 @@ agents, skills, plugins, and MCP servers from the claude-foundry repo.
 
 Usage:
     python3 tools/setup.py init [project_dir]
+    python3 tools/setup.py init [project_dir] --private /path/to/source --prefix name
     python3 tools/setup.py update-all
     python3 tools/setup.py check
     python3 tools/setup.py version
@@ -15,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -125,6 +127,7 @@ SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
     "megamind-deep", "megamind-creative", "megamind-adversarial",
     "update-foundry", "learn", "learn-recall", "snapshot-list",
+    "private-list", "private-remove",
 ]
 
 LSP_PLUGINS = {
@@ -458,6 +461,186 @@ def detect_platform(project: Path) -> set[str]:
     return detected
 
 
+# ── Private Sources ────────────────────────────────────────────────────
+
+# Reserved prefixes that would collide with foundry file names
+_RESERVED_PREFIXES: set[str] | None = None
+
+
+def _get_reserved_prefixes() -> set[str]:
+    """Build set of reserved prefixes from base rules and modular categories."""
+    global _RESERVED_PREFIXES
+    if _RESERVED_PREFIXES is None:
+        _RESERVED_PREFIXES = (
+            {r.replace(".md", "") for r in BASE_RULES}
+            | set(MODULAR_RULES.keys())
+        )
+    return _RESERVED_PREFIXES
+
+
+def validate_prefix(prefix: str, existing_prefixes: list[str]) -> str | None:
+    """Validate a private source prefix. Returns error message or None if valid."""
+    if not re.match(r'^[a-z][a-z0-9-]*$', prefix):
+        return "Prefix must start with a letter, contain only lowercase alphanumeric and hyphens"
+    if prefix in _get_reserved_prefixes():
+        return f"'{prefix}' conflicts with a foundry name"
+    if prefix in existing_prefixes:
+        return f"'{prefix}' is already registered"
+    return None
+
+
+def discover_private_content(source_path: Path) -> dict[str, list[str]]:
+    """Scan a private source directory for deployable content."""
+    content: dict[str, list[str]] = {
+        "rules": [], "commands": [], "skills": [], "agents": [], "hooks": [],
+    }
+    # Rules: rule-library/**/*.md → "category/name.md"
+    lib = source_path / "rule-library"
+    if lib.is_dir():
+        for cat_dir in sorted(lib.iterdir()):
+            if cat_dir.is_dir():
+                for f in sorted(cat_dir.iterdir()):
+                    if f.suffix == ".md":
+                        content["rules"].append(f"{cat_dir.name}/{f.name}")
+    # Commands: commands/*.md
+    cmd_dir = source_path / "commands"
+    if cmd_dir.is_dir():
+        for f in sorted(cmd_dir.iterdir()):
+            if f.suffix == ".md":
+                content["commands"].append(f.name)
+    # Skills: skills/*/ (directories)
+    skill_dir = source_path / "skills"
+    if skill_dir.is_dir():
+        for d in sorted(skill_dir.iterdir()):
+            if d.is_dir() and not d.name.startswith("."):
+                content["skills"].append(d.name)
+    # Agents: agents/*.md
+    agent_dir = source_path / "agents"
+    if agent_dir.is_dir():
+        for f in sorted(agent_dir.iterdir()):
+            if f.suffix == ".md":
+                content["agents"].append(f.name)
+    # Hooks: hooks/library/*.sh
+    hook_dir = source_path / "hooks" / "library"
+    if hook_dir.is_dir():
+        for f in sorted(hook_dir.iterdir()):
+            if f.suffix == ".sh":
+                content["hooks"].append(f.name)
+    return content
+
+
+def clean_private_files(project: Path, prefix: str) -> None:
+    """Remove all files/dirs with given prefix from all component dirs."""
+    for subdir in ["rules", "agents", "commands"]:
+        d = project / ".claude" / subdir
+        if d.is_dir():
+            for f in d.iterdir():
+                if f.is_file() and f.name.startswith(f"{prefix}-"):
+                    f.unlink()
+    # Skills are directories
+    skills_dir = project / ".claude" / "skills"
+    if skills_dir.is_dir():
+        for d in skills_dir.iterdir():
+            if d.is_dir() and d.name.startswith(f"{prefix}-"):
+                shutil.rmtree(d)
+    # Hooks
+    hooks_dir = project / ".claude" / "hooks" / "library"
+    if hooks_dir.is_dir():
+        for f in hooks_dir.iterdir():
+            if f.is_file() and f.name.startswith(f"{prefix}-"):
+                f.unlink()
+
+
+def deploy_private_source(
+    project: Path,
+    source_path: Path,
+    prefix: str,
+    selections: dict[str, list[str]],
+) -> dict[str, list[str]]:
+    """Deploy files from a private source with prefix. Returns deployed selections."""
+    deployed: dict[str, list[str]] = {
+        "rules": [], "commands": [], "skills": [], "agents": [], "hooks": [],
+    }
+
+    # Rules: rule-library/category/name.md → .claude/rules/{prefix}-{name}.md
+    for label in selections.get("rules", []):
+        parts = label.split("/", 1)
+        if len(parts) != 2:
+            continue
+        category, name = parts
+        src = source_path / "rule-library" / category / name
+        if src.exists():
+            dest = project / ".claude" / "rules" / f"{prefix}-{name}"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+            deployed["rules"].append(label)
+
+    # Commands: commands/name.md → .claude/commands/{prefix}-{name}.md
+    cmd_dir = project / ".claude" / "commands"
+    cmd_dir.mkdir(parents=True, exist_ok=True)
+    for name in selections.get("commands", []):
+        src = source_path / "commands" / name
+        if src.exists():
+            shutil.copy2(src, cmd_dir / f"{prefix}-{name}")
+            deployed["commands"].append(name)
+
+    # Skills: skills/name/ → .claude/skills/{prefix}-{name}/
+    for name in selections.get("skills", []):
+        src = source_path / "skills" / name
+        if src.is_dir():
+            dest = project / ".claude" / "skills" / f"{prefix}-{name}"
+            if dest.exists():
+                shutil.rmtree(dest)
+            shutil.copytree(src, dest)
+            deployed["skills"].append(name)
+
+    # Agents: agents/name.md → .claude/agents/{prefix}-{name}.md
+    agent_dir = project / ".claude" / "agents"
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    for name in selections.get("agents", []):
+        src = source_path / "agents" / name
+        if src.exists():
+            shutil.copy2(src, agent_dir / f"{prefix}-{name}")
+            deployed["agents"].append(name)
+
+    # Hooks: hooks/library/name.sh → .claude/hooks/library/{prefix}-{name}.sh
+    for name in selections.get("hooks", []):
+        src = source_path / "hooks" / "library" / name
+        if src.exists():
+            dest = project / ".claude" / "hooks" / "library" / f"{prefix}-{name}"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+            dest.chmod(dest.stat().st_mode | 0o111)
+            deployed["hooks"].append(name)
+
+    return deployed
+
+
+def redeploy_private_sources(project: Path, sources: list[dict]) -> list[dict]:
+    """Non-interactive re-deployment of all private sources from manifest.
+
+    Returns the updated sources list (skipping missing paths).
+    """
+    result = []
+    for source in sources:
+        source_path = Path(source["path"])
+        prefix = source["prefix"]
+        if not source_path.is_dir():
+            print(f"  \u26a0 Private source missing: {source['path']} (skipped)")
+            result.append(source)  # Keep in manifest so user can fix path
+            continue
+        clean_private_files(project, prefix)
+        deployed = deploy_private_source(project, source_path, prefix, source)
+        total = sum(len(v) for v in deployed.values())
+        print(f"  \u2713 Private source re-applied: {prefix} ({total} files)")
+        result.append({
+            "path": str(source_path),
+            "prefix": prefix,
+            **deployed,
+        })
+    return result
+
+
 # ── Generation ──────────────────────────────────────────────────────────
 
 
@@ -555,13 +738,20 @@ def copy_rules(project: Path, base: list[str], modular: dict[str, list[str]]) ->
                 shutil.copy2(src, rules_dir / dest_name)
 
 
-def copy_agents(project: Path, agents: list[str]) -> None:
+def copy_agents(
+    project: Path,
+    agents: list[str],
+    private_prefixes: list[str] | None = None,
+) -> None:
+    private_prefixes = private_prefixes or []
     dest = project / ".claude" / "agents"
     dest.mkdir(parents=True, exist_ok=True)
-    # Remove stale agents not in current selection
+    # Remove stale agents not in current selection (skip private-prefixed files)
     wanted = set(agents)
     for existing in dest.iterdir():
         if existing.suffix == ".md" and existing.name not in wanted:
+            if any(existing.name.startswith(f"{p}-") for p in private_prefixes):
+                continue
             existing.unlink()
     for agent in agents:
         src = AGENTS_DIR / agent
@@ -585,7 +775,11 @@ def _command_skill_parent(command_stem: str) -> str | None:
     return None
 
 
-def copy_commands(project: Path, selected_skills: list[str] | None = None) -> None:
+def copy_commands(
+    project: Path,
+    selected_skills: list[str] | None = None,
+    private_prefixes: list[str] | None = None,
+) -> None:
     """Copy slash commands to the project.
 
     Skill-associated commands are only copied when the corresponding skill is
@@ -595,6 +789,7 @@ def copy_commands(project: Path, selected_skills: list[str] | None = None) -> No
     if not COMMANDS_DIR.is_dir():
         return
     selected_skills = selected_skills or []
+    private_prefixes = private_prefixes or []
     dest = project / ".claude" / "commands"
     dest.mkdir(parents=True, exist_ok=True)
     # Determine which commands to copy
@@ -607,9 +802,11 @@ def copy_commands(project: Path, selected_skills: list[str] | None = None) -> No
         if parent_skill and parent_skill not in selected_skills:
             continue
         eligible.add(src.name)
-    # Remove stale commands not in eligible set
+    # Remove stale commands not in eligible set (skip private-prefixed files)
     for existing in dest.iterdir():
         if existing.suffix == ".md" and existing.name not in eligible:
+            if any(existing.name.startswith(f"{p}-") for p in private_prefixes):
+                continue
             existing.unlink()
     # Copy eligible commands
     for name in eligible:
@@ -648,10 +845,31 @@ def copy_learned_skills(project: Path, categories: list[str]) -> None:
                 shutil.copy2(skill_file, dest / skill_file.name)
 
 
-def copy_skills(project: Path, skills: list[str]) -> None:
+def copy_skills(
+    project: Path,
+    skills: list[str],
+    private_prefixes: list[str] | None = None,
+) -> None:
+    private_prefixes = private_prefixes or []
+    skills_dir = project / ".claude" / "skills"
+    skills_dir.mkdir(parents=True, exist_ok=True)
+    wanted = set(skills)
+    # Remove stale foundry skills not in current selection.
+    # Skip: learned/, learned-local/, and private-prefixed dirs.
+    protected = {"learned", "learned-local"}
+    for existing in skills_dir.iterdir():
+        if not existing.is_dir():
+            continue
+        if existing.name in protected:
+            continue
+        if any(existing.name.startswith(f"{p}-") for p in private_prefixes):
+            continue
+        if existing.name not in wanted:
+            shutil.rmtree(existing)
+    # Copy selected skills
     for skill in skills:
         src = REPO_ROOT / "skills" / skill
-        dest = project / ".claude" / "skills" / skill
+        dest = skills_dir / skill
         if src.is_dir():
             if dest.exists():
                 shutil.rmtree(dest)
@@ -723,13 +941,19 @@ def cmd_check() -> None:
         print(f"Could not check remote: {e}")
 
 
-def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bool:
+def cmd_init(
+    project: Path,
+    interactive: bool = True,
+    force: bool = False,
+    cli_private_sources: list[tuple[str, str]] | None = None,
+) -> bool:
     """Initialize or update a project. Returns True on success.
 
     Args:
         project: Path to the project directory
         interactive: Whether to prompt for choices
         force: Force update even if CLAUDE.md has no marker (with confirmation)
+        cli_private_sources: List of (path, prefix) tuples from --private/--prefix flags
     """
     version = read_version()
     project = project.resolve()
@@ -876,7 +1100,7 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
             skill_auto.add(i)
         if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
             skill_auto.add(i)
-        if skill.startswith("megamind-") or skill in (
+        if skill.startswith("megamind-") or skill.startswith("private-") or skill in (
             "update-foundry", "learn", "learn-recall", "snapshot-list",
         ):
             skill_auto.add(i)
@@ -976,6 +1200,10 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     # ── Generate ──
     print("\nGenerating project configuration...")
 
+    # Collect existing private prefixes so foundry cleanup skips private files
+    existing_private = manifest.get("private_sources", []) if manifest else []
+    private_prefixes = [s["prefix"] for s in existing_private]
+
     claude_dir = project / ".claude"
     claude_dir.mkdir(parents=True, exist_ok=True)
 
@@ -987,14 +1215,14 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
 
     # Agents
     if selected_agents:
-        copy_agents(project, selected_agents)
+        copy_agents(project, selected_agents, private_prefixes)
 
     # Commands (pass selected_skills so skill commands are conditionally included)
-    copy_commands(project, selected_skills)
+    copy_commands(project, selected_skills, private_prefixes)
 
     # Skills
     if selected_skills:
-        copy_skills(project, selected_skills)
+        copy_skills(project, selected_skills, private_prefixes)
 
     # Learned Skills
     if selected_learned:
@@ -1011,8 +1239,88 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
     if mcp_servers:
         write_mcp_servers(project, mcp_servers)
 
+    # ── Private Sources ──
+    private_sources: list[dict] = []
+    cli_private_sources = cli_private_sources or []
+
+    if cli_private_sources:
+        # CLI --private/--prefix flags take precedence
+        for src_path_str, prefix in cli_private_sources:
+            source_path = Path(src_path_str).resolve()
+            if not source_path.is_dir():
+                print(f"  Private source not a directory: {source_path}")
+                continue
+            err = validate_prefix(prefix, [s["prefix"] for s in private_sources])
+            if err:
+                print(f"  Invalid prefix '{prefix}': {err}")
+                continue
+            content = discover_private_content(source_path)
+            # Select all discovered content
+            selections = content
+            clean_private_files(project, prefix)
+            deployed = deploy_private_source(project, source_path, prefix, selections)
+            total = sum(len(v) for v in deployed.values())
+            print(f"  \u2713 Private source deployed: {prefix} ({total} files)")
+            private_sources.append({"path": str(source_path), "prefix": prefix, **deployed})
+    elif interactive:
+        # Interactive prompt loop
+        while True:
+            raw = input(
+                "\nAdd a private config source? (path or Enter to skip): "
+            ).strip()
+            if not raw:
+                break
+            source_path = Path(raw).expanduser().resolve()
+            if not source_path.is_dir():
+                print(f"  Not a directory: {source_path}")
+                continue
+            # Default prefix from directory name
+            default_prefix = re.sub(
+                r'[^a-z0-9-]', '-', source_path.name.lower(),
+            ).strip('-') or "private"
+            prefix = input(f"  Prefix [{default_prefix}]: ").strip() or default_prefix
+            err = validate_prefix(
+                prefix, [s["prefix"] for s in private_sources] + private_prefixes,
+            )
+            if err:
+                print(f"  Invalid prefix: {err}")
+                continue
+            content = discover_private_content(source_path)
+            if not any(content.values()):
+                print(f"  No deployable content found in {source_path}")
+                continue
+            # Present toggle menus per component type
+            all_items: list[str] = []
+            item_map: list[tuple[str, str]] = []  # (component_type, item)
+            for comp_type in ["rules", "commands", "skills", "agents", "hooks"]:
+                for item in content[comp_type]:
+                    all_items.append(f"[{comp_type}] {item}")
+                    item_map.append((comp_type, item))
+            selected_private = toggle_menu(
+                f"Private Source: {prefix}",
+                all_items,
+                set(range(len(all_items))),
+            )
+            selections: dict[str, list[str]] = {
+                "rules": [], "commands": [], "skills": [], "agents": [], "hooks": [],
+            }
+            for idx in sorted(selected_private):
+                comp_type, item = item_map[idx]
+                selections[comp_type].append(item)
+            if not any(selections.values()):
+                print("  No items selected.")
+                continue
+            clean_private_files(project, prefix)
+            deployed = deploy_private_source(project, source_path, prefix, selections)
+            total = sum(len(v) for v in deployed.values())
+            print(f"  \u2713 Private source deployed: {prefix} ({total} files)")
+            private_sources.append({"path": str(source_path), "prefix": prefix, **deployed})
+    elif existing_private:
+        # Non-interactive: re-deploy from manifest
+        private_sources = redeploy_private_sources(project, existing_private)
+
     # Save manifest
-    save_manifest(project, {
+    manifest_data: dict = {
         "version": version,
         "config_repo": str(REPO_ROOT),
         "repo_url": "poelsen/claude-foundry",
@@ -1024,7 +1332,10 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
         "learned_categories": selected_learned,
         "plugins": selected_plugins,
         "mcp_servers": mcp_servers,
-    })
+    }
+    if private_sources:
+        manifest_data["private_sources"] = private_sources
+    save_manifest(project, manifest_data)
 
     # Compute deployed rules list for CLAUDE.md header
     deployed_rules = selected_base.copy()
@@ -1098,6 +1409,10 @@ def cmd_init(project: Path, interactive: bool = True, force: bool = False) -> bo
         print(f"  Learned: {len(selected_learned)} categories ({', '.join(selected_learned)})")
     print(f"  Plugins: {len(selected_plugins)}")
     print(f"  MCP servers: {len(mcp_servers)}")
+    if private_sources:
+        total_private = sum(sum(len(s.get(k, [])) for k in ["rules", "commands", "skills", "agents", "hooks"]) for s in private_sources)
+        prefixes = ", ".join(s["prefix"] for s in private_sources)
+        print(f"  Private sources: {len(private_sources)} ({prefixes}, {total_private} files)")
     return True
 
 
@@ -1210,9 +1525,42 @@ def main() -> None:
     elif command == "init":
         interactive = "--non-interactive" not in sys.argv
         force = "--force" in sys.argv
-        args = [a for a in sys.argv[2:] if a not in ("--non-interactive", "--force")]
-        project = Path(args[0]) if args else Path.cwd()
-        cmd_init(project, interactive=interactive, force=force)
+        # Parse --private/--prefix pairs
+        private_sources: list[tuple[str, str]] = []
+        remaining: list[str] = []
+        i = 2
+        while i < len(sys.argv):
+            arg = sys.argv[i]
+            if arg in ("--non-interactive", "--force"):
+                i += 1
+                continue
+            if arg == "--private" and i + 1 < len(sys.argv):
+                src_path = sys.argv[i + 1]
+                # Check if next pair is --prefix
+                if i + 2 < len(sys.argv) and sys.argv[i + 2] == "--prefix":
+                    if i + 3 < len(sys.argv):
+                        prefix = sys.argv[i + 3]
+                        i += 4
+                    else:
+                        print("--prefix requires a value")
+                        sys.exit(1)
+                else:
+                    # Default prefix from directory name
+                    prefix = re.sub(
+                        r'[^a-z0-9-]', '-', Path(src_path).name.lower(),
+                    ).strip('-') or "private"
+                    i += 2
+                private_sources.append((src_path, prefix))
+            else:
+                remaining.append(arg)
+                i += 1
+        project = Path(remaining[0]) if remaining else Path.cwd()
+        cmd_init(
+            project,
+            interactive=interactive,
+            force=force,
+            cli_private_sources=private_sources or None,
+        )
     elif command == "update-all":
         force = "--force" in sys.argv
         cmd_update_all(force=force)
