@@ -14,12 +14,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
 from setup import (
     CLAUDE_FOUNDRY_MARKER_START,
     CLAUDE_FOUNDRY_MARKER_END,
+    GoBack,
+    QuitSetup,
     cmd_init,
     detect_templates,
     has_claude_foundry_header,
     load_manifest,
     migrate_manifest,
     save_manifest,
+    toggle_menu,
 )
 
 
@@ -515,6 +518,68 @@ class TestMigrateManifest:
         # Manifest should now have templates
         new_manifest = load_manifest(project)
         assert "style" not in new_manifest.get("modular_rules", {})
+
+
+class TestToggleMenuNavigation:
+    """Tests for back/quit navigation in toggle_menu."""
+
+    def test_quit_raises_quit_setup(self, monkeypatch):
+        """Typing 'q' should raise QuitSetup."""
+        monkeypatch.setattr("builtins.input", lambda _: "q")
+        with pytest.raises(QuitSetup):
+            toggle_menu("Test", ["a", "b"], set())
+
+    def test_quit_word_raises_quit_setup(self, monkeypatch):
+        """Typing 'quit' should raise QuitSetup."""
+        monkeypatch.setattr("builtins.input", lambda _: "quit")
+        with pytest.raises(QuitSetup):
+            toggle_menu("Test", ["a", "b"], set())
+
+    def test_back_raises_go_back(self, monkeypatch):
+        """Typing 'b' should raise GoBack."""
+        monkeypatch.setattr("builtins.input", lambda _: "b")
+        with pytest.raises(GoBack):
+            toggle_menu("Test", ["a", "b"], set())
+
+    def test_back_word_raises_go_back(self, monkeypatch):
+        """Typing 'back' should raise GoBack."""
+        monkeypatch.setattr("builtins.input", lambda _: "back")
+        with pytest.raises(GoBack):
+            toggle_menu("Test", ["a", "b"], set())
+
+    def test_enter_confirms_selection(self, monkeypatch):
+        """Empty input should confirm and return selection."""
+        monkeypatch.setattr("builtins.input", lambda _: "")
+        result = toggle_menu("Test", ["a", "b", "c"], {0, 2})
+        assert result == {0, 2}
+
+    def test_toggle_then_confirm(self, monkeypatch):
+        """Toggle an item then confirm."""
+        inputs = iter(["2", ""])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        result = toggle_menu("Test", ["a", "b", "c"], {0})
+        assert result == {0, 1}  # 0 was pre-selected, 2 toggled on (1-indexed)
+
+    def test_does_not_mutate_input_set(self, monkeypatch):
+        """toggle_menu should not mutate the caller's selected set."""
+        inputs = iter(["1", ""])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+        original = {0, 1}
+        original_copy = set(original)
+        toggle_menu("Test", ["a", "b", "c"], original)
+        assert original == original_copy
+
+    def test_back_case_insensitive(self, monkeypatch):
+        """'B' and 'BACK' should also raise GoBack."""
+        monkeypatch.setattr("builtins.input", lambda _: "B")
+        with pytest.raises(GoBack):
+            toggle_menu("Test", ["a"], set())
+
+    def test_quit_case_insensitive(self, monkeypatch):
+        """'Q' and 'QUIT' should also raise QuitSetup."""
+        monkeypatch.setattr("builtins.input", lambda _: "Q")
+        with pytest.raises(QuitSetup):
+            toggle_menu("Test", ["a"], set())
 
 
 class TestGitHubPlatformDetection:
