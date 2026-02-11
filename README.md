@@ -31,7 +31,7 @@ python3 tools/setup.py init /path/to/your/project
 1. Scans your project for languages (file extensions, config files like `pyproject.toml`, `package.json`, `Cargo.toml`)
 2. Presents interactive toggle menus for each component category:
    - **Base rules** — coding style, security, testing, git workflow, etc.
-   - **Modular rules** — language-specific, domain-specific, architecture patterns
+   - **Modular rules** — language tooling, project templates, platform, security
    - **Hooks** — language-specific formatters and type checkers
    - **Agents** — specialized sub-agents matched to your languages
    - **Skills** — domain knowledge modules
@@ -186,10 +186,8 @@ Rules are markdown files loaded by Claude Code at session start. They shape how 
 
 | Category | Examples |
 |----------|----------|
-| `lang/` | Python, C, C++, Rust, Go, React, Node.js, MATLAB |
-| `domain/` | Embedded, DSP/audio, GUI, GUI threading |
-| `style/` | Backend, scripts, library, data pipeline |
-| `arch/` | REST API, React app, monolith |
+| `lang/` | Python, Node.js, Go, Rust, MATLAB |
+| `templates/` | Embedded C, Embedded DSP, React App, REST API, Desktop GUI Qt, Library, Scripts, Data Pipeline, Monolith |
 | `platform/` | GitHub (auto-detected) |
 | `security/` | Sandbox, internal, enterprise |
 
@@ -270,7 +268,7 @@ A private source follows the same layout as claude-foundry:
 ```
 my-company-config/
 ├── rule-library/          # Rules deployed to .claude/rules/
-│   └── lang/
+│   └── templates/
 │       └── custom-dsp.md
 ├── commands/              # Optional slash commands
 ├── skills/                # Optional skill directories
@@ -328,10 +326,8 @@ Every merge to `master` triggers a GitHub Actions workflow that:
 claude-foundry/
 ├── rules/                    # Base rules (selected during init)
 ├── rule-library/             # Modular rules by category
-│   ├── lang/                 # Language-specific rules
-│   ├── domain/               # Domain-specific rules
-│   ├── style/                # Project style rules
-│   ├── arch/                 # Architecture pattern rules
+│   ├── lang/                 # Language tooling rules
+│   ├── templates/            # Project type templates
 │   ├── platform/             # Platform rules (GitHub)
 │   └── security/             # Security level rules
 ├── agents/                   # Sub-agent definitions

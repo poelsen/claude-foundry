@@ -17,7 +17,7 @@ Read rules in `.claude/rules/` before making changes:
 - `security.md` — Security checks and practices
 - `testing.md` — Testing requirements (TDD, 80% coverage)
 
-## Environment
+## Foundry Defaults
 
 ```bash
 uv venv && uv pip install -e .[dev]  # Setup

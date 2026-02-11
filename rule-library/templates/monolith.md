@@ -1,12 +1,12 @@
-# Architecture: Monolith Services
+# Template: Monolith Services
 
 ## Module Organization
 
 ```
 modules/
-  users/       → User domain (routes, services, models)
-  orders/      → Order domain
-  shared/      → Cross-cutting (auth, logging, utils)
+  users/       -> User domain (routes, services, models)
+  orders/      -> Order domain
+  shared/      -> Cross-cutting (auth, logging, utils)
 ```
 
 ## Dependencies

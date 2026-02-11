@@ -1,4 +1,4 @@
-# Style: Libraries & Packages
+# Template: Libraries & Packages
 
 ## API Design
 
