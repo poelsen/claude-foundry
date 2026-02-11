@@ -15,8 +15,10 @@ from setup import (
     CLAUDE_FOUNDRY_MARKER_START,
     CLAUDE_FOUNDRY_MARKER_END,
     cmd_init,
+    detect_templates,
     has_claude_foundry_header,
     load_manifest,
+    migrate_manifest,
     save_manifest,
 )
 
@@ -333,6 +335,186 @@ class TestVersionFile:
         # Should have at least some rules
         rules = list(rules_dir.glob("*.md"))
         assert len(rules) > 0
+
+
+class TestDetectTemplates:
+    """Tests for template auto-detection."""
+
+    def test_react_detected_via_dep_keyword(self, tmp_path):
+        """react-app.md should be detected from package.json dependency."""
+        project = tmp_path / "proj"
+        project.mkdir()
+        (project / "package.json").write_text('{"dependencies": {"react": "^18"}}')
+
+        detected = detect_templates(project)
+        assert "react-app.md" in detected
+
+    def test_qt_detected_via_dep_keyword(self, tmp_path):
+        """desktop-gui-qt.md should be detected from PySide6 dependency."""
+        project = tmp_path / "proj"
+        project.mkdir()
+        (project / "pyproject.toml").write_text('[project]\ndependencies = ["PySide6"]')
+
+        detected = detect_templates(project)
+        assert "desktop-gui-qt.md" in detected
+
+    def test_manual_templates_not_auto_detected(self, tmp_path):
+        """Manual templates (embedded-c, embedded-dsp, rest-api) should not auto-detect."""
+        project = tmp_path / "proj"
+        project.mkdir()
+        # Create .c files and Makefile — still shouldn't trigger embedded-c (manual)
+        (project / "main.c").write_text("int main() {}")
+        (project / "Makefile").write_text("all:")
+
+        detected = detect_templates(project)
+        assert "embedded-c.md" not in detected
+        assert "embedded-dsp.md" not in detected
+        assert "rest-api.md" not in detected
+
+    def test_empty_project_no_templates(self, tmp_path):
+        """Empty project should detect no templates."""
+        project = tmp_path / "proj"
+        project.mkdir()
+
+        detected = detect_templates(project)
+        assert detected == set()
+
+    def test_non_manual_without_keywords_not_detected(self, tmp_path):
+        """Templates like library.md with no detection keys should not auto-detect."""
+        project = tmp_path / "proj"
+        project.mkdir()
+
+        detected = detect_templates(project)
+        assert "library.md" not in detected
+        assert "scripts.md" not in detected
+        assert "monolith.md" not in detected
+
+
+class TestMigrateManifest:
+    """Tests for manifest migration from old to new category structure."""
+
+    def test_domain_embedded_migrates_to_templates(self):
+        """domain/embedded.md should migrate to templates/embedded-c.md."""
+        manifest = {"modular_rules": {"domain": ["embedded.md"]}}
+        result = migrate_manifest(manifest)
+
+        assert "domain" not in result["modular_rules"]
+        assert "embedded-c.md" in result["modular_rules"]["templates"]
+
+    def test_lang_react_migrates_to_templates(self):
+        """lang/react.md should migrate to templates/react-app.md."""
+        manifest = {"modular_rules": {"lang": ["python.md", "react.md"]}}
+        result = migrate_manifest(manifest)
+
+        assert "react.md" not in result["modular_rules"]["lang"]
+        assert "python.md" in result["modular_rules"]["lang"]
+        assert "react-app.md" in result["modular_rules"]["templates"]
+
+    def test_none_target_drops_rule(self):
+        """Rules mapped to None should be removed without replacement."""
+        manifest = {"modular_rules": {"domain": ["gui.md"], "lang": ["c.md", "python.md"]}}
+        result = migrate_manifest(manifest)
+
+        assert "domain" not in result["modular_rules"]
+        assert "c.md" not in result["modular_rules"]["lang"]
+        assert "python.md" in result["modular_rules"]["lang"]
+        # gui.md and c.md have no replacement
+        assert "templates" not in result["modular_rules"] or \
+            "gui.md" not in result["modular_rules"].get("templates", [])
+
+    def test_duplicate_targets_deduplicated(self):
+        """Both style/backend.md and arch/rest-api.md map to templates/rest-api.md."""
+        manifest = {"modular_rules": {
+            "style": ["backend.md"],
+            "arch": ["rest-api.md"],
+        }}
+        result = migrate_manifest(manifest)
+
+        assert "style" not in result["modular_rules"]
+        assert "arch" not in result["modular_rules"]
+        assert result["modular_rules"]["templates"].count("rest-api.md") == 1
+
+    def test_empty_old_categories_cleaned_up(self):
+        """Old categories should be removed when emptied."""
+        manifest = {"modular_rules": {
+            "domain": ["embedded.md"],
+            "arch": ["monolith.md"],
+            "style": ["scripts.md"],
+        }}
+        result = migrate_manifest(manifest)
+
+        for cat in ("domain", "arch", "style"):
+            assert cat not in result["modular_rules"]
+
+    def test_no_migration_needed(self):
+        """Manifest with only new-style categories should be unchanged."""
+        manifest = {"modular_rules": {
+            "lang": ["python.md"],
+            "templates": ["react-app.md"],
+        }}
+        result = migrate_manifest(manifest)
+
+        assert result["modular_rules"] == {
+            "lang": ["python.md"],
+            "templates": ["react-app.md"],
+        }
+
+    def test_empty_manifest(self):
+        """Manifest with no modular_rules should not crash."""
+        manifest = {"version": "1.0"}
+        result = migrate_manifest(manifest)
+
+        assert result == {"version": "1.0"}
+
+    def test_full_migration_scenario(self):
+        """Realistic manifest with multiple old categories."""
+        manifest = {"modular_rules": {
+            "lang": ["python.md", "python-qt.md", "react.md", "c.md"],
+            "domain": ["embedded.md", "dsp-audio.md", "gui-threading.md"],
+            "style": ["backend.md", "library.md"],
+            "arch": ["react-app.md"],
+            "platform": ["github.md"],
+        }}
+        result = migrate_manifest(manifest)
+        modular = result["modular_rules"]
+
+        # Old categories cleaned up
+        assert "domain" not in modular
+        assert "style" not in modular
+        assert "arch" not in modular
+        # Lang kept non-migrated rules
+        assert modular["lang"] == ["python.md"]
+        # Templates collected all migrations
+        templates = set(modular["templates"])
+        assert templates == {
+            "embedded-c.md", "embedded-dsp.md", "desktop-gui-qt.md",
+            "rest-api.md", "library.md", "react-app.md",
+        }
+        # Platform untouched
+        assert modular["platform"] == ["github.md"]
+
+    def test_reinit_with_migrated_manifest(self, tmp_path):
+        """cmd_init with old-format manifest should migrate and work."""
+        project = tmp_path / "test-project"
+        project.mkdir()
+        # First init to create structure
+        cmd_init(project, interactive=False)
+
+        # Write old-format manifest
+        manifest = load_manifest(project)
+        manifest["modular_rules"] = {
+            "lang": ["python.md", "react.md"],
+            "style": ["backend.md"],
+        }
+        save_manifest(project, manifest)
+
+        # Re-init should migrate and succeed
+        result = cmd_init(project, interactive=False)
+        assert result is True
+
+        # Manifest should now have templates
+        new_manifest = load_manifest(project)
+        assert "style" not in new_manifest.get("modular_rules", {})
 
 
 class TestGitHubPlatformDetection:

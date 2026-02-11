@@ -1,4 +1,4 @@
-# Style: Data Pipelines
+# Template: Data Pipelines
 
 ## Reliability
 

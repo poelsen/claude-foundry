@@ -1,4 +1,4 @@
-# Style: Scripts & CLI
+# Template: Scripts & CLI
 
 ## Simplicity
 

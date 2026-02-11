@@ -83,25 +83,21 @@ BASE_RULES = [
 MODULAR_RULES = {
     "lang": {
         "python.md": {"detect": [".py"], "config": ["pyproject.toml", "requirements.txt"]},
-        "python-qt.md": {"detect": [], "config": [], "dep_keywords": ["PySide6", "PyQt"]},
-        "react.md": {"detect": [], "config": [], "dep_keywords": ["react"]},
         "nodejs.md": {"detect": [], "config": ["package.json"]},
-        "c.md": {"detect": [".c"], "config": ["CMakeLists.txt"]},
-        "c-embedded.md": {"detect": [], "config": [], "manual": True},
-        "cpp.md": {"detect": [".cpp", ".cc", ".cxx", ".hpp"]},
         "go.md": {"detect": [".go"], "config": ["go.mod"]},
         "rust.md": {"detect": [".rs"], "config": ["Cargo.toml"]},
         "matlab.md": {"detect": [".m"]},
     },
-    "style": {
-        "backend.md": {}, "scripts.md": {},
-        "library.md": {}, "data-pipeline.md": {},
-    },
-    "arch": {
-        "rest-api.md": {}, "react-app.md": {}, "monolith.md": {},
-    },
-    "domain": {
-        "gui.md": {}, "gui-threading.md": {}, "embedded.md": {}, "dsp-audio.md": {},
+    "templates": {
+        "embedded-c.md": {"manual": True},
+        "embedded-dsp.md": {"detect": [], "manual": True},
+        "react-app.md": {"detect": [], "dep_keywords": ["react"]},
+        "rest-api.md": {"manual": True},
+        "desktop-gui-qt.md": {"detect": [], "dep_keywords": ["PySide6", "PyQt"]},
+        "library.md": {},
+        "scripts.md": {},
+        "data-pipeline.md": {},
+        "monolith.md": {},
     },
     "platform": {
         "github.md": {"detect_dir": [".github"]},
@@ -111,10 +107,30 @@ MODULAR_RULES = {
     },
 }
 
+# Migration map: (old_category, old_rule) -> (new_category, new_rule) or None
+MANIFEST_MIGRATION = {
+    ("domain", "embedded.md"): ("templates", "embedded-c.md"),
+    ("domain", "dsp-audio.md"): ("templates", "embedded-dsp.md"),
+    ("domain", "gui.md"): None,
+    ("domain", "gui-threading.md"): ("templates", "desktop-gui-qt.md"),
+    ("lang", "c.md"): None,
+    ("lang", "c-embedded.md"): ("templates", "embedded-c.md"),
+    ("lang", "cpp.md"): None,
+    ("lang", "react.md"): ("templates", "react-app.md"),
+    ("lang", "python-qt.md"): ("templates", "desktop-gui-qt.md"),
+    ("style", "backend.md"): ("templates", "rest-api.md"),
+    ("style", "library.md"): ("templates", "library.md"),
+    ("style", "scripts.md"): ("templates", "scripts.md"),
+    ("style", "data-pipeline.md"): ("templates", "data-pipeline.md"),
+    ("arch", "rest-api.md"): ("templates", "rest-api.md"),
+    ("arch", "react-app.md"): ("templates", "react-app.md"),
+    ("arch", "monolith.md"): ("templates", "monolith.md"),
+}
+
 HOOK_SCRIPTS = {
     "ruff-format.sh": {"langs": ["python.md"], "desc": "Python formatting (ruff)"},
-    "prettier-format.sh": {"langs": ["react.md", "nodejs.md"], "desc": "JS/TS formatting (prettier)"},
-    "tsc-check.sh": {"langs": ["react.md", "nodejs.md"], "desc": "TypeScript type checking"},
+    "prettier-format.sh": {"langs": ["react-app.md", "nodejs.md"], "desc": "JS/TS formatting (prettier)"},
+    "tsc-check.sh": {"langs": ["react-app.md", "nodejs.md"], "desc": "TypeScript type checking"},
     "mypy-check.sh": {"langs": ["python.md"], "desc": "Python type checking (mypy)"},
     "cargo-check.sh": {"langs": ["rust.md"], "desc": "Rust type checking (cargo check)"},
 }
@@ -132,12 +148,12 @@ SKILLS = [
 
 LSP_PLUGINS = {
     "python.md": ("pyright-lsp", "pyright-langserver"),
-    "react.md": ("typescript-lsp", "typescript-language-server"),
+    "react-app.md": ("typescript-lsp", "typescript-language-server"),
     "nodejs.md": ("typescript-lsp", "typescript-language-server"),
     "rust.md": ("rust-analyzer-lsp", "rust-analyzer"),
     "go.md": ("gopls-lsp", "gopls"),
-    "c.md": ("clangd-lsp", "clangd"),
-    "cpp.md": ("clangd-lsp", "clangd"),
+    "embedded-c.md": ("clangd-lsp", "clangd"),
+    "embedded-dsp.md": ("clangd-lsp", "clangd"),
 }
 
 WORKFLOW_PLUGINS = [
@@ -242,12 +258,23 @@ def generate_claude_foundry_header(
         "rust.md": "Rust tooling (cargo, clippy)",
         "go.md": "Go tooling (go mod, golangci-lint)",
         "nodejs.md": "Node.js tooling (npm)",
-        "react.md": "React/TypeScript tooling",
-        "c.md": "C tooling (CMake, clang)",
-        "cpp.md": "C++ tooling (CMake, clang)",
         "matlab.md": "MATLAB tooling",
+        # Project templates
+        "embedded-c.md": "Embedded C/C++ (MISRA, memory safety, build)",
+        "embedded-dsp.md": "Embedded DSP & Audio (real-time, numerical, HW)",
+        "react-app.md": "React application (components, state, UX)",
+        "rest-api.md": "REST API backend (layers, reliability, observability)",
+        "desktop-gui-qt.md": "Desktop GUI Qt (threading, signals, persistence)",
+        "library.md": "Library development (API design, versioning)",
+        "scripts.md": "Scripts & CLI (argument parsing, error handling)",
+        "data-pipeline.md": "Data pipeline (idempotency, validation, monitoring)",
+        "monolith.md": "Monolith architecture (module boundaries, migrations)",
         # Platform rules
         "github.md": "GitHub workflow (gh CLI, PR conventions)",
+        # Security rules
+        "enterprise.md": "Enterprise security (production, compliance)",
+        "internal.md": "Internal security (team tools)",
+        "sandbox.md": "Sandbox security (prototyping)",
         # Base rules
         "coding-style.md": "Code style guidelines",
         "git-workflow.md": "Git workflow and commit conventions",
@@ -260,14 +287,16 @@ def generate_claude_foundry_header(
         "hooks.md": "Hooks system",
     }
 
-    # Sort rules with tooling rules first (language + platform), then alphabetically
+    # Sort rules: lang/template/platform first, then base rules alphabetically
     lang_rules = set(MODULAR_RULES.get("lang", {}).keys())
+    template_rules = set(MODULAR_RULES.get("templates", {}).keys())
     platform_rules = set(MODULAR_RULES.get("platform", {}).keys())
-    tooling_rules = lang_rules | platform_rules
+    security_rules = set(MODULAR_RULES.get("security", {}).keys())
+    modular_rules = lang_rules | template_rules | platform_rules | security_rules
 
-    tooling_first = sorted(r for r in deployed_rules if r in tooling_rules)
-    other_rules = sorted(r for r in deployed_rules if r not in tooling_rules)
-    ordered_rules = tooling_first + other_rules
+    modular_first = sorted(r for r in deployed_rules if r in modular_rules)
+    other_rules = sorted(r for r in deployed_rules if r not in modular_rules)
+    ordered_rules = modular_first + other_rules
 
     rules_lines = []
     for rule in ordered_rules:
@@ -415,18 +444,6 @@ def detect_languages(project: Path) -> set[str]:
             if (project / cfg).exists():
                 detected.add(rule)
 
-    # Dependency keyword detection (python-qt, react)
-    dep_text = _read_dep_files(project)
-    for rule, meta in MODULAR_RULES["lang"].items():
-        for kw in meta.get("dep_keywords", []):
-            if kw.lower() in dep_text.lower():
-                detected.add(rule)
-
-    # React vs nodejs disambiguation
-    if "react.md" in detected and "nodejs.md" in detected:
-        # If react detected via dependency, nodejs is redundant for frontend
-        pass  # Keep both, let user deselect
-
     return detected
 
 
@@ -459,6 +476,59 @@ def detect_platform(project: Path) -> set[str]:
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
     return detected
+
+
+def detect_templates(project: Path) -> set[str]:
+    """Return set of detected template rule names."""
+    exts = scan_extensions(project)
+    detected: set[str] = set()
+
+    for rule, meta in MODULAR_RULES["templates"].items():
+        if meta.get("manual"):
+            continue
+        for ext in meta.get("detect", []):
+            if ext in exts:
+                detected.add(rule)
+        for cfg in meta.get("config", []):
+            if (project / cfg).exists():
+                detected.add(rule)
+
+    # Dependency keyword detection
+    dep_text = _read_dep_files(project)
+    for rule, meta in MODULAR_RULES["templates"].items():
+        for kw in meta.get("dep_keywords", []):
+            if kw.lower() in dep_text.lower():
+                detected.add(rule)
+
+    return detected
+
+
+def migrate_manifest(manifest: dict) -> dict:
+    """Migrate a manifest from old category structure to new template structure."""
+    modular = manifest.get("modular_rules", {})
+    changed = False
+
+    for (old_cat, old_rule), target in MANIFEST_MIGRATION.items():
+        if old_cat in modular and old_rule in modular[old_cat]:
+            modular[old_cat].remove(old_rule)
+            if not modular[old_cat]:
+                del modular[old_cat]
+            if target is not None:
+                new_cat, new_rule = target
+                modular.setdefault(new_cat, [])
+                if new_rule not in modular[new_cat]:
+                    modular[new_cat].append(new_rule)
+            changed = True
+
+    # Clean up empty old categories
+    for old_cat in ("domain", "arch", "style"):
+        if old_cat in modular and not modular[old_cat]:
+            del modular[old_cat]
+            changed = True
+
+    if changed:
+        manifest["modular_rules"] = modular
+    return manifest
 
 
 # ── Private Sources ────────────────────────────────────────────────────
@@ -979,6 +1049,8 @@ def cmd_init(
 
     # ── Load manifest for defaults ──
     manifest = load_manifest(project)
+    if manifest:
+        manifest = migrate_manifest(manifest)
 
     def _manifest_indices(registry_items: list[str], manifest_key: str,
                           manifest_sub: str | None = None) -> set[int]:
@@ -989,15 +1061,17 @@ def cmd_init(
             manifest.get(manifest_key, {}).get(manifest_sub, [])
         return {i for i, item in enumerate(registry_items) if item in saved}
 
-    # ── 1. Detect languages ──
-    print("Scanning project for languages...")
+    # ── 1. Detect languages & templates ──
+    print("Scanning project...")
     detected_langs = detect_languages(project)
+    detected_templates = detect_templates(project)
     detected_platform = detect_platform(project)
 
-    if detected_langs:
-        print(f"Detected: {', '.join(sorted(r.replace('.md', '') for r in detected_langs))}")
+    all_detected = detected_langs | detected_templates | detected_platform
+    if all_detected:
+        print(f"Detected: {', '.join(sorted(r.replace('.md', '') for r in all_detected))}")
     else:
-        print("No languages auto-detected.")
+        print("No languages or templates auto-detected.")
 
     # ── 2. Base rules ──
     if manifest:
@@ -1014,7 +1088,13 @@ def cmd_init(
     # ── 3. Modular rules ──
     selected_modular: dict[str, list[str]] = {}
 
-    for category in ["lang", "style", "arch", "domain", "platform", "security"]:
+    category_labels = {
+        "lang": "Languages",
+        "templates": "Project Template",
+        "platform": "Platform",
+        "security": "Security Level",
+    }
+    for category in ["lang", "templates", "platform", "security"]:
         rules = list(MODULAR_RULES[category].keys())
         if not rules:
             continue
@@ -1027,13 +1107,16 @@ def cmd_init(
             for i, rule in enumerate(rules):
                 if category == "lang" and rule in detected_langs:
                     auto.add(i)
+                elif category == "templates" and rule in detected_templates:
+                    auto.add(i)
                 elif category == "platform" and rule in detected_platform:
                     auto.add(i)
 
         required = category == "security"
+        label = category_labels.get(category, category)
         if interactive:
             result = toggle_menu(
-                f"Rules: {category}/" + (" (select exactly one)" if required else ""),
+                f"{label}" + (" (select exactly one)" if required else ""),
                 [f"{rule}" for rule in rules],
                 auto,
                 required_one=required,
@@ -1044,8 +1127,10 @@ def cmd_init(
         if chosen:
             selected_modular[category] = chosen
 
-    # Collect all selected lang rules for hook/plugin auto-detection
+    # Collect selected lang + template rules for hook/plugin/agent auto-detection
     selected_langs = set(selected_modular.get("lang", []))
+    selected_templates = set(selected_modular.get("templates", []))
+    selected_for_detection = selected_langs | selected_templates
 
     # ── 4. Hooks ──
     hook_names = list(HOOK_SCRIPTS.keys())
@@ -1055,7 +1140,7 @@ def cmd_init(
         hook_auto = set()
         for i, script in enumerate(hook_names):
             meta = HOOK_SCRIPTS[script]
-            if any(lang in selected_langs for lang in meta["langs"]):
+            if any(lang in selected_for_detection for lang in meta["langs"]):
                 hook_auto.add(i)
 
     if interactive:
@@ -1075,12 +1160,15 @@ def cmd_init(
     else:
         agent_auto = set()
         for i, af in enumerate(agent_files):
-            for lang in selected_langs:
+            for lang in selected_for_detection:
                 lang_key = lang.replace(".md", "")
                 if f"-{lang_key}." in af or af.startswith(f"{lang_key}."):
                     agent_auto.add(i)
-            if any(l in selected_langs for l in ["react.md", "nodejs.md"]):
+            if any(r in selected_for_detection for r in ["react-app.md", "nodejs.md"]):
                 if "typescript" in af:
+                    agent_auto.add(i)
+            if "desktop-gui-qt.md" in selected_for_detection:
+                if "python-qt" in af:
                     agent_auto.add(i)
 
     if interactive:
@@ -1096,9 +1184,9 @@ def cmd_init(
         skill_auto = set()
     # Always include megamind skills, update-foundry, and context-dependent skills
     for i, skill in enumerate(SKILLS):
-        if skill == "gui-threading" and "python-qt.md" in selected_langs:
+        if skill == "gui-threading" and "desktop-gui-qt.md" in selected_for_detection:
             skill_auto.add(i)
-        if skill == "python-qt-gui" and "python-qt.md" in selected_langs:
+        if skill == "python-qt-gui" and "desktop-gui-qt.md" in selected_for_detection:
             skill_auto.add(i)
         if skill.startswith("megamind-") or skill.startswith("private-") or skill in (
             "update-foundry", "learn", "learn-recall", "snapshot-list",
@@ -1133,7 +1221,7 @@ def cmd_init(
     # ── 7. Plugins ──
     lsp_plugins: list[tuple[str, str]] = []
     seen_lsp: set[str] = set()
-    for lang in selected_langs:
+    for lang in selected_for_detection:
         if lang in LSP_PLUGINS:
             plugin, binary = LSP_PLUGINS[lang]
             if plugin not in seen_lsp:
@@ -1399,7 +1487,7 @@ def cmd_init(
 
     # Summary
     print(f"\n✓ Project configured with claude-foundry v{version}")
-    print(f"  Rules: {len(selected_base)} base + {sum(len(v) for v in selected_modular.values())} modular")
+    print(f"  Rules: {len(selected_base)} base + {sum(len(v) for v in selected_modular.values())} selected")
     print(f"  Hooks: {len(selected_hooks)}")
     cmd_count = len([f for f in (COMMANDS_DIR).iterdir() if f.suffix == ".md"]) if COMMANDS_DIR.is_dir() else 0
     print(f"  Commands: {cmd_count}")
