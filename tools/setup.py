@@ -1110,7 +1110,7 @@ def cmd_init(
     # ── Selection phase (step-based with back/quit for interactive) ──
     STEPS = (["base"] + modular_categories +
              ["hooks", "agents", "skills", "learned", "plugins", "mcp"])
-    if interactive:
+    if interactive and not cli_private_sources:
         STEPS.append("private")
     saved_steps: dict[str, set[int]] = {}
     saved_plugin_names: set[str] | None = None
