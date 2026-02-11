@@ -24,6 +24,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+
+class GoBack(Exception):
+    """User requested to go back to the previous menu."""
+
+
+class QuitSetup(Exception):
+    """User requested to quit setup."""
+
+
 # ── CLAUDE.md Header ────────────────────────────────────────────────────
 
 CLAUDE_FOUNDRY_MARKER_START = "<!-- claude-foundry -->"
@@ -188,19 +197,26 @@ def read_version() -> str:
 
 def toggle_menu(title: str, items: list[str], selected: set[int],
                 required_one: bool = False) -> set[int]:
-    """Interactive toggle menu. Returns set of selected indices."""
+    """Interactive toggle menu. Returns set of selected indices.
+
+    Raises GoBack if user types 'b', QuitSetup if user types 'q'.
+    """
+    selected = set(selected)  # Copy to avoid mutating caller's data
     while True:
         print(f"\n=== {title} ===")
         for i, item in enumerate(items):
             mark = "X" if i in selected else " "
             print(f"  [{mark}] {i + 1}. {item}")
-        prompt = "Toggle (space-separated numbers, Enter to confirm): "
-        raw = input(prompt).strip()
+        raw = input("Toggle numbers, [b]ack, [q]uit, Enter=confirm: ").strip()
         if not raw:
             if required_one and not selected:
                 print("  ⚠ At least one selection required.")
                 continue
             return selected
+        if raw.lower() in ("b", "back"):
+            raise GoBack()
+        if raw.lower() in ("q", "quit"):
+            raise QuitSetup()
         for token in raw.split():
             try:
                 idx = int(token) - 1
@@ -1073,194 +1089,318 @@ def cmd_init(
     else:
         print("No languages or templates auto-detected.")
 
-    # ── 2. Base rules ──
-    if manifest:
-        base_defaults = _manifest_indices(BASE_RULES, "base_rules")
-    else:
-        base_defaults = set(range(len(BASE_RULES)))
+    # ── Pre-compute static data ──
+    learned_cats = discover_learned_categories()
+    agent_files = (sorted(f.name for f in AGENTS_DIR.iterdir() if f.suffix == ".md")
+                   if AGENTS_DIR.is_dir() else [])
+    hook_names = list(HOOK_SCRIPTS.keys())
+    mcp_available = MCP_SERVERS_FILE.exists()
+    mcp_names: list[str] = []
+    mcp_descs: list[str] = []
+    if mcp_available:
+        all_mcp_data = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
+        mcp_names = list(all_mcp_data.keys())
+        mcp_descs = [f"{k} — {v.get('description', '')}" for k, v in all_mcp_data.items()]
+    existing_private = manifest.get("private_sources", []) if manifest else []
+    existing_private_prefixes = [s["prefix"] for s in existing_private]
+    category_labels = {"lang": "Languages", "templates": "Project Template",
+                       "platform": "Platform", "security": "Security Level"}
+    modular_categories = ["lang", "templates", "platform", "security"]
 
+    # ── Selection phase (step-based with back/quit for interactive) ──
+    STEPS = (["base"] + modular_categories +
+             ["hooks", "agents", "skills", "learned", "plugins", "mcp"])
     if interactive:
-        base_selected = toggle_menu("Base Rules (all recommended)", BASE_RULES, base_defaults)
-    else:
-        base_selected = base_defaults
-    selected_base = [BASE_RULES[i] for i in sorted(base_selected)]
+        STEPS.append("private")
+    saved_steps: dict[str, set[int]] = {}
+    saved_plugin_names: set[str] | None = None
+    pending_private: list[dict] = []
+    step = 0
 
-    # ── 3. Modular rules ──
+    def _skip_step(s: str) -> bool:
+        return ((s == "learned" and not learned_cats) or
+                (s == "mcp" and not mcp_available))
+
+    def _for_detection() -> set[str]:
+        """Derive selected_for_detection from current saved state."""
+        lr = list(MODULAR_RULES["lang"].keys())
+        tr = list(MODULAR_RULES["templates"].keys())
+        return ({lr[i] for i in saved_steps.get("lang", set()) if i < len(lr)} |
+                {tr[i] for i in saved_steps.get("templates", set()) if i < len(tr)})
+
+    try:
+        while step < len(STEPS):
+            name = STEPS[step]
+            if _skip_step(name):
+                step += 1
+                continue
+
+            try:
+                if name == "base":
+                    if "base" in saved_steps:
+                        defaults = saved_steps["base"]
+                    elif manifest:
+                        defaults = _manifest_indices(BASE_RULES, "base_rules")
+                    else:
+                        defaults = set(range(len(BASE_RULES)))
+                    if interactive:
+                        saved_steps["base"] = toggle_menu(
+                            "Base Rules (all recommended)", BASE_RULES, defaults)
+                    else:
+                        saved_steps["base"] = defaults
+
+                elif name in modular_categories:
+                    rules = list(MODULAR_RULES[name].keys())
+                    if not rules:
+                        step += 1
+                        continue
+                    if name in saved_steps:
+                        auto = saved_steps[name]
+                    elif manifest:
+                        auto = _manifest_indices(rules, "modular_rules", name)
+                    else:
+                        auto = set()
+                        for i, rule in enumerate(rules):
+                            if name == "lang" and rule in detected_langs:
+                                auto.add(i)
+                            elif name == "templates" and rule in detected_templates:
+                                auto.add(i)
+                            elif name == "platform" and rule in detected_platform:
+                                auto.add(i)
+                    required = name == "security"
+                    label = category_labels.get(name, name)
+                    if interactive:
+                        saved_steps[name] = toggle_menu(
+                            f"{label}" + (" (select exactly one)" if required else ""),
+                            [f"{rule}" for rule in rules], auto,
+                            required_one=required)
+                    else:
+                        saved_steps[name] = auto
+
+                elif name == "hooks":
+                    sfd = _for_detection()
+                    if "hooks" in saved_steps:
+                        auto = saved_steps["hooks"]
+                    elif manifest:
+                        auto = _manifest_indices(hook_names, "hooks")
+                    else:
+                        auto = set()
+                        for i, script in enumerate(hook_names):
+                            meta = HOOK_SCRIPTS[script]
+                            if any(lang in sfd for lang in meta["langs"]):
+                                auto.add(i)
+                    if interactive:
+                        saved_steps["hooks"] = toggle_menu(
+                            "Hooks (auto-selected by language)",
+                            [f"{s} — {HOOK_SCRIPTS[s]['desc']}" for s in hook_names],
+                            auto)
+                    else:
+                        saved_steps["hooks"] = auto
+
+                elif name == "agents":
+                    sfd = _for_detection()
+                    if "agents" in saved_steps:
+                        auto = saved_steps["agents"]
+                    elif manifest:
+                        auto = _manifest_indices(agent_files, "agents")
+                    else:
+                        auto = set()
+                        for i, af in enumerate(agent_files):
+                            for lang in sfd:
+                                lang_key = lang.replace(".md", "")
+                                if f"-{lang_key}." in af or af.startswith(f"{lang_key}."):
+                                    auto.add(i)
+                            if any(r in sfd for r in ["react-app.md", "nodejs.md"]):
+                                if "typescript" in af:
+                                    auto.add(i)
+                            if "desktop-gui-qt.md" in sfd:
+                                if "python-qt" in af:
+                                    auto.add(i)
+                    if interactive:
+                        saved_steps["agents"] = toggle_menu("Agents", agent_files, auto)
+                    else:
+                        saved_steps["agents"] = auto
+
+                elif name == "skills":
+                    sfd = _for_detection()
+                    if "skills" in saved_steps:
+                        auto = saved_steps["skills"]
+                    elif manifest:
+                        auto = _manifest_indices(SKILLS, "skills")
+                    else:
+                        auto = set()
+                    # Always include core skills
+                    for i, skill in enumerate(SKILLS):
+                        if skill == "gui-threading" and "desktop-gui-qt.md" in sfd:
+                            auto.add(i)
+                        if skill == "python-qt-gui" and "desktop-gui-qt.md" in sfd:
+                            auto.add(i)
+                        if skill.startswith("megamind-") or skill.startswith("private-") or skill in (
+                            "update-foundry", "learn", "learn-recall", "snapshot-list",
+                        ):
+                            auto.add(i)
+                    if interactive:
+                        saved_steps["skills"] = toggle_menu("Skills", SKILLS, auto)
+                    else:
+                        saved_steps["skills"] = auto
+
+                elif name == "learned":
+                    if "learned" in saved_steps:
+                        auto = saved_steps["learned"]
+                    elif manifest:
+                        auto = _manifest_indices(learned_cats, "learned_categories")
+                    else:
+                        auto = set(range(len(learned_cats)))
+                    if interactive:
+                        saved_steps["learned"] = toggle_menu(
+                            "Learned Skills (categories)", learned_cats, auto)
+                    else:
+                        saved_steps["learned"] = auto
+
+                elif name == "plugins":
+                    sfd = _for_detection()
+                    lsp_plugins: list[tuple[str, str]] = []
+                    seen_lsp: set[str] = set()
+                    for lang in sfd:
+                        if lang in LSP_PLUGINS:
+                            plugin, binary = LSP_PLUGINS[lang]
+                            if plugin not in seen_lsp:
+                                lsp_plugins.append((plugin, binary))
+                                seen_lsp.add(plugin)
+                    all_plugins = ([(p, f"LSP: {b}") for p, b in lsp_plugins] +
+                                   [(p, d) for p, d in WORKFLOW_PLUGINS])
+                    plugin_display = [f"{p} — {d}" for p, d in all_plugins]
+                    if saved_plugin_names is not None:
+                        auto = {i for i, (p, _) in enumerate(all_plugins)
+                                if p in saved_plugin_names}
+                    elif manifest:
+                        sp = manifest.get("plugins", [])
+                        auto = {i for i, (p, _) in enumerate(all_plugins) if p in sp}
+                    else:
+                        auto = set(range(len(all_plugins)))
+                    if interactive:
+                        result = toggle_menu("Plugins", plugin_display, auto)
+                    else:
+                        result = auto
+                    saved_steps["plugins"] = result
+                    saved_plugin_names = {all_plugins[i][0] for i in result
+                                          if i < len(all_plugins)}
+
+                elif name == "mcp":
+                    if "mcp" in saved_steps:
+                        auto = saved_steps["mcp"]
+                    elif manifest:
+                        sm = manifest.get("mcp_servers", [])
+                        auto = {i for i, n in enumerate(mcp_names) if n in sm}
+                    else:
+                        auto = set()
+                    if interactive:
+                        saved_steps["mcp"] = toggle_menu(
+                            "MCP Servers (optional)", mcp_descs, auto)
+                    else:
+                        saved_steps["mcp"] = auto
+
+                elif name == "private":
+                    # Interactive-only: collect private sources (deployment deferred)
+                    while True:
+                        label = f" ({len(pending_private)} added)" if pending_private else ""
+                        raw = input(
+                            f"\nAdd a private config source?{label}"
+                            " (path, [b]ack, [q]uit, Enter=done): "
+                        ).strip()
+                        if not raw:
+                            break
+                        if raw.lower() in ("b", "back"):
+                            raise GoBack()
+                        if raw.lower() in ("q", "quit"):
+                            raise QuitSetup()
+                        source_path = Path(raw).expanduser().resolve()
+                        if not source_path.is_dir():
+                            print(f"  Not a directory: {source_path}")
+                            continue
+                        default_prefix = re.sub(
+                            r'[^a-z0-9-]', '-', source_path.name.lower(),
+                        ).strip('-') or "private"
+                        try:
+                            prefix_raw = input(f"  Prefix [{default_prefix}]: ").strip()
+                            if prefix_raw.lower() in ("q", "quit"):
+                                raise QuitSetup()
+                            if prefix_raw.lower() in ("b", "back"):
+                                continue  # Back to path prompt
+                            prefix = prefix_raw or default_prefix
+                            all_prefixes = (
+                                [s["prefix"] for s in pending_private]
+                                + existing_private_prefixes
+                            )
+                            err = validate_prefix(prefix, all_prefixes)
+                            if err:
+                                print(f"  Invalid prefix: {err}")
+                                continue
+                            content = discover_private_content(source_path)
+                            if not any(content.values()):
+                                print(f"  No deployable content found in {source_path}")
+                                continue
+                            all_items: list[str] = []
+                            item_map: list[tuple[str, str]] = []
+                            for comp_type in ["rules", "commands", "skills", "agents", "hooks"]:
+                                for item in content[comp_type]:
+                                    all_items.append(f"[{comp_type}] {item}")
+                                    item_map.append((comp_type, item))
+                            selected_prv = toggle_menu(
+                                f"Private Source: {prefix}",
+                                all_items,
+                                set(range(len(all_items))),
+                            )
+                            selections: dict[str, list[str]] = {
+                                "rules": [], "commands": [], "skills": [],
+                                "agents": [], "hooks": [],
+                            }
+                            for idx in sorted(selected_prv):
+                                comp_type, item = item_map[idx]
+                                selections[comp_type].append(item)
+                            if not any(selections.values()):
+                                print("  No items selected.")
+                                continue
+                            pending_private.append({
+                                "source_path": source_path,
+                                "prefix": prefix,
+                                "selections": selections,
+                            })
+                            print(f"  ✓ Private source queued: {prefix}")
+                        except GoBack:
+                            continue  # GoBack from toggle → back to path prompt
+
+                step += 1
+
+            except GoBack:
+                step -= 1
+                while step >= 0 and _skip_step(STEPS[step]):
+                    step -= 1
+                step = max(0, step)
+
+    except QuitSetup:
+        print("\nSetup cancelled.")
+        return False
+
+    # ── Derive final selections ──
+    selected_base = [BASE_RULES[i] for i in sorted(saved_steps.get("base", set()))]
     selected_modular: dict[str, list[str]] = {}
-
-    category_labels = {
-        "lang": "Languages",
-        "templates": "Project Template",
-        "platform": "Platform",
-        "security": "Security Level",
-    }
-    for category in ["lang", "templates", "platform", "security"]:
-        rules = list(MODULAR_RULES[category].keys())
-        if not rules:
-            continue
-
-        # Defaults: manifest takes precedence, then auto-detection
-        if manifest:
-            auto = _manifest_indices(rules, "modular_rules", category)
-        else:
-            auto = set()
-            for i, rule in enumerate(rules):
-                if category == "lang" and rule in detected_langs:
-                    auto.add(i)
-                elif category == "templates" and rule in detected_templates:
-                    auto.add(i)
-                elif category == "platform" and rule in detected_platform:
-                    auto.add(i)
-
-        required = category == "security"
-        label = category_labels.get(category, category)
-        if interactive:
-            result = toggle_menu(
-                f"{label}" + (" (select exactly one)" if required else ""),
-                [f"{rule}" for rule in rules],
-                auto,
-                required_one=required,
-            )
-        else:
-            result = auto
-        chosen = [rules[i] for i in sorted(result)]
+    for cat in modular_categories:
+        rules = list(MODULAR_RULES[cat].keys())
+        chosen = [rules[i] for i in sorted(saved_steps.get(cat, set()))]
         if chosen:
-            selected_modular[category] = chosen
-
-    # Collect selected lang + template rules for hook/plugin/agent auto-detection
+            selected_modular[cat] = chosen
     selected_langs = set(selected_modular.get("lang", []))
     selected_templates = set(selected_modular.get("templates", []))
     selected_for_detection = selected_langs | selected_templates
-
-    # ── 4. Hooks ──
-    hook_names = list(HOOK_SCRIPTS.keys())
-    if manifest:
-        hook_auto = _manifest_indices(hook_names, "hooks")
-    else:
-        hook_auto = set()
-        for i, script in enumerate(hook_names):
-            meta = HOOK_SCRIPTS[script]
-            if any(lang in selected_for_detection for lang in meta["langs"]):
-                hook_auto.add(i)
-
-    if interactive:
-        hook_selected = toggle_menu(
-            "Hooks (auto-selected by language)",
-            [f"{s} — {HOOK_SCRIPTS[s]['desc']}" for s in hook_names],
-            hook_auto,
-        )
-    else:
-        hook_selected = hook_auto
-    selected_hooks = [hook_names[i] for i in sorted(hook_selected)]
-
-    # ── 5. Agents ──
-    agent_files = sorted(f.name for f in AGENTS_DIR.iterdir() if f.suffix == ".md") if AGENTS_DIR.is_dir() else []
-    if manifest:
-        agent_auto = _manifest_indices(agent_files, "agents")
-    else:
-        agent_auto = set()
-        for i, af in enumerate(agent_files):
-            for lang in selected_for_detection:
-                lang_key = lang.replace(".md", "")
-                if f"-{lang_key}." in af or af.startswith(f"{lang_key}."):
-                    agent_auto.add(i)
-            if any(r in selected_for_detection for r in ["react-app.md", "nodejs.md"]):
-                if "typescript" in af:
-                    agent_auto.add(i)
-            if "desktop-gui-qt.md" in selected_for_detection:
-                if "python-qt" in af:
-                    agent_auto.add(i)
-
-    if interactive:
-        agent_selected = toggle_menu("Agents", agent_files, agent_auto)
-    else:
-        agent_selected = agent_auto
-    selected_agents = [agent_files[i] for i in sorted(agent_selected)]
-
-    # ── 6. Skills ──
-    if manifest:
-        skill_auto = _manifest_indices(SKILLS, "skills")
-    else:
-        skill_auto = set()
-    # Always include megamind skills, update-foundry, and context-dependent skills
-    for i, skill in enumerate(SKILLS):
-        if skill == "gui-threading" and "desktop-gui-qt.md" in selected_for_detection:
-            skill_auto.add(i)
-        if skill == "python-qt-gui" and "desktop-gui-qt.md" in selected_for_detection:
-            skill_auto.add(i)
-        if skill.startswith("megamind-") or skill.startswith("private-") or skill in (
-            "update-foundry", "learn", "learn-recall", "snapshot-list",
-        ):
-            skill_auto.add(i)
-
-    if interactive:
-        skill_selected = toggle_menu("Skills", SKILLS, skill_auto)
-    else:
-        skill_selected = skill_auto
-    selected_skills = [SKILLS[i] for i in sorted(skill_selected)]
-
-    # ── 6b. Learned Skills ──
-    learned_cats = discover_learned_categories()
-    selected_learned: list[str] = []
-    if learned_cats:
-        if manifest:
-            learned_auto = _manifest_indices(learned_cats, "learned_categories")
-        else:
-            learned_auto = set(range(len(learned_cats)))  # All selected by default
-
-        if interactive:
-            learned_selected = toggle_menu(
-                "Learned Skills (categories)",
-                learned_cats,
-                learned_auto,
-            )
-        else:
-            learned_selected = learned_auto
-        selected_learned = [learned_cats[i] for i in sorted(learned_selected)]
-
-    # ── 7. Plugins ──
-    lsp_plugins: list[tuple[str, str]] = []
-    seen_lsp: set[str] = set()
-    for lang in selected_for_detection:
-        if lang in LSP_PLUGINS:
-            plugin, binary = LSP_PLUGINS[lang]
-            if plugin not in seen_lsp:
-                lsp_plugins.append((plugin, binary))
-                seen_lsp.add(plugin)
-
-    all_plugins = [(p, f"LSP: {b}") for p, b in lsp_plugins] + [(p, d) for p, d in WORKFLOW_PLUGINS]
-    plugin_names = [f"{p} — {d}" for p, d in all_plugins]
-
-    if manifest:
-        saved_plugins = manifest.get("plugins", [])
-        plugin_auto = {i for i, (p, _) in enumerate(all_plugins) if p in saved_plugins}
-    else:
-        plugin_auto = set(range(len(all_plugins)))
-
-    if interactive:
-        plugin_selected = toggle_menu("Plugins", plugin_names, plugin_auto)
-    else:
-        plugin_selected = plugin_auto
-    selected_plugins = [all_plugins[i][0] for i in sorted(plugin_selected)]
-
-    # ── 8. MCP servers ──
-    mcp_servers: list[str] = []
-    if MCP_SERVERS_FILE.exists():
-        all_mcp = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
-        mcp_names = list(all_mcp.keys())
-        mcp_descs = [f"{k} — {v.get('description', '')}" for k, v in all_mcp.items()]
-
-        if manifest:
-            saved_mcp = manifest.get("mcp_servers", [])
-            mcp_auto = {i for i, name in enumerate(mcp_names) if name in saved_mcp}
-        else:
-            mcp_auto = set()
-
-        if interactive:
-            mcp_selected = toggle_menu("MCP Servers (optional)", mcp_descs, mcp_auto)
-        else:
-            mcp_selected = mcp_auto
-        mcp_servers = [mcp_names[i] for i in sorted(mcp_selected)]
+    selected_hooks = [hook_names[i] for i in sorted(saved_steps.get("hooks", set()))]
+    selected_agents = [agent_files[i] for i in sorted(saved_steps.get("agents", set()))]
+    selected_skills = [SKILLS[i] for i in sorted(saved_steps.get("skills", set()))]
+    selected_learned = ([learned_cats[i] for i in sorted(saved_steps.get("learned", set()))]
+                        if learned_cats else [])
+    selected_plugins = sorted(saved_plugin_names) if saved_plugin_names else []
+    mcp_servers = ([mcp_names[i] for i in sorted(saved_steps.get("mcp", set()))]
+                   if mcp_available else [])
 
     # ── Pre-check CLAUDE.md for non-interactive mode ──
     claude_md = project / "CLAUDE.md"
@@ -1288,9 +1428,8 @@ def cmd_init(
     # ── Generate ──
     print("\nGenerating project configuration...")
 
-    # Collect existing private prefixes so foundry cleanup skips private files
-    existing_private = manifest.get("private_sources", []) if manifest else []
-    private_prefixes = [s["prefix"] for s in existing_private]
+    # Collect private prefixes (existing + pending) so foundry cleanup skips them
+    private_prefixes = existing_private_prefixes + [s["prefix"] for s in pending_private]
 
     claude_dir = project / ".claude"
     claude_dir.mkdir(parents=True, exist_ok=True)
@@ -1350,59 +1489,17 @@ def cmd_init(
             total = sum(len(v) for v in deployed.values())
             print(f"  \u2713 Private source deployed: {prefix} ({total} files)")
             private_sources.append({"path": str(source_path), "prefix": prefix, **deployed})
-    elif interactive:
-        # Interactive prompt loop
-        while True:
-            raw = input(
-                "\nAdd a private config source? (path or Enter to skip): "
-            ).strip()
-            if not raw:
-                break
-            source_path = Path(raw).expanduser().resolve()
-            if not source_path.is_dir():
-                print(f"  Not a directory: {source_path}")
-                continue
-            # Default prefix from directory name
-            default_prefix = re.sub(
-                r'[^a-z0-9-]', '-', source_path.name.lower(),
-            ).strip('-') or "private"
-            prefix = input(f"  Prefix [{default_prefix}]: ").strip() or default_prefix
-            err = validate_prefix(
-                prefix, [s["prefix"] for s in private_sources] + private_prefixes,
-            )
-            if err:
-                print(f"  Invalid prefix: {err}")
-                continue
-            content = discover_private_content(source_path)
-            if not any(content.values()):
-                print(f"  No deployable content found in {source_path}")
-                continue
-            # Present toggle menus per component type
-            all_items: list[str] = []
-            item_map: list[tuple[str, str]] = []  # (component_type, item)
-            for comp_type in ["rules", "commands", "skills", "agents", "hooks"]:
-                for item in content[comp_type]:
-                    all_items.append(f"[{comp_type}] {item}")
-                    item_map.append((comp_type, item))
-            selected_private = toggle_menu(
-                f"Private Source: {prefix}",
-                all_items,
-                set(range(len(all_items))),
-            )
-            selections: dict[str, list[str]] = {
-                "rules": [], "commands": [], "skills": [], "agents": [], "hooks": [],
-            }
-            for idx in sorted(selected_private):
-                comp_type, item = item_map[idx]
-                selections[comp_type].append(item)
-            if not any(selections.values()):
-                print("  No items selected.")
-                continue
-            clean_private_files(project, prefix)
-            deployed = deploy_private_source(project, source_path, prefix, selections)
+    elif pending_private:
+        # Deploy private sources collected during interactive step loop
+        for ps in pending_private:
+            clean_private_files(project, ps["prefix"])
+            deployed = deploy_private_source(
+                project, ps["source_path"], ps["prefix"], ps["selections"])
             total = sum(len(v) for v in deployed.values())
-            print(f"  \u2713 Private source deployed: {prefix} ({total} files)")
-            private_sources.append({"path": str(source_path), "prefix": prefix, **deployed})
+            print(f"  \u2713 Private source deployed: {ps['prefix']} ({total} files)")
+            private_sources.append({
+                "path": str(ps["source_path"]), "prefix": ps["prefix"], **deployed,
+            })
     elif existing_private:
         # Non-interactive: re-deploy from manifest
         private_sources = redeploy_private_sources(project, existing_private)
