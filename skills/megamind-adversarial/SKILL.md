@@ -30,4 +30,5 @@ Complete ALL steps before writing code or taking action:
 2. **"No problems found" is a failure** — Always find at least 3 weaknesses. If you can't, you're not looking hard enough.
 3. **Attack your own ideas** — Don't just critique the user's request; critique your own instinctive response to it
 4. **Be specific** — "This might have performance issues" is useless. "This O(n²) loop will timeout at 10k records" is useful.
-5. **One response only** — Present your full adversarial analysis, then wait
+5. **Verify your own numbers** — When your attack relies on specific thresholds, rates, or calculations, double-check them. An adversarial analysis built on a wrong number is worse than no analysis — it produces confident, specific, wrong conclusions. If you're unsure of a number, state the uncertainty rather than asserting a false precision.
+6. **One response only** — Present your full adversarial analysis, then wait

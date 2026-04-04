@@ -53,4 +53,5 @@ Complete ALL steps before writing code or taking action:
 4. **Quantity before quality** — Generate many, compress hard, present few
 5. **Include the uncomfortable option** — The "Wild" option should make you slightly nervous
 6. **Feasibility gradient required** — Always present Safe / Bold / Wild, not just a ranked list
-7. **One response only** — Present your full exploration, then wait
+7. **Clarify before creating when precision matters** — If the domain requires specific numbers (tax rates, thresholds, legal rules), ask or verify before weaving them into creative ideas. Creative thinking built on wrong facts produces confidently wrong solutions. When uncertain about a domain-specific number, flag it explicitly rather than guessing.
+8. **One response only** — Present your full exploration, then wait
