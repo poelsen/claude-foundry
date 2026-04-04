@@ -15,7 +15,7 @@ The obvious answer is your starting point, not your destination. Push past it. Q
 Complete ALL steps before writing code or taking action:
 
 1. **Intent** — What is the user actually trying to achieve? Think beyond the literal words. What's the real problem? What does success look like?
-2. **Assumptions** — List ALL assumptions about scope, users, context, constraints, existing code, and edge cases — even the obvious ones.
+2. **Assumptions** — List ALL assumptions about scope, users, context, constraints, existing code, and edge cases — even the obvious ones. When an assumption involves a specific number, threshold, or rule (tax rates, legal limits, protocol specs), verify it rather than stating it from memory. A wrong assumption that looks precise is more dangerous than an acknowledged uncertainty.
 3. **Exploration** — Do NOT settle for the first approach:
    - What would a completely different solution look like?
    - Is there a simpler way to get the same result?
