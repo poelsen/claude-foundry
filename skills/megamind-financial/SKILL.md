@@ -140,7 +140,12 @@ Use at least 2: DCF, comparables, earnings power, asset-based, or pre-earnings f
 
 Tax rules are 100% country-specific. Identify the jurisdiction before any analysis. Common frameworks:
 
-**Denmark (DK):** For current rates and thresholds, read the data file `data/dk-tax-YYYY.md` (use the most recent year available in `skills/megamind-financial/data/`). Key rules that are structural (not rate-dependent):
+**Denmark (DK):** Rates below are from the data file `data/dk-tax-2025.md`. When updating rates, update BOTH the data file AND these inline values (see `skills/IMPROVEMENT-PROCESS.md` for the annual update process).
+- Aktieindkomst: 27% up to DKK 61,000 (2025), 42% above. Married couples share the threshold (DKK 122,000 combined).
+- Topskat: 15% on personal income above DKK 588,900 (after AM-bidrag 8%)
+- Pension: ratepension fradrag up to DKK 63,100/year. Aldersopsparing DKK 5,600/year. PAL-skat 15.3%.
+- Aktiesparekonto: max DKK 135,900 deposit, 17% lagerbeskatning
+- Key structural rules (not rate-dependent):
 - Lagerbeskatning vs realisationsbeskatning: ETFs/investment funds taxed on unrealized gains yearly (lager); individual stocks taxed on realization
 - Crypto/NFT: taxed as **personlig indkomst** under spekulationsbeskatning (statsskatteloven §5), NOT aktieindkomst or kapitalindkomst. AM-bidrag does NOT apply to speculative gains. Losses only offset same-category speculative gains in same year (no carry-forward). NFT treatment is evolving — flag uncertainty, recommend bindende svar for material amounts.
 - Cross-border dividend withholding: DK has dobbeltbeskatningsoverenskomster (DBO) with most countries. Treaty rate is typically 15%. Denmark gives credit (lempelse) for foreign tax paid.
@@ -299,4 +304,5 @@ Most countries use a variant of:
 8. **Quality above average, price below average** — The Thorleif Jackson principle applies to investments; the analogous principle for other domains is: optimize for long-term total cost, not headline rate
 9. **Data skepticism** — If a number looks too good or too bad, verify it
 10. **Know your framework's limits** — State when a framework doesn't apply and what you're using instead
-11. **One response only** — Present your full analysis, then wait
+11. **Include disclaimer in output** — End every financial response with: *"This is analytical output, not professional financial, tax, or legal advice. Verify with a licensed advisor before acting."*
+12. **One response only** — Present your full analysis, then wait

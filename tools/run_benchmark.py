@@ -29,9 +29,11 @@ from eval_rubric import Challenge, EvalResult, load_challenges, score_response
 from eval_runner import (
     _build_depth_judge_prompt,
     _build_judge_prompt,
+    _build_outcome_judge_prompt,
     _build_subject_prompt,
     _parse_depth_response,
     _parse_judge_response,
+    _parse_outcome_response,
 )
 from skill_parser import parse_skill
 
@@ -119,10 +121,18 @@ def run_one(challenge: Challenge, skill_name: str | None) -> EvalResult:
         depth_text = _claude_cli(depth_prompt)
         depth_scores = _parse_depth_response(challenge, depth_text)
 
+    # Separate outcome judge call (process-blind, tests decision quality)
+    outcome_scores = []
+    if challenge.rubric.outcome_elements:
+        outcome_prompt = _build_outcome_judge_prompt(challenge, response)
+        outcome_text = _claude_cli(outcome_prompt)
+        outcome_scores = _parse_outcome_response(challenge, outcome_text)
+
     return score_response(
         challenge, element_scores, anti_scores,
         skill_used=skill_name, raw_response=response,
         depth_scores=depth_scores,
+        outcome_scores=outcome_scores,
     )
 
 
@@ -323,6 +333,26 @@ def print_element_grid(
                     cell = "-"
                 row += cell.center(col_width)
             print(row)
+
+        # Outcome scores (process-blind, only if challenge has outcome_elements)
+        if challenge.rubric.outcome_elements:
+            print()
+            print("  OUTCOMES (process-blind — did it change the decision?):")
+            for oid in challenge.rubric.outcome_elements:
+                row = f"  * {oid}".ljust(34)
+                for skill in skill_modes:
+                    results = all_results.get(challenge.id, {}).get(label(skill), [])
+                    if results:
+                        met = sum(
+                            1 for r in results for o in r.outcome_scores
+                            if o.element_id == oid and o.met
+                        )
+                        total = len(results)
+                        cell = f"{met}/{total}"
+                    else:
+                        cell = "-"
+                    row += cell.center(col_width)
+                print(row)
 
         print()
 
