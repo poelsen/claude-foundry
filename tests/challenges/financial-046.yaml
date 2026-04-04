@@ -22,4 +22,8 @@ rubric:
     applies_aktie_rates: "Taxes crypto at aktieindkomst rates (27/42%) instead of personlig indkomst rates"
     ignores_losses: "Doesn't address whether the altcoin loss offsets the Bitcoin gain"
     generic_crypto_advice: "Gives generic crypto tax advice without DK-specific SKAT treatment"
+  depth_elements:
+    classification_certainty: "Does it correctly classify crypto as personlig indkomst under spekulationsbeskatning (not kapitalindkomst)?"
+    loss_offset_precision: "Does it explain that losses can ONLY offset same-category same-year gains with no carry-forward?"
+    total_tax_range: "Does it provide a specific DKK tax estimate range reflecting different marginal rate scenarios?"
   passing_score: 6

@@ -20,4 +20,8 @@ rubric:
     only_traditional: "Only suggests standard rate limiting variations"
     single_approach: "Proposes only one solution"
     no_analogy: "No cross-domain thinking or analogies"
+  depth_elements:
+    reframe_originality: "Are the reframings genuinely novel (e.g., 'this is an economics problem not a security problem') or just rewording?"
+    analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
+    hybrid_novelty: "Is the combined/hybrid solution something no individual idea produced, or just picking the best single idea?"
   passing_score: 6

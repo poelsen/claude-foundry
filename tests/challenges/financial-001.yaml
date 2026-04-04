@@ -21,4 +21,8 @@ rubric:
     pe_only: "Judges purely on P/E without considering quality or growth"
     narrative_driven: "Just tells the Ozempic story without quantitative rigor"
     ignores_valuation: "Doesn't attempt a valuation range or fair value estimate"
+  depth_elements:
+    valuation_precision: "Does it provide a specific fair value range with DKK/USD numbers, not just 'fairly valued'?"
+    scenario_quantification: "Are bear/base/bull cases quantified with specific price targets and probability weights?"
+    pe_channel_specifics: "Does it estimate or calculate actual P/E channel percentile boundaries for this stock?"
   passing_score: 6

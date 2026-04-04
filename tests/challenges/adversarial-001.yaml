@@ -20,4 +20,8 @@ rubric:
     approves_uncritically: "Approves the approach without finding problems"
     vague_concerns: "Only raises vague concerns without specific scenarios"
     no_alternatives: "Doesn't suggest any alternative or hardened approach"
+  depth_elements:
+    attack_specificity: "Are failure scenarios described with specific numbered steps and concrete numbers (e.g., 'Thread A reads... Thread B writes...'), or just category names?"
+    inversion_quality: "Does the inversion genuinely challenge the premise (e.g., 'what if you don't cache at all?'), or just suggest a minor variant?"
+    hardening_actionability: "Are the proposed mitigations specific enough to implement (e.g., 'use SET NX with TTL 2x the query time'), or generic advice?"
   passing_score: 6

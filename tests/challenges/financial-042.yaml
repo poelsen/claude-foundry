@@ -13,7 +13,7 @@ rubric:
     lager_on_ask: "Notes aktiesparekonto uses lagerbeskatning — taxed yearly on unrealized gains at 17%"
     frie_midler_realisation: "Notes individual stocks in frie midler use realisationsbeskatning at 27/42% aktieindkomst rates"
     frie_midler_etf_lager: "Notes that ETFs in frie midler are ALSO lager-taxed but at the higher 27/42% rates — worse than ASK"
-    ask_advantage_quantified: "Quantifies or illustrates the 17% vs 27/42% rate advantage on ASK for the same lager treatment"
+    ask_advantage_quantified: "Quantifies the 17% vs 27/42% rate advantage with DKK terminal value comparison over the stated horizon (not just 'lower rate is better')"
     deposit_limit_issue: "Notes the ASK deposit limit means only ~136K fits in ASK, remainder must go to frie midler"
     split_recommendation: "Recommends splitting: max ASK first (lower lager rate), overflow to frie midler individual stocks (realisation advantage)"
     index_fund_vs_etf_nuance: "Distinguishes Danish-domiciled index funds (may be realisation) from foreign ETFs (lager) for frie midler"
@@ -21,4 +21,9 @@ rubric:
     ignores_ask: "Doesn't mention aktiesparekonto as an option"
     wrong_ask_rate: "Gets the ASK tax rate wrong (it's 17%, not 27%)"
     treats_all_lager_same: "Doesn't distinguish between 17% ASK lager and 27/42% frie midler lager"
+  depth_elements:
+    compounding_illustration: "Does it model the compounding impact over 15 years with actual DKK numbers (not just 'lower rate is better')?"
+    gain_harvesting_strategy: "Does it suggest annual gain harvesting up to the DKK 61K aktieindkomst threshold at 27%?"
+    fund_specific_recommendations: "Does it name specific funds (e.g., Sparinvest INDEX Globale Aktier KL) with ISINs or ÅOP figures?"
+    livsvarig_consideration: "Does it consider livsvarig pension as a potentially superior alternative for high earners?"
   passing_score: 6

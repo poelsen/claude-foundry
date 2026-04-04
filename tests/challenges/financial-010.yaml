@@ -22,4 +22,8 @@ rubric:
     never_sell_winners: "Advises holding forever because quality is good"
     mechanical_sell: "Says sell purely because of channel signal without considering context"
     ignores_channel: "Dismisses the SELL ZONE signal entirely"
+  depth_elements:
+    multiple_decomposition: "Does it decompose how much of the 120% return came from earnings growth vs P/E expansion?"
+    trim_sizing: "Does it suggest a specific trim percentage (e.g., 30-50%) or just say 'consider selling some'?"
+    opportunity_cost_quantified: "Does it calculate what the proceeds could earn at better valuations?"
   passing_score: 6

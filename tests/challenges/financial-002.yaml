@@ -22,4 +22,8 @@ rubric:
     cheap_equals_good: "Concludes it's a buy just because multiples are low"
     dismisses_without_analysis: "Dismisses as value trap without investigating the fundamentals"
     ignores_sector: "Doesn't consider banking sector dynamics"
+  depth_elements:
+    roe_diagnosis_depth: "Does it investigate specific causes of ROE decline (NIM, cost/income, NPL) or just note it's declining?"
+    dividend_math: "Does it calculate FCF coverage ratio or just say 'payout looks sustainable'?"
+    bank_sector_knowledge: "Does it reference specific banking metrics (CET1, NPL ratio, cost/income) or stay generic?"
   passing_score: 6

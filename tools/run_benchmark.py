@@ -25,8 +25,14 @@ from pathlib import Path
 # Add tools to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from eval_rubric import Challenge, ElementScore, EvalResult, load_challenges, score_response
-from eval_runner import _build_judge_prompt, _build_subject_prompt, _parse_judge_response
+from eval_rubric import Challenge, EvalResult, load_challenges, score_response
+from eval_runner import (
+    _build_depth_judge_prompt,
+    _build_judge_prompt,
+    _build_subject_prompt,
+    _parse_depth_response,
+    _parse_judge_response,
+)
 from skill_parser import parse_skill
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -106,9 +112,17 @@ def run_one(challenge: Challenge, skill_name: str | None) -> EvalResult:
 
     element_scores, anti_scores = _parse_judge_response(challenge, judge_text)
 
+    # Separate depth judge call (avoids halo effect from binary scoring)
+    depth_scores = []
+    if challenge.rubric.depth_elements:
+        depth_prompt = _build_depth_judge_prompt(challenge, response)
+        depth_text = _claude_cli(depth_prompt)
+        depth_scores = _parse_depth_response(challenge, depth_text)
+
     return score_response(
         challenge, element_scores, anti_scores,
         skill_used=skill_name, raw_response=response,
+        depth_scores=depth_scores,
     )
 
 
@@ -147,6 +161,17 @@ def results_to_json(
                     if a.element_id == aid and a.present
                 )
                 mode_data["anti_patterns"][aid] = {"hits": hits, "total": len(results)}
+            if challenge.rubric.depth_elements:
+                mode_data["depth"] = {}
+                for did in challenge.rubric.depth_elements:
+                    depths = [
+                        d.score for r in results for d in r.depth_scores
+                        if d.element_id == did
+                    ]
+                    mode_data["depth"][did] = {
+                        "avg": sum(depths) / len(depths) if depths else 0,
+                        "scores": depths,
+                    }
             cdata["modes"][key] = mode_data
         data["challenges"][challenge.id] = cdata
     return data
@@ -262,6 +287,43 @@ def print_element_grid(
                 cell = "-"
             row += cell.center(col_width)
         print(row)
+
+        # Depth scores (only if challenge has depth_elements)
+        if challenge.rubric.depth_elements:
+            print()
+            print("  DEPTH (0-3 scale, indicative — average across runs):")
+            for did in challenge.rubric.depth_elements:
+                row = f"  ~ {did}".ljust(34)
+                for skill in skill_modes:
+                    results = all_results.get(challenge.id, {}).get(label(skill), [])
+                    if results:
+                        depths = [
+                            d.score for r in results for d in r.depth_scores
+                            if d.element_id == did
+                        ]
+                        if depths:
+                            avg_d = sum(depths) / len(depths)
+                            cell = f"{avg_d:.1f}/3"
+                        else:
+                            cell = "n/a"
+                    else:
+                        cell = "-"
+                    row += cell.center(col_width)
+                print(row)
+
+            row = "  DEPTH TOTAL (avg)".ljust(34)
+            for skill in skill_modes:
+                results = all_results.get(challenge.id, {}).get(label(skill), [])
+                if results:
+                    totals = [r.depth_total for r in results]
+                    max_depth = len(challenge.rubric.depth_elements) * 3
+                    avg_t = sum(totals) / len(totals) if totals else 0
+                    cell = f"{avg_t:.1f}/{max_depth}"
+                else:
+                    cell = "-"
+                row += cell.center(col_width)
+            print(row)
+
         print()
 
 

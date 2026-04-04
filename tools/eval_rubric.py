@@ -16,9 +16,10 @@ import yaml
 class Rubric:
     """Scoring rubric for a challenge problem."""
 
-    required_elements: dict[str, str]  # id -> description
-    anti_patterns: dict[str, str]  # id -> description
+    required_elements: dict[str, str]  # id -> description (binary: present/absent, +1 each)
+    anti_patterns: dict[str, str]  # id -> description (binary: present/absent, -2 each)
     passing_score: int
+    depth_elements: dict[str, str] = None  # id -> description (0-3: absent/mentioned/addressed/deep)
 
 
 @dataclass(frozen=True)
@@ -35,10 +36,19 @@ class Challenge:
 
 @dataclass(frozen=True)
 class ElementScore:
-    """Score for a single rubric element."""
+    """Score for a single binary rubric element (present/absent)."""
 
     element_id: str
     present: bool
+    evidence: str = ""
+
+
+@dataclass(frozen=True)
+class DepthScore:
+    """Score for a single depth rubric element (0-3 scale)."""
+
+    element_id: str
+    score: int  # 0=absent, 1=mentioned, 2=addressed with reasoning, 3=deep with specifics
     evidence: str = ""
 
 
@@ -53,6 +63,8 @@ class EvalResult:
     total_score: int
     passed: bool
     raw_response: str = ""
+    depth_scores: tuple[DepthScore, ...] = ()
+    depth_total: int = 0  # sum of depth scores (max = 3 * num_depth_elements)
 
 
 def load_challenge(path: Path) -> Challenge:
@@ -87,6 +99,7 @@ def load_challenge(path: Path) -> Challenge:
         required_elements=rubric_data["required_elements"],
         anti_patterns=rubric_data.get("anti_patterns", {}),
         passing_score=rubric_data["passing_score"],
+        depth_elements=rubric_data.get("depth_elements"),
     )
 
     return Challenge(
@@ -116,13 +129,18 @@ def score_response(
     anti_pattern_scores: list[ElementScore],
     skill_used: str | None = None,
     raw_response: str = "",
+    depth_scores: list[DepthScore] | None = None,
 ) -> EvalResult:
     """Score a response against a challenge rubric.
 
-    Points: +1 for each required element present, -1 for each anti-pattern present.
+    Points: +1 for each required element present, -2 for each anti-pattern present.
+    Depth scores (0-3 per element) are tracked separately and do not affect pass/fail.
     """
     score = sum(1 for e in element_scores if e.present)
-    score -= sum(1 for a in anti_pattern_scores if a.present)
+    score -= sum(2 for a in anti_pattern_scores if a.present)
+
+    depth_scores = depth_scores or []
+    depth_total = sum(d.score for d in depth_scores)
 
     return EvalResult(
         challenge_id=challenge.id,
@@ -132,4 +150,6 @@ def score_response(
         total_score=score,
         passed=score >= challenge.rubric.passing_score,
         raw_response=raw_response,
+        depth_scores=tuple(depth_scores),
+        depth_total=depth_total,
     )

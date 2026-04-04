@@ -22,4 +22,7 @@ rubric:
     ignores_complexity: "Recommends VSO without addressing the compliance and bookkeeping burden"
     wrong_tax_rate: "Gets the 22% opsparingsskat rate wrong or confuses it with selskabsskat"
     generic_advice: "Gives general tax advice without DK-specific VSO mechanics"
+  depth_elements:
+    vso_savings_quantified: "Does it calculate the specific DKK deferral benefit at this income level (not just 'you save at 22% vs 52%')?"
+    indskudskonto_practical: "Does it explain the practical setup steps for indskudskonto, or just mention it exists?"
   passing_score: 6

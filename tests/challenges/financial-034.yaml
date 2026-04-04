@@ -23,4 +23,7 @@ rubric:
     ignores_rate_increase: "Focuses only on the restgæld reduction without addressing the rate going from 1% to 4.5%"
     generic_refinance: "Treats this as a standard refinancing without understanding the unique Danish realkredit bond mechanism"
     no_calculation: "Discusses conceptually without attempting any numerical comparison"
+  depth_elements:
+    monthly_payment_math: "Does it calculate approximate monthly payments for both old and new loan, showing the comparison?"
+    break_even_calculation: "Does it compute a break-even period for the konvertering in years?"
   passing_score: 6
