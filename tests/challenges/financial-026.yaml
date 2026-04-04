@@ -1,0 +1,25 @@
+id: financial-026
+name: "Unlabeled Screen — Apply the Right Framework Without Being Told"
+category: financial_analysis_hard
+skill: megamind-financial
+prompt: |
+  Evaluate these metrics for a potential investment and give me your
+  structured scoring assessment:
+  P/E 14 (forward), EV/EBITDA 9, ROE 16%, dividend yield 2.8%,
+  payout ratio 45%, P/B 2.5. European mid-cap, consumer staples sector.
+  What quality and value scores would you give this?
+rubric:
+  required_elements:
+    applies_structured_scoring: "Uses a structured quality+value scoring framework with specific thresholds, not just 'looks reasonable'"
+    pe_threshold_bands: "Places P/E 14 into a specific band (e.g., 12-15 = attractive) rather than just saying 'moderate'"
+    ev_ebitda_threshold: "Places EV/EBITDA 9 into a specific band rather than generic commentary"
+    roe_gate_check: "Checks ROE 16% against a quality threshold (e.g., >15% passes) and notes it's above minimum but not strong"
+    payout_optimal_range: "Identifies 45% payout as being in an optimal range (30-50%)"
+    dividend_band: "Places 2.8% yield into a specific band (attractive range)"
+    separates_quality_value: "Presents quality and value as separate dimensions, not a single blended verdict"
+    hard_gates_explicit: "Explicitly checks pass/fail gates before proceeding to scoring"
+  anti_patterns:
+    vague_assessment: "Only says 'metrics look reasonable' or 'fairly valued' without structured scoring"
+    no_thresholds: "Discusses each metric without placing it in defined bands or ranges"
+    single_verdict: "Gives only one combined verdict instead of separate quality and value scores"
+  passing_score: 6

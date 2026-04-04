@@ -1,0 +1,26 @@
+id: financial-020
+name: "Sector Rotation and Quality Screens"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  I ran Thorleif-style screens globally and noticed:
+  - Financials dominate the top scores (cheap P/E, high ROE, good dividends)
+  - Technology has very few passing stocks (P/E too high, no dividends)
+  - Energy scores well on trailing numbers but analysts expect earnings decline
+  Does this mean I should overweight financials and ignore tech?
+  Is the screen biased toward certain sectors?
+rubric:
+  required_elements:
+    screen_bias_awareness: "Identifies that value screens systematically favor certain sectors"
+    sector_specific_thresholds: "Discusses why different sectors need different thresholds"
+    cyclical_warning: "Warns about energy's trailing metrics being potentially misleading"
+    tech_justification: "Discusses why quality tech may warrant higher multiples (asset-light, scalability)"
+    financial_risk: "Notes that financials screen well on earnings but carry balance sheet/systemic risk"
+    screen_as_starting_point: "Positions the screen as a starting point, not a final answer"
+    diversification_principle: "Argues for sector diversification even when one sector dominates screens"
+    thorleif_practice: "Notes Thorleif's actual portfolio was sector-diversified despite Danish focus"
+  anti_patterns:
+    screen_is_gospel: "Treats screen output as investment decisions without further analysis"
+    abandons_screen: "Suggests ignoring the screen results entirely"
+    no_sector_adjustment: "Applies identical thresholds across all sectors"
+  passing_score: 6

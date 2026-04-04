@@ -1,0 +1,24 @@
+id: financial-015
+name: "Interest Rate Sensitivity Across Sectors"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Central banks are signaling rate cuts of 150-200bps over the next 18 months.
+  I have capital to deploy. Which sectors and stock types benefit most from
+  falling rates, and how should I position a Thorleif-style quality+value
+  portfolio to capture this?
+rubric:
+  required_elements:
+    rate_sensitivity_map: "Maps which sectors benefit vs suffer from rate cuts (REITs, utilities, banks, growth)"
+    duration_effect: "Explains how rate cuts affect long-duration assets (growth stocks) vs short-duration"
+    bank_impact: "Discusses the nuanced impact on banks (NIM compression vs loan growth)"
+    quality_filter: "Doesn't abandon quality criteria just to chase rate-sensitive names"
+    valuation_discipline: "Checks whether rate-sensitive sectors are already pricing in cuts"
+    historical_context: "References historical rate cut cycles and sector performance"
+    portfolio_construction: "Suggests specific positioning changes with rationale"
+    contrarian_check: "Considers whether the consensus rate trade is already crowded"
+  anti_patterns:
+    macro_without_micro: "Discusses macro themes without connecting to specific stock selection criteria"
+    abandons_quality: "Suggests buying low-quality rate-sensitive stocks just for the trade"
+    consensus_only: "Only repeats the obvious consensus trades without critical analysis"
+  passing_score: 6

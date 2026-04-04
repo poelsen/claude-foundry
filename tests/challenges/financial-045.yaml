@@ -1,0 +1,26 @@
+id: financial-045
+name: "DK Hybrid — Expat Moving to Denmark with Foreign Assets"
+category: financial_hybrid_dk_hard
+skill: megamind-financial
+prompt: |
+  I'm a German citizen moving to Denmark for work. I own a German
+  apartment (rented out, EUR 150K mortgage remaining), a German
+  depot with EUR 200K in ETFs and stocks, a Riester pension with
+  EUR 40K, and a German bank account. What happens to my tax
+  situation when I become a Danish tax resident? What should I
+  restructure before or after the move?
+rubric:
+  required_elements:
+    full_tax_liability: "Explains that Danish tax residents are taxed on worldwide income (globalindkomstprincippet)"
+    german_rental_treatment: "Discusses how German rental income is taxed — DK has taxing rights but gives credit for German tax paid (DBO)"
+    etf_lager_shock: "Warns that German ETFs will become subject to Danish lagerbeskatning — unrealized gains taxed yearly"
+    consider_selling_before: "Suggests considering realizing gains on ETFs BEFORE becoming DK tax resident (taxed under German rules at 25%+Soli)"
+    riester_complication: "Flags Riester pension complications — DK may tax withdrawals differently, and Riester zulagen may need to be repaid if leaving DE"
+    double_taxation_treaty: "References the DK-DE dobbeltbeskatningsoverenskomst for handling overlap"
+    property_tax_both: "Notes the apartment may be subject to tax in both countries (DE has primary taxing right on immovable property)"
+    restructuring_timeline: "Provides a before-move vs after-move action plan"
+  anti_patterns:
+    ignores_worldwide: "Doesn't mention Denmark's worldwide taxation principle"
+    german_rules_only: "Analyzes everything under German tax rules without considering the DK switch"
+    no_restructuring: "Doesn't suggest any pre-move restructuring opportunities"
+  passing_score: 6

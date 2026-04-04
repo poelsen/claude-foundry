@@ -1,0 +1,26 @@
+id: financial-029
+name: "Framework Selection — Three Stocks, Three Types"
+category: financial_analysis_hard
+skill: megamind-financial
+prompt: |
+  Compare these three for my portfolio:
+  Stock A: Cloud SaaS, P/S 18x, no earnings, revenue +40%, gross margin 78%
+  Stock B: Nordic holding company, P/B 0.65, ROE 10%, holds 4 listed stakes
+  Stock C: German auto parts supplier, trailing P/E 5, forward P/E 9,
+           ROE 22%, revenue down 15% last year
+  Which is the best investment?
+rubric:
+  required_elements:
+    identifies_three_types: "Correctly classifies each: A = growth/pre-earnings, B = holding company, C = cyclical"
+    skips_pe_for_a: "Does NOT apply P/E scoring to Stock A (pre-earnings) — uses P/S, Rule of 40, or similar"
+    nav_primary_for_b: "Uses NAV discount / P/B as primary lens for the holding company, not P/E"
+    normalizes_c: "Notes Stock C's trailing P/E 5 is likely peak-cycle and uses forward P/E or normalized earnings"
+    different_frameworks: "Explicitly uses different valuation frameworks for each stock type"
+    forward_trailing_gap_c: "Notes the forward/trailing gap on Stock C (5 to 9 = earnings expected to halve) as a cyclical signal"
+    holding_roe_context: "Notes that ROE 10% for a holding company is not comparable to ROE 10% for an operating company"
+    takes_position: "Actually recommends which is best with reasoning, doesn't just describe each"
+  anti_patterns:
+    uniform_framework: "Applies the same P/E-based scoring to all three stocks"
+    cant_compare: "Says they can't be compared because they're different types"
+    ignores_stock_type: "Doesn't recognize the stocks require different analytical frameworks"
+  passing_score: 6

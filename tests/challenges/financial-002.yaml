@@ -1,0 +1,25 @@
+id: financial-002
+name: "Value Trap vs Turnaround"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A European bank is trading at P/B 0.45, P/E 6, dividend yield 7.2%,
+  ROE 8%. It's been profitable every year for the last decade but ROE
+  has declined from 14% to 8% over 5 years. Earnings are flat.
+  Revenue is growing at 2% nominal. The payout ratio is 43%.
+  Is this a value opportunity or a value trap?
+rubric:
+  required_elements:
+    value_trap_analysis: "Explicitly discusses what distinguishes a value trap from a genuine bargain"
+    quality_gate_check: "Notes ROE below 15% quality threshold and discusses implications"
+    sector_pb_context: "Evaluates P/B 0.45 in context of banking sector norms (cheap < 0.8)"
+    dividend_sustainability: "Assesses whether the 7.2% yield is sustainable given payout and earnings trend"
+    declining_roe_diagnosis: "Investigates WHY ROE is declining — not just that it is"
+    turnaround_signals: "Checks for recovery signals or catalysts that could reverse the decline"
+    asks_right_questions: "Asks about NIM trends, cost/income ratio, capital adequacy, or loan book quality"
+    contrarian_reasoning: "Considers Thorleif's contrarian principle — buy after drops when fundamentals intact"
+  anti_patterns:
+    cheap_equals_good: "Concludes it's a buy just because multiples are low"
+    dismisses_without_analysis: "Dismisses as value trap without investigating the fundamentals"
+    ignores_sector: "Doesn't consider banking sector dynamics"
+  passing_score: 6

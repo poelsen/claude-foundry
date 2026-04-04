@@ -1,0 +1,25 @@
+id: financial-038
+name: "DK Tax — VSO vs Kapitalafkastordning"
+category: financial_tax_dk
+skill: megamind-financial
+prompt: |
+  I'm a Danish freelance consultant earning DKK 900,000/year.
+  My accountant mentioned I could use Virksomhedsskatteordningen (VSO)
+  to reduce my tax bill. I currently just report everything as personal
+  income. How does VSO work, what are the benefits, and is it worth
+  the complexity for someone at my income level?
+rubric:
+  required_elements:
+    vso_mechanism: "Explains VSO: business income taxed at 22% if retained in the business (opsparet overskud), taxed as personal income when withdrawn"
+    tax_deferral_benefit: "Identifies the core benefit: defer tax by keeping profits in the business at 22% instead of marginal rate (~52% at this income)"
+    hævet_i_overensstemmelse: "Explains that withdrawals (hævninger) are taxed as personal income — VSO is deferral, not elimination"
+    indskudskonto: "Mentions indskudskonto and the requirement to track business vs private assets"
+    complexity_cost: "Acknowledges VSO adds significant accounting complexity and typically requires a professional accountant"
+    income_level_assessment: "Assesses whether DKK 900K income benefits meaningfully — at this level, the marginal rate is high, so the spread between 22% and ~52% is substantial"
+    kapitalafkast_mention: "Mentions or compares with kapitalafkastordningen as a simpler alternative"
+    concrete_recommendation: "Recommends whether VSO is worth it for this specific situation"
+  anti_patterns:
+    ignores_complexity: "Recommends VSO without addressing the compliance and bookkeeping burden"
+    wrong_tax_rate: "Gets the 22% opsparingsskat rate wrong or confuses it with selskabsskat"
+    generic_advice: "Gives general tax advice without DK-specific VSO mechanics"
+  passing_score: 6

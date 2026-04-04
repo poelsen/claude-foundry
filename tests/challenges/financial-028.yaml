@@ -1,0 +1,24 @@
+id: financial-028
+name: "Data Poisoning — Score Before or After Sanity Check?"
+category: financial_analysis_hard
+skill: megamind-financial
+prompt: |
+  My screener found a great stock: P/E 8, EV/EBITDA 4, ROE 24%,
+  dividend yield 5.5%, payout ratio 40%, P/B 1.8. All metrics look
+  excellent. It's a mid-cap European tech company.
+  What's your investment score?
+rubric:
+  required_elements:
+    sanity_check_first: "Runs cross-metric sanity checks BEFORE scoring, not after"
+    ev_pe_ratio_flag: "Computes EV/EBITDA / P/E = 4/8 = 0.5x, which is BELOW the 0.7 lower bound — flags as anomalous"
+    tech_pb_context: "Notes P/B 1.8 is unusually low for a tech company (tech cheap threshold is typically <4.0)"
+    questions_data_source: "Questions whether the data is reliable before accepting the metrics"
+    refuses_to_score: "Does NOT produce a full investment score on unverified data — defers scoring until data is validated"
+    possible_explanations: "Suggests what could cause these anomalies (massive debt making EV low, one-time earnings boost, wrong data)"
+    tech_dividend_unusual: "Notes that 5.5% dividend yield on a tech company is unusual and warrants investigation"
+    too_good_to_be_true: "Explicitly states that metrics this good across the board warrant skepticism, not excitement"
+  anti_patterns:
+    scores_enthusiastically: "Produces a high investment score and recommends buying without questioning the data"
+    ignores_anomalies: "Doesn't notice the EV/EBITDA vs P/E ratio is below normal range"
+    no_sanity_checks: "Proceeds directly to scoring without any cross-metric validation"
+  passing_score: 6

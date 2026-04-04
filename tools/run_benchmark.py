@@ -2,15 +2,12 @@
 """Run comprehensive megamind skill benchmarks.
 
 Runs every challenge against every skill mode + baseline.
-Produces a detailed comparison report.
+Produces a detailed comparison report. Uses the claude CLI.
 
-Usage (local — uses claude CLI, no API cost):
-    python3 tools/run_benchmark.py --local --runs 2
-    python3 tools/run_benchmark.py --local --skill megamind-deep --runs 2
-
-Usage (API — requires ANTHROPIC_API_KEY):
-    ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --runs 2
-    ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --save results/baseline.json
+Usage:
+    python3 tools/run_benchmark.py --runs 2
+    python3 tools/run_benchmark.py --skill megamind-deep --runs 2
+    python3 tools/run_benchmark.py --save results/baseline.json
 """
 
 from __future__ import annotations
@@ -18,7 +15,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import os
 import shutil
 import subprocess
 import sys
@@ -40,7 +36,9 @@ CHALLENGES_DIR = REPO_ROOT / "tests" / "challenges"
 SUBJECT_MODEL = "claude-opus-4-6-20250929"
 JUDGE_MODEL = "claude-opus-4-6-20250929"
 
-ALL_SKILL_MODES = [None, "megamind-deep", "megamind-creative", "megamind-adversarial"]
+ALL_SKILL_MODES = [
+    None, "megamind-deep", "megamind-creative", "megamind-adversarial", "megamind-financial",
+]
 
 
 def label(skill: str | None) -> str:
@@ -52,32 +50,6 @@ def load_skill_content(skill_name: str) -> str | None:
     if not path.exists():
         return None
     return parse_skill(path).body
-
-
-def run_one(client, challenge: Challenge, skill_name: str | None) -> EvalResult:
-    """Run a single challenge with a single skill mode (API backend)."""
-    skill_content = load_skill_content(skill_name) if skill_name else None
-    subject_prompt = _build_subject_prompt(challenge, skill_content)
-
-    response = client.messages.create(
-        model=SUBJECT_MODEL,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": subject_prompt}],
-    ).content[0].text
-
-    judge_prompt = _build_judge_prompt(challenge, response)
-    judge_text = client.messages.create(
-        model=JUDGE_MODEL,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": judge_prompt}],
-    ).content[0].text
-
-    element_scores, anti_scores = _parse_judge_response(challenge, judge_text)
-
-    return score_response(
-        challenge, element_scores, anti_scores,
-        skill_used=skill_name, raw_response=response,
-    )
 
 
 def _claude_cli(prompt: str, model: str = "opus") -> str:
@@ -106,8 +78,8 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
     return result.stdout.strip()
 
 
-def run_one_local(challenge: Challenge, skill_name: str | None) -> EvalResult:
-    """Run a single challenge with a single skill mode (local claude CLI)."""
+def run_one(challenge: Challenge, skill_name: str | None) -> EvalResult:
+    """Run a single challenge with a single skill mode via claude CLI."""
     skill_content = load_skill_content(skill_name) if skill_name else None
     subject_prompt = _build_subject_prompt(challenge, skill_content)
 
@@ -454,26 +426,13 @@ def main() -> None:
     parser.add_argument("--json", action="store_true", help="Output JSON to stdout")
     parser.add_argument("--save", type=str, help="Save results to JSON file")
     parser.add_argument("--compare", type=str, help="Compare with saved baseline JSON")
-    parser.add_argument("--local", action="store_true", help="Use claude CLI instead of API (no cost)")
-    parser.add_argument("--workers", type=int, default=1, help="Parallel workers (use with --local)")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel workers")
     args = parser.parse_args()
 
-    use_local = args.local
-    client = None
-
-    if use_local:
-        if not shutil.which("claude"):
-            print("ERROR: claude CLI not found in PATH")
-            sys.exit(1)
-        print("Backend: claude CLI (local, no API cost)")
-    else:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            print("ERROR: ANTHROPIC_API_KEY not set (use --local for claude CLI)")
-            sys.exit(1)
-        from anthropic import Anthropic
-        client = Anthropic(api_key=api_key)
-        print("Backend: Anthropic API")
+    if not shutil.which("claude"):
+        print("ERROR: claude CLI not found in PATH")
+        sys.exit(1)
+    print("Backend: claude CLI")
 
     challenges = load_challenges(CHALLENGES_DIR)
     if args.challenges:
@@ -484,7 +443,7 @@ def main() -> None:
     if args.skill:
         skill_modes = [None]  # Always include baseline
         for s in args.skill:
-            if s in ("megamind-deep", "megamind-creative", "megamind-adversarial"):
+            if s in ALL_SKILL_MODES and s is not None:
                 skill_modes.append(s)
 
     total_combos = len(challenges) * len(skill_modes) * args.runs
@@ -513,10 +472,7 @@ def main() -> None:
         challenge, skill, run_idx = combo
         key = label(skill)
         try:
-            if use_local:
-                result = run_one_local(challenge, skill)
-            else:
-                result = run_one(client, challenge, skill)
+            result = run_one(challenge, skill)
             status = "PASS" if result.passed else "FAIL"
             return (challenge.id, key, run_idx, result, f"score={result.total_score} {status}")
         except Exception as e:

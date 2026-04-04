@@ -1,0 +1,26 @@
+id: financial-033
+name: "DK Tax — Pension Optimization"
+category: financial_tax_dk
+skill: megamind-financial
+prompt: |
+  I'm 35, Danish tax resident, earning DKK 650,000 annually (before AM-bidrag).
+  My employer offers a pension scheme but no additional matching beyond the
+  mandatory. I want to optimize my pension contributions for tax efficiency.
+  How much should I put in ratepension vs aldersopsparing, and should I
+  consider a livsvarig pension? What about investing via a frie midler
+  (free funds) account instead?
+rubric:
+  required_elements:
+    ratepension_fradrag: "States ratepension deduction limit (~63,100 DKK for 2025) and that contributions reduce taxable income"
+    aldersopsparing_limit: "States aldersopsparing limit (~5,600 DKK for 2025) and that it has no deduction but tax-free withdrawal"
+    livsvarig_explanation: "Explains livsvarig pension has no cap on deduction but provides lifelong annuity payments"
+    pal_skat: "Mentions PAL-skat (15.3%) on pension investment returns — a drag vs frie midler aktieindkomst rates"
+    frie_midler_comparison: "Compares investing via pension vs frie midler: tax deduction benefit vs lower PAL rate vs aktieindkomst rates"
+    marginal_rate_analysis: "Analyzes the marginal tax rate benefit: at 650K income, the topskat threshold matters for deduction value"
+    time_horizon_advantage: "Notes that at age 35, 30+ years of compounding amplifies even small tax-rate differences"
+    concrete_recommendation: "Provides a specific recommendation on contribution amounts with reasoning"
+  anti_patterns:
+    ignores_limits: "Doesn't mention the specific DKK limits for ratepension or aldersopsparing"
+    generic_advice: "Says 'maximize pension' without DK-specific limits and tradeoffs"
+    misses_pal: "Doesn't mention PAL-skat as a factor in the pension vs frie midler comparison"
+  passing_score: 6

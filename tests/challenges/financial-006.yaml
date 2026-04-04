@@ -1,0 +1,26 @@
+id: financial-006
+name: "Growth vs Value Tradeoff"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Compare two stocks for a long-term portfolio:
+  Stock A: SaaS company, P/E 45, revenue growing 35% YoY, ROE 25%,
+  no dividend, P/B 15, negative free cash flow (reinvesting heavily).
+  Stock B: Consumer staples, P/E 18, revenue growing 4% YoY, ROE 22%,
+  dividend yield 3.2%, P/B 4.5, strong free cash flow.
+  Which is the better investment and why?
+rubric:
+  required_elements:
+    framework_choice: "Recognizes that different valuation frameworks suit each stock"
+    quality_comparison: "Compares quality metrics (ROE, stability, cash flow) head-to-head"
+    growth_durability: "Questions whether 35% growth is sustainable and for how long"
+    thorleif_lens: "Applies quality-above-average, price-below-average thinking"
+    pe_context: "Evaluates P/E of each stock relative to its growth rate and sector norms"
+    risk_asymmetry: "Discusses the different risk profiles (growth deceleration vs stagnation)"
+    time_horizon: "Considers how the answer changes with different holding periods"
+    doesnt_dodge: "Takes a position rather than saying 'it depends on your risk tolerance'"
+  anti_patterns:
+    growth_at_any_price: "Picks the growth stock without addressing the valuation premium"
+    value_dogma: "Picks the value stock without acknowledging growth's compounding potential"
+    refuses_to_choose: "Only says 'it depends' without providing analytical reasoning"
+  passing_score: 6

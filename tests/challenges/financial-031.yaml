@@ -1,0 +1,25 @@
+id: financial-031
+name: "DK Tax — Aktieindkomst vs Kapitalindkomst"
+category: financial_tax_dk
+skill: megamind-financial
+prompt: |
+  I'm a Danish tax resident. I sold shares in a Danish stock for a
+  DKK 80,000 profit. I also received DKK 15,000 in dividends from
+  the same stock. Separately, I earned DKK 12,000 in interest from
+  my bond portfolio. How is each taxed, and what's my total tax bill
+  on these? I'm single.
+rubric:
+  required_elements:
+    aktieindkomst_identification: "Identifies both the capital gain (80K) and dividends (15K) as aktieindkomst"
+    aktieindkomst_brackets: "Applies correct brackets: 27% up to progressionsgrænse (~61K), 42% above"
+    combined_aktie_calculation: "Combines gain + dividends = 95K aktieindkomst, then applies brackets (27% on first ~61K, 42% on remaining ~34K)"
+    kapitalindkomst_identification: "Identifies bond interest (12K) as kapitalindkomst, NOT aktieindkomst"
+    kapital_tax_treatment: "Explains that positive kapitalindkomst is taxed differently (added to personal income or kommune/sundhedsbidrag depending on net position)"
+    actual_tax_calculation: "Attempts a numerical tax calculation for the aktieindkomst portion"
+    married_threshold_mention: "Mentions that married couples can share/double the progressionsgrænse"
+    distinguishes_three_types: "Clearly distinguishes aktieindkomst, kapitalindkomst, and personlig indkomst as separate tax categories"
+  anti_patterns:
+    treats_all_as_income: "Taxes everything as personal income without distinguishing categories"
+    wrong_brackets: "Applies income tax brackets (37-52%) instead of aktieindkomst brackets (27/42%)"
+    misses_kapital: "Treats bond interest as aktieindkomst"
+  passing_score: 6

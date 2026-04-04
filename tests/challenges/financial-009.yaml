@@ -1,0 +1,26 @@
+id: financial-009
+name: "Portfolio Construction from Screener Output"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  My stock screener produced 15 passing stocks across sectors:
+  4 financials (P/E 8-12, ROE 16-20%), 3 industrials (P/E 13-16, ROE 18-25%),
+  3 healthcare (P/E 18-22, ROE 20-30%), 2 consumer staples (P/E 15-17, ROE 17-21%),
+  2 technology (P/E 20-25, ROE 28-35%), 1 energy (P/E 7, ROE 22%).
+  I want a concentrated portfolio of 10-12 stocks. How should I select
+  and weight them?
+rubric:
+  required_elements:
+    concentration_principle: "Supports concentrated portfolio approach (Thorleif uses 10-12 stocks)"
+    sector_diversification: "Discusses sector allocation and concentration risk"
+    quality_ranking: "Proposes ranking by quality metrics, not just cheapness"
+    entry_timing: "Considers which stocks have the best entry points (channel position)"
+    correlation_awareness: "Discusses correlation between holdings (e.g., 4 financials = concentration risk)"
+    position_sizing: "Addresses equal-weight vs conviction-weighted vs other sizing approaches"
+    selection_criteria: "Proposes clear criteria for choosing 10-12 from 15"
+    rebalancing: "Mentions when to review and what would trigger changes"
+  anti_patterns:
+    buy_all_15: "Suggests buying all 15 without selection"
+    cheapest_only: "Selects purely based on lowest P/E"
+    no_portfolio_thinking: "Evaluates each stock individually without considering the portfolio"
+  passing_score: 6

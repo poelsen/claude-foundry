@@ -1,0 +1,26 @@
+id: financial-023
+name: "Sector Exemptions and Quality Gate Overrides"
+category: financial_analysis_thorleif
+skill: megamind-financial
+prompt: |
+  Three stocks from my screen:
+  Stock A: Marine shipping company, EV/EBITDA 16, ROE 12%, P/E 5
+  Stock B: Insurance company, EV/EBITDA 18, ROE 17%, P/B 0.9
+  Stock C: Cyclical materials company, ROE 11%, P/E 8
+  Which of these fail the Thorleif hard quality gates, and which get
+  sector-specific exemptions? Walk me through the gate checks.
+rubric:
+  required_elements:
+    shipping_ev_exempt: "Identifies marine shipping as exempt from the EV/EBITDA < 14 hard gate"
+    insurance_ev_exempt: "Identifies insurance as exempt from the EV/EBITDA < 14 hard gate"
+    cyclical_roe_threshold: "Applies the lower ROE threshold for cyclicals (< 10% fails, not < 15%) — Stock C at 11% passes the cyclical gate"
+    shipping_roe_check: "Checks Stock A's ROE 12% — shipping is cyclical, so the 10% threshold applies, Stock A passes"
+    pb_primary_insurance: "Notes that P/B is the primary metric for insurance (P/B 0.9 = cheap-to-fair range)"
+    pe_gate_check: "Checks P/E < 30 gate for all three — all pass"
+    explicit_pass_fail: "States explicit pass/fail for each gate for each stock"
+    normalized_earnings_note: "Notes that Stock A's P/E 5 on shipping may reflect peak cycle earnings and should be normalized"
+  anti_patterns:
+    applies_uniform_gates: "Applies the same ROE 15% and EV/EBITDA 14 gates to all stocks without sector adjustments"
+    misses_exemptions: "Doesn't mention sector-specific exemptions for shipping or insurance"
+    ignores_cyclical_adjustment: "Doesn't apply the lower ROE threshold for cyclical sectors"
+  passing_score: 6

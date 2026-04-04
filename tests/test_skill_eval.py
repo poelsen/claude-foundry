@@ -1,7 +1,7 @@
 """Tests for eval_runner.py and eval_report.py.
 
 Tier 2: Challenge structure validation (always runs).
-Tier 3: API-based evaluation (requires --run-eval and ANTHROPIC_API_KEY).
+Tier 3: CLI-based evaluation (requires --run-eval and claude CLI in PATH).
 """
 
 from __future__ import annotations
@@ -239,12 +239,12 @@ class TestReports:
         assert "No results" in report
 
 
-# ── Tier 3: API-based evaluation (gated) ──
+# ── Tier 3: CLI-based evaluation (gated) ──
 
 
 @pytest.mark.eval
-class TestAPIEvaluation:
-    """API-based evaluation tests. Requires --run-eval and ANTHROPIC_API_KEY."""
+class TestCLIEvaluation:
+    """CLI-based evaluation tests. Requires --run-eval and claude CLI in PATH."""
 
     def test_single_challenge_evaluation(self):
         """Run a single challenge and verify scoring works end-to-end."""

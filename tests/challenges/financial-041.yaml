@@ -1,0 +1,25 @@
+id: financial-041
+name: "DK Tax — Cross-Border Dividend Withholding Tax Reclaim"
+category: financial_tax_dk
+skill: megamind-financial
+prompt: |
+  I'm a Danish tax resident owning stocks in the US (15% withheld),
+  Germany (26.375% withheld), France (30% withheld), and Switzerland
+  (35% withheld). I receive about DKK 50,000/year in foreign dividends.
+  How much of this withholding can I reclaim, what are Denmark's
+  double taxation treaty rates, and how do I actually get the money back?
+rubric:
+  required_elements:
+    dbo_concept: "Explains dobbeltbeskatningsoverenskomster (double taxation treaties/DBO) and their purpose"
+    treaty_rates: "States or estimates the correct treaty withholding rates for at least 2 of the 4 countries (US typically 15%, DE 15%, FR 15%, CH 15% under DBO)"
+    excess_withholding: "Calculates or identifies the excess withholding above treaty rate for countries that over-withhold (DE: 26.375% - 15% = 11.375% reclaimable, FR: 30% - 15% = 15% reclaimable, CH: 35% - 15% = 20% reclaimable)"
+    us_w8ben: "Mentions W-8BEN form for US dividends to get the 15% treaty rate at source (rather than 30% default)"
+    reclaim_process: "Describes the reclaim process: filing with foreign tax authorities or through your broker/custodian"
+    danish_credit: "Explains that Denmark gives credit (lempelse/creditmetoden) for foreign tax paid up to the Danish tax rate on the dividend"
+    practical_challenges: "Mentions practical challenges: different forms per country, processing times (months to years), minimum claim amounts"
+    quantifies_benefit: "Estimates the actual DKK amount reclaimable on 50K of foreign dividends"
+  anti_patterns:
+    ignores_treaties: "Doesn't mention double taxation treaties"
+    assumes_no_reclaim: "Says the withholding is just lost/final"
+    wrong_treaty_rates: "States obviously wrong treaty rates (e.g., 30% US treaty rate)"
+  passing_score: 6

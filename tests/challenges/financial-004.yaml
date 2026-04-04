@@ -1,0 +1,25 @@
+id: financial-004
+name: "Cyclical Stock Timing"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A global shipping company has: trailing P/E 4.5, forward P/E 8,
+  EV/EBITDA 3.2, ROE 35%, dividend yield 12%. Revenue doubled in 2
+  years due to supply chain disruptions. Analysts expect earnings to
+  halve next year as freight rates normalize. The stock is down 40%
+  from peak. Is this cheap or is the earnings peak misleading?
+rubric:
+  required_elements:
+    cyclical_awareness: "Recognizes this as a cyclical business where trailing metrics are misleading"
+    normalized_earnings: "Attempts to estimate mid-cycle or normalized earnings rather than using peak"
+    forward_vs_trailing: "Explicitly discusses why forward P/E matters more than trailing for cyclicals"
+    ev_ebitda_exemption: "Notes marine shipping is often exempt from standard EV/EBITDA thresholds"
+    dividend_trap: "Questions sustainability of 12% yield if earnings halve"
+    pe_channel_context: "Discusses that P/E channels for cyclicals need careful interpretation"
+    supply_demand: "Considers underlying supply/demand dynamics (orderbook, fleet age, trade volumes)"
+    multiple_scenarios: "Models at least normalized and trough scenarios, not just current"
+  anti_patterns:
+    trailing_pe_only: "Concludes cheap based on trailing P/E of 4.5 without normalizing"
+    ignores_cycle: "Doesn't address cyclicality or earnings normalization"
+    yield_chasing: "Recommends buy primarily because of high dividend yield"
+  passing_score: 6

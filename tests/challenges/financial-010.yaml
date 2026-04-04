@@ -1,0 +1,25 @@
+id: financial-010
+name: "Sell Discipline — When to Exit"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  I bought a Danish industrial stock 3 years ago at P/E 14. It's now at P/E 28,
+  up 120%. ROE is still 23%, earnings grew 15% annually, dividend yield dropped
+  from 3.5% to 1.8% due to price appreciation. The P/E channel shows it's in
+  the SELL ZONE (above 85th percentile). I love this company.
+  What should I do?
+rubric:
+  required_elements:
+    sell_discipline: "Applies the principle that no stock is sacred — even winners can be sold"
+    channel_signal: "Takes SELL ZONE signal seriously as a timing indicator"
+    emotional_awareness: "Addresses the 'I love this company' emotional attachment directly"
+    partial_sell: "Considers partial position reduction as an option (not just all-or-nothing)"
+    what_if_analysis: "Considers what happens if held vs sold (opportunity cost, reversion risk)"
+    quality_still_matters: "Notes that the business quality remains strong (ROE 23%, growing earnings)"
+    valuation_stretch: "Quantifies how stretched the valuation is vs historical norms"
+    reinvestment: "Discusses what to do with proceeds if selling (opportunity cost)"
+  anti_patterns:
+    never_sell_winners: "Advises holding forever because quality is good"
+    mechanical_sell: "Says sell purely because of channel signal without considering context"
+    ignores_channel: "Dismisses the SELL ZONE signal entirely"
+  passing_score: 6

@@ -1,0 +1,25 @@
+id: financial-014
+name: "Share Buyback vs Dividend Assessment"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A US tech company generates $5B in annual FCF. Market cap is $80B.
+  P/E is 20, ROE 30%. They pay no dividend but buy back 4% of shares
+  annually. Some investors are pushing for a dividend instead.
+  Is the buyback strategy correct, or should they pay a dividend?
+  How does this affect total shareholder yield?
+rubric:
+  required_elements:
+    total_yield_concept: "Calculates total shareholder yield (buyback yield + dividend yield)"
+    buyback_at_fair_value: "Discusses whether buying back at P/E 20 creates or destroys value"
+    tax_efficiency: "Notes tax advantage of buybacks over dividends for shareholders"
+    signaling: "Discusses what buybacks vs dividends signal about management confidence"
+    roe_reinvestment: "Connects high ROE to whether capital should be retained or returned"
+    thorleif_dividend_view: "Notes Thorleif's preference for total shareholder yield ~5%+"
+    eps_accretion: "Shows how buybacks mechanically increase EPS via share count reduction"
+    valuation_sensitivity: "Discusses at what price level buybacks become value-destructive"
+  anti_patterns:
+    dividends_always_better: "Assumes dividends are inherently superior to buybacks"
+    buybacks_always_better: "Assumes buybacks are always the right choice"
+    ignores_valuation: "Doesn't connect buyback attractiveness to the stock's valuation level"
+  passing_score: 6

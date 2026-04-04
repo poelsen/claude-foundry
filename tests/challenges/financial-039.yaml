@@ -1,0 +1,26 @@
+id: financial-039
+name: "DK Pension — Folkepension and Early Retirement"
+category: financial_pension_dk
+skill: megamind-financial
+prompt: |
+  I'm 55 years old in Denmark, earning DKK 750,000/year. I'd like to
+  retire at 62 if possible. Folkepension age is 67 for my birth year.
+  I have DKK 2,500,000 in ratepension, DKK 400,000 in aldersopsparing,
+  and DKK 800,000 in frie midler investments.
+  Can I retire at 62? What's the income bridge strategy, and what are
+  the tax implications of drawing down pension early?
+rubric:
+  required_elements:
+    folkepension_age: "States folkepension age is 67 (for this person's birth year) — 5-year gap to bridge"
+    bridge_strategy: "Proposes an income bridge strategy for ages 62-67 using available assets"
+    ratepension_withdrawal_rules: "Explains ratepension can be withdrawn from age 60 (or possibly earlier with conditions) and is taxed as personal income"
+    aldersopsparing_advantage: "Notes aldersopsparing withdrawals are tax-free — valuable for the bridge period"
+    frie_midler_role: "Discusses using frie midler to supplement (taxed as aktieindkomst on gains)"
+    tax_bracket_management: "Discusses managing withdrawals to stay below topskat threshold during bridge years"
+    sustainability_calculation: "Estimates whether the combined assets can sustain 5 years of living expenses before folkepension"
+    modregning_warning: "Mentions that certain pension income can reduce (modregne) folkepension or other benefits"
+  anti_patterns:
+    ignores_gap: "Doesn't address the 5-year gap between desired retirement and folkepension"
+    no_tax_planning: "Doesn't discuss tax implications of pension withdrawals during bridge years"
+    assumes_enough: "Says 'you have enough' without calculating whether the assets actually bridge the gap"
+  passing_score: 6

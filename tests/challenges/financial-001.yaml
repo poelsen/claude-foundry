@@ -1,0 +1,24 @@
+id: financial-001
+name: "Mature Dividend Stock Valuation"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Evaluate Novo Nordisk (NVO) as an investment. Current P/E is around 32,
+  ROE ~88%, dividend yield ~1.3%, revenue grew ~30% last year driven by
+  Ozempic/Wegovy. The stock is down ~25% from its 52-week high.
+  Should I buy, hold, or avoid at current levels?
+rubric:
+  required_elements:
+    business_understanding: "Explains the GLP-1/obesity drug business model and competitive landscape"
+    multi_framework: "Uses at least 2 valuation methods (DCF, comparables, earnings power, etc.)"
+    pe_channel_thinking: "Discusses where current P/E sits vs historical range or channel zones"
+    quality_assessment: "Evaluates ROE, earnings stability, growth consistency — not just price"
+    identifies_risks: "Names at least 3 specific risks (competition, patent cliffs, regulation, etc.)"
+    scenarios: "Presents bear/base/bull cases with different valuation ranges"
+    addresses_pe_vs_quality: "Wrestles with tension between high P/E (>30) and exceptional quality"
+    bias_check: "Explicitly checks for at least one bias (anchoring to drop, narrative, recency)"
+  anti_patterns:
+    pe_only: "Judges purely on P/E without considering quality or growth"
+    narrative_driven: "Just tells the Ozempic story without quantitative rigor"
+    ignores_valuation: "Doesn't attempt a valuation range or fair value estimate"
+  passing_score: 6

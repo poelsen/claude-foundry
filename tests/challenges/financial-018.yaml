@@ -1,0 +1,26 @@
+id: financial-018
+name: "Small Cap Screening Pitfalls"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  I'm screening European small caps (market cap EUR 200M-500M). My screen found
+  a company with P/E 9, ROE 21%, dividend yield 4.2%, EV/EBITDA 6, growing
+  revenue 8% annually. It passes all Thorleif quality gates. But average daily
+  volume is only EUR 50K, the company has one analyst covering it, and the
+  free float is 35% (family-controlled).
+  Is this a hidden gem or a liquidity trap?
+rubric:
+  required_elements:
+    liquidity_risk: "Identifies EUR 50K daily volume as a serious concern for position sizing"
+    information_asymmetry: "Notes that single-analyst coverage means limited price discovery"
+    family_control: "Discusses implications of 35% free float — governance, minority rights, liquidity"
+    position_sizing: "Calculates how long it would take to build/exit a meaningful position"
+    quality_genuine: "Acknowledges the fundamentals are genuinely strong"
+    small_cap_premium: "Discusses whether the low valuation is a small-cap discount or liquidity discount"
+    bid_ask_spread: "Mentions likely wide bid-ask spreads and impact on execution"
+    due_diligence: "Recommends specific additional due diligence for small caps"
+  anti_patterns:
+    ignores_liquidity: "Recommends buying based on fundamentals alone"
+    dismisses_small_caps: "Rejects all small caps as too risky without analysis"
+    no_sizing_consideration: "Doesn't discuss how liquidity affects position management"
+  passing_score: 6

@@ -11,7 +11,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--run-eval",
         action="store_true",
         default=False,
-        help="Run evaluation tests that require ANTHROPIC_API_KEY",
+        help="Run evaluation tests that require the claude CLI",
     )
 
 

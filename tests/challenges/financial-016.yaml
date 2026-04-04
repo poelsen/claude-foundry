@@ -1,0 +1,25 @@
+id: financial-016
+name: "Accounting Red Flags"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A company reports: Revenue up 20%, net income up 25%, but operating cash flow
+  is down 15%. Receivables grew 45% (vs 20% revenue growth). Inventory is up 60%.
+  The company recently changed its revenue recognition policy. P/E looks
+  attractive at 13 with ROE of 19%.
+  What's going on here?
+rubric:
+  required_elements:
+    cash_vs_accrual: "Flags the divergence between earnings growth and cash flow decline"
+    receivables_flag: "Identifies receivables growing faster than revenue as a major red flag"
+    inventory_flag: "Identifies inventory buildup as potential demand weakness or channel stuffing"
+    revenue_recognition: "Connects the accounting policy change to potentially inflated revenue"
+    earnings_quality: "Distinguishes between reported earnings and earnings quality"
+    dont_trust_pe: "Warns that attractive P/E on potentially inflated earnings is misleading"
+    investigation_needed: "Recommends specific areas to investigate (cash conversion, DSO trends, policy details)"
+    historical_comparison: "Suggests comparing current metrics to historical patterns"
+  anti_patterns:
+    accepts_reported: "Takes reported earnings at face value and scores the stock positively"
+    ignores_cash_flow: "Doesn't notice the earnings vs cash flow divergence"
+    over_paranoia: "Assumes fraud without considering legitimate explanations"
+  passing_score: 6

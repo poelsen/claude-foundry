@@ -1,0 +1,25 @@
+id: financial-007
+name: "Dividend Cut Warning Signs"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A utility company has paid increasing dividends for 18 consecutive years.
+  Current yield is 5.8%, payout ratio is 92%. Debt/equity is 180%.
+  Capex is rising due to grid modernization requirements. Interest rates
+  have risen 300bps in 2 years. Free cash flow barely covers the dividend.
+  Is the dividend safe?
+rubric:
+  required_elements:
+    payout_analysis: "Flags 92% payout as dangerously high and close to unsustainable threshold"
+    fcf_coverage: "Analyzes free cash flow coverage of dividends, not just earnings coverage"
+    debt_burden: "Connects rising rates + high leverage to dividend sustainability"
+    capex_pressure: "Recognizes mandatory capex (grid modernization) is non-discretionary"
+    historical_context: "Notes that long dividend streaks create management reluctance to cut"
+    probability_assessment: "Gives a clear view on likelihood of cut vs continuation"
+    warning_signs: "Lists specific warning signs to monitor going forward"
+    yield_trap_awareness: "Discusses whether high yield itself is a warning signal"
+  anti_patterns:
+    streak_means_safe: "Assumes 18-year streak guarantees continuation"
+    yield_enthusiasm: "Focuses on attractive yield without stress-testing sustainability"
+    ignores_balance_sheet: "Doesn't connect debt levels to dividend risk"
+  passing_score: 6

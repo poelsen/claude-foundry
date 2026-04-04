@@ -1,0 +1,25 @@
+id: financial-008
+name: "Tech Company Post-IPO Lockup"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A recently IPO'd cloud security company is 6 months post-IPO. The lockup
+  expires in 2 weeks. Stock is up 80% from IPO price. P/S is 25x (no
+  positive earnings yet), revenue growing 55% YoY, gross margins 72%.
+  Insiders hold 45% of shares. Is this a buying opportunity, or should
+  I wait for the lockup expiry selloff?
+rubric:
+  required_elements:
+    lockup_mechanics: "Explains lockup expiry dynamics and likely selling pressure"
+    pre_revenue_valuation: "Uses appropriate metrics for pre-earnings company (P/S, EV/revenue, rule of 40)"
+    insider_selling_context: "Analyzes what 45% insider ownership means for selling pressure magnitude"
+    quality_without_earnings: "Assesses business quality without earnings-based metrics"
+    timing_vs_value: "Separates the timing question (when) from the value question (if)"
+    thorleif_limitations: "Acknowledges that traditional P/E-based screening doesn't apply here"
+    margin_trajectory: "Discusses gross margin path to profitability"
+    risk_factors: "Identifies risks specific to post-IPO growth stocks"
+  anti_patterns:
+    applies_pe_scoring: "Tries to apply P/E-based Thorleif scoring to a pre-earnings company"
+    ignores_lockup: "Doesn't address the lockup expiry timing at all"
+    growth_story_only: "Gets excited about growth without discussing valuation discipline"
+  passing_score: 6

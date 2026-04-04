@@ -1,0 +1,24 @@
+id: financial-027
+name: "Conflicting Signals — Quality Passes, Channel Says Sell"
+category: financial_analysis_hard
+skill: megamind-financial
+prompt: |
+  I have a stock with ROE 28%, P/E 26 (trailing), earnings growing 20% p.a.,
+  payout ratio 35%, dividend yield 1.4%. The stock's P/E is at the 90th
+  percentile of its own 15-year history. All my quality metrics say buy.
+  The valuation timing says sell. What do I do?
+rubric:
+  required_elements:
+    acknowledges_conflict: "Explicitly names the quality-vs-timing conflict rather than ignoring one side"
+    quality_score_strong: "Scores the quality as strong/excellent (ROE 28% > 20% threshold, optimal payout)"
+    pe_gate_borderline: "Notes P/E 26 is close to or breaching the >25 expensive threshold and approaching the >30 hard gate"
+    channel_above_85th: "Identifies 90th percentile as above the 85th percentile SELL ZONE boundary"
+    trim_not_exit: "Recommends trimming (not full exit) because quality is intact — the quality-adjusted sell discipline"
+    quantifies_multiple_expansion: "Separates how much return came from earnings growth vs P/E expansion"
+    opportunity_cost: "Discusses what the freed capital could buy at better valuations"
+    no_stock_sacred: "Applies the principle that even quality compounders can be trimmed when stretched"
+  anti_patterns:
+    holds_because_quality: "Recommends holding purely because quality metrics are strong, ignoring the channel"
+    sells_mechanically: "Recommends full exit purely on channel signal without weighing quality"
+    no_timing_framework: "Doesn't use any percentile or channel-based timing analysis"
+  passing_score: 6

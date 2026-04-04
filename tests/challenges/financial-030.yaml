@@ -1,0 +1,24 @@
+id: financial-030
+name: "Full Process Test — Raw Data, No Hand-Holding"
+category: financial_analysis_hard
+skill: megamind-financial
+prompt: |
+  Here's a stock I'm looking at. Tell me if I should invest.
+  Sector: European insurance. P/E 11, P/B 0.75, ROE 14%, EV/EBITDA 15,
+  dividend yield 6.2%, payout ratio 68%, forward P/E 9.
+  Revenue grew 8% last year. Stock is near its 52-week low.
+rubric:
+  required_elements:
+    insurance_type_id: "Identifies this as a financial/insurance company and adjusts framework accordingly"
+    ev_ebitda_exempt: "Notes insurance is exempt from EV/EBITDA < 14 hard gate"
+    pb_primary: "Uses P/B 0.75 as the primary valuation metric (cheap < 1.0 for insurance)"
+    roe_gate_flag: "Flags ROE 14% as below the 15% hard gate — triggers investigation, not automatic discard"
+    yield_warning: "Flags 6.2% dividend yield as above 6% warning threshold — investigates sustainability"
+    payout_elevated: "Notes 68% payout is in the 50-75% acceptable-but-elevated range, not optimal"
+    forward_gap_signal: "Notes forward P/E 9 vs trailing 11 = ~18% improvement expected — close to but below the 20% turnaround signal"
+    sanity_check_ev: "Catches that EV/EBITDA 15 on an insurance company is meaningless (exempt sector) — doesn't treat it as negative"
+  anti_patterns:
+    fails_on_ev_ebitda: "Disqualifies the stock because EV/EBITDA 15 > 14 without recognizing the insurance exemption"
+    ignores_yield_warning: "Treats 6.2% yield as purely positive without sustainability investigation"
+    generic_financial_analysis: "Analyzes as a generic stock without insurance-specific framework adjustments"
+  passing_score: 6

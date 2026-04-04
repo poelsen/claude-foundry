@@ -150,7 +150,7 @@ LEARNED_SKILLS_DIR = REPO_ROOT / "skills" / "learned"
 
 SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
-    "megamind-deep", "megamind-creative", "megamind-adversarial",
+    "megamind-deep", "megamind-creative", "megamind-adversarial", "megamind-financial",
     "update-foundry", "learn", "learn-recall", "snapshot-list",
     "private-list", "private-remove",
 ]

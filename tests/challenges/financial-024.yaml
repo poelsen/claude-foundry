@@ -1,0 +1,25 @@
+id: financial-024
+name: "Turnaround Candidate Detection"
+category: financial_analysis_thorleif
+skill: megamind-financial
+prompt: |
+  A European industrial company failed my Thorleif quality screen:
+  ROE 9% (below 15% gate), P/E 7 (trailing), forward P/E 5.
+  Revenue is flat but the company just hired a new CEO with a
+  restructuring mandate. Analysts are cautiously optimistic.
+  Should I just discard this stock, or is there something here?
+rubric:
+  required_elements:
+    turnaround_check_triggered: "Explicitly recognizes this as a turnaround candidate check situation — don't just discard gate failures"
+    forward_trailing_gap: "Identifies that forward P/E (5) is > 20% below trailing P/E (7) — a specific Thorleif turnaround signal"
+    trailing_pe_range: "Notes trailing P/E of 7 is in the 0-8 beaten-down range — another turnaround signal"
+    cyclical_roe_adjustment: "Checks if the 10% cyclical ROE threshold applies (industrial = cyclical) — ROE 9% barely fails even the lower gate"
+    catalyst_assessment: "Evaluates the new CEO restructuring as a potential recovery catalyst"
+    separate_from_quality_screen: "Explicitly states this goes into a turnaround/watchlist category, not the main quality portfolio"
+    recovery_signals_checklist: "Applies at least 2 of the 3 Thorleif turnaround signals (forward gap, beaten-down P/E, restructuring keywords)"
+    conditional_thesis: "Presents a conditional thesis — what would need to happen for this to become investable"
+  anti_patterns:
+    immediate_discard: "Discards the stock solely because it failed the ROE gate without checking turnaround signals"
+    treats_as_normal_buy: "Recommends buying without acknowledging the gate failure and turnaround nature"
+    no_turnaround_framework: "Doesn't use any structured turnaround detection methodology"
+  passing_score: 6

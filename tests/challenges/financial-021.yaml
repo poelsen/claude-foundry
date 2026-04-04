@@ -1,0 +1,24 @@
+id: financial-021
+name: "Thorleif Scoring Tables — Precise Application"
+category: financial_analysis_thorleif
+skill: megamind-financial
+prompt: |
+  Score this Danish mid-cap industrial company using the Thorleif Jackson
+  methodology: P/E 13 (forward), EV/EBITDA 8.5, ROE 19%, dividend yield
+  3.8%, payout ratio 42%, P/B 3.2. The company is in the industrials sector.
+  Give me the quality and value assessment with specific scores per dimension.
+rubric:
+  required_elements:
+    pe_scoring_table: "Applies the specific P/E scoring thresholds (< 12 excellent, 12-15 attractive, 15-25 fair, > 25 expensive) — P/E 13 = Attractive"
+    ev_ebitda_scoring: "Applies EV/EBITDA thresholds (< 6 excellent, 6-10 attractive) — 8.5 = Attractive"
+    roe_quality_gate: "Checks ROE against the 15% hard gate AND the quality table (> 20% strong, 15-20% adequate) — 19% = Adequate"
+    dividend_scoring: "Applies dividend yield thresholds (> 4% excellent, 2.5-4% attractive) — 3.8% = Attractive"
+    payout_assessment: "Applies payout ratio scoring (30-50% optimal) — 42% = Optimal"
+    pb_sector_context: "Evaluates P/B in context of industrial sector norms, not generic thresholds"
+    quality_vs_value_summary: "Provides a structured quality score AND value score separately, not just a combined verdict"
+    hard_gate_pass_fail: "Explicitly checks all 4 hard gates (ROE > 15%, P/E < 30, EV/EBITDA < 14, payout < 100%) and states pass/fail for each"
+  anti_patterns:
+    generic_analysis: "Provides only generic 'looks good/bad' without using specific scoring thresholds"
+    missing_gates: "Doesn't check the hard quality gates explicitly"
+    no_thorleif_framework: "Uses general valuation frameworks without applying the Thorleif scoring system"
+  passing_score: 6
