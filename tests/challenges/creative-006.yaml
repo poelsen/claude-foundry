@@ -1,0 +1,34 @@
+id: creative-006
+name: "Solve a Problem That Has No Good Solution"
+category: creative_next_level
+skill: megamind-creative
+prompt: |
+  Our product has a fundamental conflict: power users need complex,
+  configurable workflows (they use 200+ features). New users are
+  overwhelmed and churn within 3 days because the interface is too complex.
+
+  We've tried: progressive disclosure (users miss features), separate
+  UIs (maintenance nightmare), onboarding tutorials (nobody watches them),
+  AI assistants (users don't trust them for critical workflows).
+
+  Everything we've tried either makes power users angry or doesn't help
+  new users. This feels unsolvable. Solve it anyway.
+rubric:
+  required_elements:
+    reframes_beyond_ui: "Reframes beyond 'simpler UI' — sees this as an information architecture, incentive, or ecosystem problem"
+    analogy_solved_first: "Names a cross-domain analogy AND solves the analogous problem in detail before mapping back"
+    generates_7_plus: "Generates at least 7 distinct ideas before filtering"
+    uncomfortable_wild: "The Wild option is genuinely uncomfortable — challenges a core assumption about the product"
+    addresses_failures: "Explicitly engages with why the 4 previous attempts failed and what to learn from each"
+    hybrid_novel: "The combined hybrid is something none of the individual ideas produced"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs, not just risk levels"
+    doesnt_compromise: "Doesn't propose a compromise that makes both groups equally unhappy"
+  anti_patterns:
+    just_progressive_disclosure: "Proposes progressive disclosure again (already tried and failed)"
+    ignores_previous_failures: "Doesn't address why previous attempts failed"
+    splits_the_baby: "Proposes a middle-ground compromise that satisfies neither group"
+  depth_elements:
+    reframe_originality: "Are the reframings genuinely novel or just rewording the problem?"
+    analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
+    wild_option_discomfort: "Is the Wild option genuinely uncomfortable, or just a bigger version of Safe?"
+  passing_score: 6

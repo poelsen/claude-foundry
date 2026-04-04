@@ -24,4 +24,8 @@ rubric:
     approves_design: "Says the design is secure without finding issues"
     checklist_only: "Just runs through OWASP categories without depth"
     no_mitigations: "Finds problems but doesn't suggest fixes"
+  depth_elements:
+    attack_specificity: "Are failure scenarios step-by-step with concrete numbers, or just category names?"
+    inversion_quality: "Does the inversion genuinely challenge the premise, or just suggest a minor variant?"
+    hardening_actionability: "Are mitigations specific enough to implement, or generic advice?"
   passing_score: 6

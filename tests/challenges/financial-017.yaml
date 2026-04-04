@@ -23,4 +23,8 @@ rubric:
     ignores_divisions: "Values as a single entity without analyzing parts"
     activist_always_wins: "Assumes activist will succeed without assessing obstacles"
     ignores_japan: "Doesn't consider Japan-specific corporate governance dynamics"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

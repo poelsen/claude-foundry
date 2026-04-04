@@ -22,4 +22,8 @@ rubric:
     trailing_pe_only: "Concludes cheap based on trailing P/E of 4.5 without normalizing"
     ignores_cycle: "Doesn't address cyclicality or earnings normalization"
     yield_chasing: "Recommends buy primarily because of high dividend yield"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

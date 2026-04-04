@@ -22,4 +22,8 @@ rubric:
     accepts_reported: "Takes reported earnings at face value and scores the stock positively"
     ignores_cash_flow: "Doesn't notice the earnings vs cash flow divergence"
     over_paranoia: "Assumes fraud without considering legitimate explanations"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

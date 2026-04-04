@@ -23,4 +23,8 @@ rubric:
     ignores_limits: "Doesn't mention the specific DKK limits for ratepension or aldersopsparing"
     generic_advice: "Says 'maximize pension' without DK-specific limits and tradeoffs"
     misses_pal: "Doesn't mention PAL-skat as a factor in the pension vs frie midler comparison"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

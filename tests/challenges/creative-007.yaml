@@ -1,0 +1,33 @@
+id: creative-007
+name: "Invent a New Abstraction"
+category: creative_next_level
+skill: megamind-creative
+prompt: |
+  Every significant leap in software productivity came from a new abstraction:
+  assembly → C, manual memory → garbage collection, bare metal → containers,
+  SQL → ORMs, REST → GraphQL.
+
+  What's the next abstraction that doesn't exist yet? Specifically for
+  the problem of managing state across distributed systems — the thing
+  that makes microservices, event sourcing, and CQRS so painful.
+
+  Don't describe an existing tool. Invent something new.
+rubric:
+  required_elements:
+    mines_existing: "Catalogs existing approaches to distributed state (sagas, event sourcing, CRDTs, outbox pattern) and their failure modes"
+    reframes_deeply: "Reframes distributed state as something other than 'coordinating writes' — at least 3 reframings"
+    analogy_solved: "Names AND solves an analogous problem from another field before mapping back"
+    genuinely_novel: "Proposes at least one abstraction that doesn't currently exist as a named pattern or tool"
+    hybrid_invention: "Combines elements from different ideas into something neither would produce alone"
+    feasibility_gradient: "Presents Safe/Bold/Wild where Wild is a genuine paradigm shift"
+    explains_why_not_yet: "Addresses why this abstraction doesn't exist yet — what changed that makes it possible now?"
+    concrete_enough: "The invention is specific enough that an engineer could start building a prototype"
+  anti_patterns:
+    describes_existing: "Describes an existing tool (Kafka, Temporal, CRDTs) and calls it 'the next abstraction'"
+    too_abstract: "The invention is so vague it could mean anything"
+    ignores_tradeoffs: "Presents the invention without addressing what it gives up"
+  depth_elements:
+    reframe_originality: "Are the reframings genuinely novel or just rewording the problem?"
+    analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
+    wild_option_discomfort: "Is the Wild option genuinely uncomfortable, or just a bigger version of Safe?"
+  passing_score: 6

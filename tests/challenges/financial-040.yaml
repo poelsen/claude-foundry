@@ -23,4 +23,8 @@ rubric:
     single_factor: "Decides based on one factor (e.g., just the card or just the bidrag) without comprehensive comparison"
     ignores_pension_fees: "Moves pension to bank without questioning fee impact"
     qualitative_only: "Discusses pros and cons without attempting to quantify any financial impact"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

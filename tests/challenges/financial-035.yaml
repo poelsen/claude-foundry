@@ -22,4 +22,8 @@ rubric:
     afdragsfri_always_better: "Recommends afdragsfri purely because of lower payments without addressing risks"
     ignores_limit: "Doesn't mention the 10-year time limit on afdragsfri"
     no_numbers: "Discusses conceptually without any payment calculations"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

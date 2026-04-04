@@ -22,4 +22,8 @@ rubric:
     jumps_to_solution: "Immediately recommends multi-region active-active without analysis"
     ignores_budget: "Proposes expensive solutions without addressing limited budget"
     ignores_team_size: "Recommends complex architecture that a 4-person team can't maintain"
+  depth_elements:
+    tradeoff_quantification: "Are architectural tradeoffs quantified (cost, latency, team hours) or just named?"
+    constraint_awareness: "Does it design within stated constraints (team size, budget) or ignore them?"
+    failure_mode_depth: "Does it describe specific failure scenarios, or just say 'consider reliability'?"
   passing_score: 6

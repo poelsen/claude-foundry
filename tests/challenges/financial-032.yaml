@@ -22,4 +22,8 @@ rubric:
     ignores_tax_difference: "Says 'both are taxed the same' or doesn't address the lager/realisation distinction"
     wrong_regime: "Applies realisationsbeskatning to the ETF or lagerbeskatning to individual stocks"
     no_quantification: "Discusses the difference conceptually but doesn't attempt to quantify the impact"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

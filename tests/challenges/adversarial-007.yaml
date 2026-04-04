@@ -1,0 +1,30 @@
+id: adversarial-007
+name: "Attack Your Own Successful System"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  Our microservices migration was a success. We went from a monolith to
+  12 services over 18 months. Deployment frequency went from weekly to
+  daily. Incident count dropped 40%. Team satisfaction is up. Leadership
+  is happy. The architecture review board approved the design.
+
+  Find what's wrong. Everything looks great — that's what worries me.
+rubric:
+  required_elements:
+    attacks_success_metrics: "Challenges whether the metrics actually prove success (e.g., incidents dropped but are they harder to debug now?)"
+    multi_persona: "Attacks from at least 4 distinct hostile perspectives"
+    pre_mortem: "Writes a future failure narrative ('it's 2 years from now and this architecture collapsed')"
+    hidden_costs: "Identifies hidden costs the success narrative obscures (operational complexity, cognitive load, hiring requirements)"
+    survivorship_bias: "Notes that we're only hearing the success story — what about the services that were hard to extract or the ones that were abandoned?"
+    second_order: "Identifies what the migration changed beyond the stated metrics (team structure, debugging difficulty, onboarding time)"
+    inversion: "Considers whether the monolith was actually better in some dimensions"
+    residual_risk: "States what risks remain even if everything claimed is true"
+  anti_patterns:
+    agrees_its_great: "Accepts the success narrative and only suggests minor improvements"
+    generic_microservices_critique: "Lists standard microservices problems without connecting to this specific scenario"
+    contrarian_for_show: "Attacks just to attack without genuine analytical depth"
+  depth_elements:
+    attack_specificity: "Are failure scenarios step-by-step with concrete numbers, or just category names?"
+    inversion_quality: "Does the inversion genuinely challenge the premise, or just suggest a minor variant?"
+    hardening_actionability: "Are mitigations specific enough to implement, or generic advice?"
+  passing_score: 6

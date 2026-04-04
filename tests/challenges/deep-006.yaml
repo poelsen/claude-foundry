@@ -1,0 +1,31 @@
+id: deep-006
+name: "Three Experts Disagree — Who's Right?"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  Your CTO says: "We need to rewrite our Python backend in Go for performance."
+  Your Staff Engineer says: "The bottleneck is the database, not the language. Rewriting wastes 6 months."
+  Your VP Engineering says: "We should switch to a managed service (AWS Lambda) and stop managing servers entirely."
+
+  All three are smart, experienced, and have data supporting their position.
+  The system handles 10k requests/second, P99 latency is 800ms (target: 200ms),
+  and you have a 12-person team. Who is right?
+rubric:
+  required_elements:
+    doesnt_pick_immediately: "Resists immediately siding with one expert — investigates what data each would need to be right"
+    multi_path_convergence: "Solves the problem via at least 2 independent reasoning paths and notes where they converge"
+    tests_each_claim: "For each expert's position, identifies what evidence would confirm or falsify it"
+    finds_hidden_option: "Discovers an approach none of the three proposed (e.g., profile first, optimize hot paths, shard the DB)"
+    asks_root_cause: "Identifies that 800ms P99 hasn't been profiled — the diagnosis must precede the prescription"
+    critique_loop: "Explicitly reviews own analysis for gaps before presenting recommendation"
+    evidence_anchored: "Every claim is backed by a specific data point, reasoning chain, or explicit uncertainty marker"
+    team_size_constraint: "Accounts for the 12-person team as a hard constraint that eliminates some options"
+  anti_patterns:
+    picks_winner_immediately: "Sides with one expert without investigating the others' claims"
+    ignores_profiling: "Proposes a solution without first determining where the 800ms is actually spent"
+    all_three_wrong: "Dismisses all experts without engaging with their reasoning"
+  depth_elements:
+    challenges_premise: "Does it question whether the stated approach is even the right problem to solve?"
+    assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
+    alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
+  passing_score: 6

@@ -15,4 +15,7 @@ rubric:
   anti_patterns:
     jumps_to_optimization: "Immediately starts optimizing without measuring"
     assumes_scope: "Assumes what 'faster' means without asking"
+  depth_elements:
+    question_sharpness: "Are clarifying questions targeted enough to change the approach, or generic?"
+    investigation_specificity: "Does it propose specific diagnostic steps with expected outcomes?"
   passing_score: 4

@@ -25,4 +25,8 @@ rubric:
     approves_plan: "Says the rollout plan is solid without finding issues"
     generic_advice: "Gives generic feature flag advice without engaging the specifics"
     no_mitigations: "Finds problems but doesn't suggest fixes"
+  depth_elements:
+    attack_specificity: "Are failure scenarios step-by-step with concrete numbers, or just category names?"
+    inversion_quality: "Does the inversion genuinely challenge the premise, or just suggest a minor variant?"
+    hardening_actionability: "Are mitigations specific enough to implement, or generic advice?"
   passing_score: 6

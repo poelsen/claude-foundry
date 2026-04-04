@@ -24,4 +24,8 @@ rubric:
     dismisses_options: "Dismisses one or more options without genuine evaluation"
     ignores_constraints: "Ignores the 6-week timeline or 2-person team"
     over_engineers: "Proposes building a custom framework instead of using available options"
+  depth_elements:
+    tradeoff_quantification: "Are architectural tradeoffs quantified (cost, latency, team hours) or just named?"
+    constraint_awareness: "Does it design within stated constraints (team size, budget) or ignore them?"
+    failure_mode_depth: "Does it describe specific failure scenarios, or just say 'consider reliability'?"
   passing_score: 6

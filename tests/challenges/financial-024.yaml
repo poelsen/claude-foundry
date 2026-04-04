@@ -22,4 +22,8 @@ rubric:
     immediate_discard: "Discards the stock solely because it failed the ROE gate without checking turnaround signals"
     treats_as_normal_buy: "Recommends buying without acknowledging the gate failure and turnaround nature"
     no_turnaround_framework: "Doesn't use any structured turnaround detection methodology"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

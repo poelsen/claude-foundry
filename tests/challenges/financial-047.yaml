@@ -1,0 +1,34 @@
+id: financial-047
+name: "Contradictory Analyst Reports"
+category: financial_next_level
+skill: megamind-financial
+prompt: |
+  Three analysts cover the same Danish industrial company:
+  Analyst A (Goldman): BUY, target DKK 850, DCF-based, assumes 12% revenue growth
+  Analyst B (JPM): HOLD, target DKK 620, comparables-based, P/E 18x on normalized earnings
+  Analyst C (local Danish broker): SELL, target DKK 480, asset-based, flags inventory buildup
+
+  Current price: DKK 680. Last reported P/E: 22, ROE: 19%, revenue growth: 8%.
+  The stock is in the 75th percentile of its P/E channel.
+
+  All three analysts have access to the same public data. Why do they disagree
+  so dramatically, and who is most likely right?
+rubric:
+  required_elements:
+    explains_framework_divergence: "Identifies that each analyst uses a different valuation framework which produces different answers on the same data"
+    tests_each_assumption: "For each analyst, identifies the key assumption that drives their target and tests whether it's reasonable"
+    growth_assumption_test: "Challenges Goldman's 12% growth assumption against the reported 8% — what justifies the gap?"
+    inventory_flag: "Takes the local broker's inventory buildup warning seriously as a potential earnings quality issue"
+    channel_context: "Notes 75th percentile is upper-NEUTRAL, approaching SELL ZONE — neither cheap nor screaming expensive"
+    synthesizes_own_view: "Forms an independent view rather than just averaging the three targets"
+    quantifies_scenarios: "Provides bear/base/bull with specific DKK ranges, not just 'somewhere between 480 and 850'"
+    data_quality_check: "Runs sanity checks on the provided metrics before accepting them"
+  anti_patterns:
+    averages_targets: "Simply averages the three price targets (DKK 650) and calls it fair value"
+    picks_one_analyst: "Sides with one analyst without seriously engaging the other two"
+    ignores_local_knowledge: "Dismisses the local Danish broker without considering they may have information edge"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
+  passing_score: 6

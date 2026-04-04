@@ -15,4 +15,7 @@ rubric:
   anti_patterns:
     jumps_to_redesign: "Immediately starts redesigning UI without understanding the complaints"
     assumes_scope: "Assumes what users are complaining about without asking"
+  depth_elements:
+    question_sharpness: "Are clarifying questions targeted enough to change the approach, or generic?"
+    investigation_specificity: "Does it propose specific diagnostic steps with expected outcomes?"
   passing_score: 4

@@ -23,4 +23,8 @@ rubric:
     test_everything: "Recommends testing everything at once or setting a coverage target first"
     ignores_coupling: "Proposes unit tests without addressing the coupling problem"
     stops_features: "Recommends halting all feature work to write tests"
+  depth_elements:
+    challenges_premise: "Does it question whether the stated approach is even the right problem to solve?"
+    assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
+    alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
   passing_score: 6

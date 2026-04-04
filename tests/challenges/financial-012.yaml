@@ -22,4 +22,8 @@ rubric:
     em_always_risky: "Dismisses based on 'emerging market = risky' without analysis"
     cheap_vs_us: "Concludes cheap just because P/E is lower than US peers"
     ignores_currency: "Doesn't mention currency risk for a non-domestic investor"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

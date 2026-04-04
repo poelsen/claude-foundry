@@ -21,4 +21,8 @@ rubric:
     jumps_to_solution: "Immediately proposes a specific AI implementation"
     accepts_premise: "Doesn't question whether AI is the right answer"
     ignores_budget: "Proposes expensive solutions without addressing budget constraint"
+  depth_elements:
+    stakeholder_nuance: "Does it understand each stakeholder's hidden motivation, not just stated position?"
+    synthesis_novelty: "Does the proposed solution create new value, or just compromise between positions?"
+    implementation_specifics: "Are next steps concrete (who does what by when) or vague?"
   passing_score: 7

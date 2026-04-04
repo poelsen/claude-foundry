@@ -22,4 +22,8 @@ rubric:
     jumps_to_product: "Immediately recommends a specific product (Kong, Envoy) without analysis"
     ignores_concerns: "Dismisses the SPOF and bottleneck concerns without addressing them"
     over_engineers: "Proposes service mesh for a 12-service org without considering simpler options"
+  depth_elements:
+    tradeoff_quantification: "Are architectural tradeoffs quantified (cost, latency, team hours) or just named?"
+    constraint_awareness: "Does it design within stated constraints (team size, budget) or ignore them?"
+    failure_mode_depth: "Does it describe specific failure scenarios, or just say 'consider reliability'?"
   passing_score: 6
