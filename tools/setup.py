@@ -3,6 +3,7 @@
 
 Configures a project's .claude/ directory with selected rules, hooks,
 agents, skills, plugins, and MCP servers from the claude-foundry repo.
+Includes prj-* project management skills.
 
 Usage:
     python3 tools/setup.py init [project_dir]
