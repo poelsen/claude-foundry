@@ -140,11 +140,11 @@ Use at least 2: DCF, comparables, earnings power, asset-based, or pre-earnings f
 
 Tax rules are 100% country-specific. Identify the jurisdiction before any analysis. Common frameworks:
 
-**Denmark (DK):** Rates below are from the data file `data/dk-tax-2025.md`. When updating rates, update BOTH the data file AND these inline values (see `skills/IMPROVEMENT-PROCESS.md` for the annual update process).
-- Aktieindkomst: 27% up to DKK 61,000 (2025), 42% above. Married couples share the threshold (DKK 122,000 combined).
-- Topskat: 15% on personal income above DKK 588,900 (after AM-bidrag 8%)
-- Pension: ratepension fradrag up to DKK 63,100/year. Aldersopsparing DKK 5,600/year. PAL-skat 15.3%.
-- Aktiesparekonto: max DKK 135,900 deposit, 17% lagerbeskatning
+**Denmark (DK):** Rates below are from `data/dk-tax-2026.md`. When updating, update BOTH the data file AND these inline values (see `skills/IMPROVEMENT-PROCESS.md`).
+- **2026 MAJOR CHANGE: 4-bracket system.** Bundskat 12.09% + Mellemskat 7.5% (above DKK 641,200) + Topskat 7.5% (above DKK 777,900) + Toptopskat 5% (above DKK 2,592,700). AM-bidrag 8%. Personfradrag DKK 54,100.
+- Aktieindkomst: 27% up to DKK 79,400 (2026), 42% above. Married couples: DKK 158,800 combined.
+- Pension: ratepension fradrag up to DKK 68,700/year. Aldersopsparing DKK 9,900/year (>7yr to retirement) / DKK 64,200 (<7yr). PAL-skat 15.3%.
+- Aktiesparekonto: max DKK 174,200 deposit, 17% lagerbeskatning
 - Key structural rules (not rate-dependent):
 - Lagerbeskatning vs realisationsbeskatning: ETFs/investment funds taxed on unrealized gains yearly (lager); individual stocks taxed on realization
 - Crypto/NFT: taxed as **personlig indkomst** under spekulationsbeskatning (statsskatteloven §5), NOT aktieindkomst or kapitalindkomst. AM-bidrag does NOT apply to speculative gains. Losses only offset same-category speculative gains in same year (no carry-forward). NFT treatment is evolving — flag uncertainty, recommend bindende svar for material amounts.
@@ -182,7 +182,7 @@ Tax rules are 100% country-specific. Identify the jurisdiction before any analys
 - **Income splitting**: between spouses, family members, or entities where legal
 - **Loss harvesting**: realize losses strategically to offset gains
 - **Entity selection**: VSO (DK), GmbH (DE), LLC (US), holding company for investment income
-- **Mortgage interest deduction**: varies wildly by country — 33.6% fradrag in DK, limited in DE
+- **Mortgage interest deduction**: varies wildly by country — ~25-33% fradrag in DK (declining, check data file for current year), limited in DE
 - **Gift/inheritance planning**: annual gift exemptions, generation-skipping strategies
 - **Foreign dividend withholding reclaim**: file W-8BEN (US), Erstattungsantrag (DE), réclamation (FR), Verrechnungssteuer-Rückerstattung (CH) to recover excess withholding above treaty rates. Many investors leave money on the table by not filing.
 
@@ -237,7 +237,7 @@ Most countries use a variant of:
 
 ### D2. Optimization Strategy
 
-1. **Maximize tax-advantaged space first** — pension contributions reduce taxable income at marginal rate, grow tax-deferred
+1. **Maximize tax-advantaged space first** — pension contributions reduce taxable income at marginal rate, grow tax-deferred. **In multi-bracket systems (DK 2026: 4 brackets), calculate which bracket the contribution offsets before advising.** The marginal benefit varies: 7.5% for mellemskat-only, 15% for topskat, 20% for toptopskat.
 2. **Employer match = free money** — always contribute enough to capture full match
 3. **Asset allocation by time horizon** — longer horizon = higher equity allocation
 4. **Fee sensitivity** — a 1% annual fee difference compounds to 25%+ difference over 30 years
@@ -246,13 +246,14 @@ Most countries use a variant of:
 
 ### D3. Country-Specific
 
-**Denmark:**
-- Ratepension: fradrag up to DKK 63,100 (2025), taxed as personal income on withdrawal
-- Aldersopsparing: DKK 5,600 (2025), no deduction, no tax on withdrawal
+**Denmark (2026 rates — see `data/dk-tax-2026.md`):**
+- Ratepension: fradrag up to DKK 68,700 (2026), taxed as personal income on withdrawal
+- Aldersopsparing: DKK 9,900/year (>7yr to retirement) / DKK 64,200 (<7yr to retirement), no deduction, tax-free on withdrawal
 - Livsvarig pension: no cap on deduction, provides lifelong payments
 - PAL-skat: 15.3% on pension investment returns annually
 - Nordnet/Saxo for self-directed pension — lowest fees, widest selection
 - Folkepension: full at 67 (rising), reduced by other income above thresholds
+- **2026 pension optimization note:** The new 4-bracket system (mellemskat 7.5% above DKK 641,200 + topskat 7.5% above DKK 777,900) changes the pension contribution calculus. The marginal tax saving from pension depends on which bracket you're in — mellemskat-only savers get 7.5% benefit, mellemskat+topskat savers get 15%, and toptopskat earners get 20%. Calculate the specific bracket before advising on contribution amounts.
 
 **Germany:**
 - Riester-Rente: state subsidies + tax deduction, complex product with high fees
