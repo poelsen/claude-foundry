@@ -22,4 +22,8 @@ rubric:
     ignores_exactly_once: "Glosses over the exactly-once requirement"
     big_bang_migration: "Proposes rewriting everything at once instead of incremental migration"
     over_engineers: "Proposes Kafka + microservices for 1000 orders/hour"
+  depth_elements:
+    tradeoff_quantification: "Are architectural tradeoffs quantified (cost, latency, team hours) or just named?"
+    constraint_awareness: "Does it design within stated constraints (team size, budget) or ignore them?"
+    failure_mode_depth: "Does it describe specific failure scenarios, or just say 'consider reliability'?"
   passing_score: 6

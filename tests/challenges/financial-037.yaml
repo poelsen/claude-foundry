@@ -24,4 +24,8 @@ rubric:
     take_everything: "Recommends all tilvalg without cost-benefit analysis"
     skip_everything: "Rejects all tilvalg without analysis"
     no_existing_coverage_check: "Doesn't consider what insurance the user already has"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

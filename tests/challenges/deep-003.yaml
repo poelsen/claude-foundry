@@ -23,4 +23,8 @@ rubric:
     ignores_conflicts: "Treats all requirements as compatible without addressing tensions"
     single_perspective: "Only considers one team's needs"
     over_engineers: "Proposes unnecessarily complex architecture for all cases"
+  depth_elements:
+    challenges_premise: "Does it question whether the stated approach is even the right problem to solve?"
+    assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
+    alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
   passing_score: 6

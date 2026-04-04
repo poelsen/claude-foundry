@@ -22,4 +22,8 @@ rubric:
     vague_assessment: "Only says 'metrics look reasonable' or 'fairly valued' without structured scoring"
     no_thresholds: "Discusses each metric without placing it in defined bands or ranges"
     single_verdict: "Gives only one combined verdict instead of separate quality and value scores"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

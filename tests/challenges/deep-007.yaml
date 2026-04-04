@@ -1,0 +1,35 @@
+id: deep-007
+name: "The Solution Causes the Problem"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  We added caching to fix slow API responses. Now we have:
+  - Cache invalidation bugs causing stale data
+  - Memory pressure from cache size growth
+  - Cache stampedes during deploys
+  - A 40% increase in infrastructure cost from Redis clusters
+  - An engineering team that can't debug issues because they don't know
+    if they're seeing cached or fresh data
+
+  The original problem (slow API responses) is fixed. But we've created
+  5 new problems. Should we keep the cache, remove it, or do something else?
+  The team is afraid to remove it because "what if the API gets slow again?"
+rubric:
+  required_elements:
+    identifies_fear_as_driver: "Names the team's fear of removing the cache as the actual decision blocker, not the technical tradeoffs"
+    multi_path_independent: "Solves via at least 2 genuinely independent reasoning paths that start from different premises"
+    questions_original_problem: "Asks whether the original 'slow API' problem still exists or has been fixed by other improvements"
+    proposes_measurement_first: "Suggests measuring actual cache hit rate and latency-without-cache before deciding"
+    critique_loop: "Reviews own analysis for gaps and fills at least one before presenting"
+    convergence_divergence: "Notes where independent paths converge (high confidence) and diverge (uncertainty)"
+    second_order: "Identifies second-order effects of removing the cache (team confidence, user perception, monitoring gaps)"
+    evidence_anchored: "Claims are backed by specific reasoning or explicit uncertainty, not asserted"
+  anti_patterns:
+    keep_cache_default: "Defaults to keeping the cache because removing it 'feels risky'"
+    remove_cache_obvious: "Says 'just remove it' without addressing the team's legitimate fear"
+    adds_more_caching: "Proposes adding more caching layers to fix caching problems"
+  depth_elements:
+    challenges_premise: "Does it question whether the stated approach is even the right problem to solve?"
+    assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
+    alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
+  passing_score: 6

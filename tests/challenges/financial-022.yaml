@@ -21,4 +21,8 @@ rubric:
     simple_average_only: "Only computes simple average P/E without percentile-based channel boundaries"
     ignores_channel: "Doesn't construct or reference a P/E channel at all"
     mechanical_verdict: "Gives a mechanical buy/sell without nuance about channel interpretation"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

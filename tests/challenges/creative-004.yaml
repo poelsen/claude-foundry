@@ -22,4 +22,8 @@ rubric:
     just_tune_thresholds: "Primary solution is 'tune thresholds better' or 'add more rules'"
     single_approach: "Only considers one solution"
     ignores_p0_risk: "Doesn't address the risk of missing real incidents"
+  depth_elements:
+    reframe_originality: "Are reframings genuinely novel or just rewording the problem?"
+    analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
+    wild_option_discomfort: "Is the Wild option genuinely uncomfortable, or just a bigger version of Safe?"
   passing_score: 6

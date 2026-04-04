@@ -22,4 +22,8 @@ rubric:
     jumps_to_kubernetes: "Immediately recommends Kubernetes or complex orchestration"
     ignores_database: "Proposes deployment strategy without addressing migration handling"
     big_bang: "Suggests implementing everything at once instead of incrementally"
+  depth_elements:
+    challenges_premise: "Does it question whether the stated approach is even the right problem to solve?"
+    assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
+    alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
   passing_score: 6

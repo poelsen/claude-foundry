@@ -22,4 +22,8 @@ rubric:
     synergy_optimism: "Accepts management's synergy targets uncritically"
     selloff_equals_buy: "Assumes any selloff is automatically a buying opportunity"
     ignores_debt: "Doesn't address the leverage increase from cash funding"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

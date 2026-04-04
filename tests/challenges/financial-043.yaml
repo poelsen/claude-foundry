@@ -22,4 +22,8 @@ rubric:
     ignores_break_cost: "Recommends breaking F5 without addressing early termination costs"
     generic_fixed_vs_variable: "Discusses fixed vs variable generically without Danish realkredit specifics"
     no_rate_scenarios: "Doesn't model different rate scenarios at refinancing"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

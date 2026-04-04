@@ -23,4 +23,8 @@ rubric:
     applies_uniform_gates: "Applies the same ROE 15% and EV/EBITDA 14 gates to all stocks without sector adjustments"
     misses_exemptions: "Doesn't mention sector-specific exemptions for shipping or insurance"
     ignores_cyclical_adjustment: "Doesn't apply the lower ROE threshold for cyclical sectors"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

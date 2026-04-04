@@ -23,4 +23,8 @@ rubric:
     growth_at_any_price: "Picks the growth stock without addressing the valuation premium"
     value_dogma: "Picks the value stock without acknowledging growth's compounding potential"
     refuses_to_choose: "Only says 'it depends' without providing analytical reasoning"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

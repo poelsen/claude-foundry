@@ -21,4 +21,8 @@ rubric:
     generic_analysis: "Provides only generic 'looks good/bad' without using specific scoring thresholds"
     missing_gates: "Doesn't check the hard quality gates explicitly"
     no_thorleif_framework: "Uses general valuation frameworks without applying the Thorleif scoring system"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

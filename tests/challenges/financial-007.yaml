@@ -22,4 +22,8 @@ rubric:
     streak_means_safe: "Assumes 18-year streak guarantees continuation"
     yield_enthusiasm: "Focuses on attractive yield without stress-testing sustainability"
     ignores_balance_sheet: "Doesn't connect debt levels to dividend risk"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6

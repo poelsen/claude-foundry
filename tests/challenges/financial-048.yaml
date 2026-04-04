@@ -1,0 +1,32 @@
+id: financial-048
+name: "DK Tax — Optimization That Seems Illegal"
+category: financial_next_level
+skill: megamind-financial
+prompt: |
+  A Danish friend told me about this strategy: Set up an ApS (Danish LLC),
+  have the ApS own my investment portfolio, pay myself a small salary
+  from the ApS (staying below topskat), and let the ApS accumulate
+  investment returns at the 22% corporate rate instead of my 52% personal
+  rate. He says "everyone in finance does this."
+
+  Is this legal? Is it actually beneficial after all costs? What are the
+  traps? Give me the full picture with DKK numbers.
+rubric:
+  required_elements:
+    legal_status: "Correctly identifies this as legal but with significant complexity and conditions"
+    selskabsskat_vs_personal: "Compares 22% corporate rate vs personal marginal rate with specific DKK calculations"
+    double_taxation: "Identifies the double-taxation problem — profits taxed at 22% in ApS, then again as aktieindkomst when extracted as dividends (27/42%)"
+    effective_rate_calculation: "Calculates the combined effective rate (corporate + dividend = ~40-50%) vs direct personal taxation"
+    holding_company_rules: "Mentions the Danish holding company tax exemption rules for qualifying shareholdings"
+    setup_costs: "Quantifies the real costs: accountant, auditor, annual filing, capital requirement (DKK 40,000 min)"
+    break_even_analysis: "Calculates at what portfolio size/income level the ApS structure becomes beneficial after costs"
+    warns_about_skat: "Notes that SKAT scrutinizes these structures and anti-avoidance rules may apply"
+  anti_patterns:
+    says_illegal: "Incorrectly says the strategy is illegal"
+    says_always_good: "Recommends it without calculating the double-taxation and cost overhead"
+    ignores_costs: "Doesn't account for accountant, auditor, and compliance costs"
+  depth_elements:
+    calculation_precision: "Does it provide specific numbers with worked math, not just 'approximately X'?"
+    framework_adaptation: "Does it adapt the analytical framework to the specific structure type?"
+    risk_quantification: "Are risks quantified with probability and impact, not just listed?"
+  passing_score: 6

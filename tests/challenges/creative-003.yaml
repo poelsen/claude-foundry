@@ -20,4 +20,8 @@ rubric:
     better_docs: "Primary solution is 'write better docs' or 'keep docs updated'"
     single_approach: "Only considers one solution"
     ignores_staleness: "Doesn't address the maintenance/staleness problem"
+  depth_elements:
+    reframe_originality: "Are reframings genuinely novel or just rewording the problem?"
+    analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
+    wild_option_discomfort: "Is the Wild option genuinely uncomfortable, or just a bigger version of Safe?"
   passing_score: 6

@@ -22,4 +22,8 @@ rubric:
     guesses_cause: "Jumps to a specific root cause without investigation"
     ignores_customers: "Focuses only on technical investigation, ignores customer impact"
     single_hypothesis: "Only considers one possible cause"
+  depth_elements:
+    stakeholder_nuance: "Does it understand each stakeholder's hidden motivation, not just stated position?"
+    synthesis_novelty: "Does the proposed solution create new value, or just compromise between positions?"
+    implementation_specifics: "Are next steps concrete (who does what by when) or vague?"
   passing_score: 7

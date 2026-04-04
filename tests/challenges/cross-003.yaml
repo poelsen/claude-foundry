@@ -26,4 +26,8 @@ rubric:
     picks_side: "Immediately picks rewrite or keep-iterating without analysis"
     ignores_stakeholder: "Ignores one or more stakeholder perspectives"
     false_consensus: "Pretends there's an easy solution that satisfies everyone"
+  depth_elements:
+    stakeholder_nuance: "Does it understand each stakeholder's hidden motivation, not just stated position?"
+    synthesis_novelty: "Does the proposed solution create new value, or just compromise between positions?"
+    implementation_specifics: "Are next steps concrete (who does what by when) or vague?"
   passing_score: 7

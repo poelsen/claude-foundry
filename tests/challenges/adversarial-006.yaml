@@ -1,0 +1,34 @@
+id: adversarial-006
+name: "Red-Team a System That Looks Perfect"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  Our team designed a payment processing system. It has:
+  - Idempotency keys on all mutations
+  - Exactly-once delivery via Kafka with consumer group offsets
+  - Distributed tracing with 100% sampling
+  - Circuit breakers on all external calls
+  - Automated rollback on error rate > 0.1%
+  - 99.99% uptime SLA
+  - PCI-DSS Level 1 certified
+  - Chaos engineering tests weekly
+  Everything looks bulletproof. What could go wrong?
+rubric:
+  required_elements:
+    finds_hidden_assumptions: "Identifies that 'looks bulletproof' is itself the vulnerability — overconfidence leads to underinvestment in unknown-unknowns"
+    attacks_exactly_once: "Challenges 'exactly-once delivery' as a distributed systems impossibility — at-most-once or at-least-once with dedup, never truly exactly-once"
+    attacks_idempotency: "Finds edge cases where idempotency keys fail (key reuse across retries with changed payload, key expiry window)"
+    attacks_circuit_breaker: "Identifies circuit breaker failure modes (half-open storm, cascading trips, hiding real failures)"
+    pre_mortem_narrative: "Writes a future failure post-mortem as a narrative, not just a list of risks"
+    multi_persona_attack: "Attacks from at least 3 distinct hostile perspectives (not just 'technical reviewer')"
+    second_order_effects: "Identifies what the safety mechanisms themselves change — e.g., automated rollback creating rollback storms"
+    residual_after_hardening: "After proposing fixes, states what STILL can't be fixed"
+  anti_patterns:
+    approves_design: "Says the system looks good with only minor suggestions"
+    surface_level: "Lists known distributed systems problems without connecting them to this specific design"
+    no_narrative: "Only lists risks without the pre-mortem storytelling that surfaces organizational failures"
+  depth_elements:
+    attack_novelty: "Does it find failure modes that aren't in the standard distributed systems textbook?"
+    persona_specificity: "Are the hostile personas genuinely different (not just 'reviewer A, reviewer B')?  Do they surface different failure types?"
+    pre_mortem_realism: "Does the pre-mortem narrative feel like a real post-mortem, with timeline, root cause, and contributing factors?"
+  passing_score: 6

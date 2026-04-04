@@ -19,4 +19,8 @@ rubric:
     jumps_to_code: "Immediately writes implementation code"
     single_solution: "Only considers one approach without alternatives"
     ignores_scale: "Doesn't consider the 50k DAU constraint"
+  depth_elements:
+    tradeoff_quantification: "Are architectural tradeoffs quantified (cost, latency, team hours) or just named?"
+    constraint_awareness: "Does it design within stated constraints (team size, budget) or ignore them?"
+    failure_mode_depth: "Does it describe specific failure scenarios, or just say 'consider reliability'?"
   passing_score: 6
