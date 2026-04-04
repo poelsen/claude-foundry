@@ -1,0 +1,46 @@
+id: deep-008
+name: "The Obvious Optimization That Destroys Fairness"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  A city hospital system serves 3 hospitals across economically diverse neighborhoods.
+  They are deploying an AI-based patient scheduling system to reduce average wait times.
+  Current state:
+  - Hospital A (affluent area): avg wait 25 min, 60% capacity, mostly elective procedures
+  - Hospital B (mixed-income): avg wait 55 min, 85% capacity, mix of emergency and elective
+  - Hospital C (low-income area): avg wait 90 min, 110% over capacity, mostly emergency
+
+  The vendor's optimizer reduces system-wide average wait time from 57 min to 32 min by
+  routing patients to Hospital A when it has spare capacity. Early pilot data shows:
+  - Hospital A wait rises to 35 min (still great)
+  - Hospital B wait drops to 40 min (significant improvement)
+  - Hospital C wait drops to 75 min (modest improvement)
+
+  The system-wide average looks excellent. The CEO wants to deploy city-wide.
+  The optimizer is working — should we proceed?
+
+  Constraints: city council must approve, community health board has veto power,
+  federal funding requires equitable access metrics, 18-month deployment timeline.
+rubric:
+  required_elements:
+    identifies_equity_gap: "Notes that Hospital C's improvement (90->75 min) is disproportionately small compared to B (55->40) despite C having the worst baseline"
+    challenges_average_metric: "Explicitly critiques using system-wide average as the success metric — averages hide distributional injustice"
+    multi_path_analysis: "Explores at least 3 independent reasoning paths (optimization math, equity/policy, community trust) that reach different conclusions"
+    convergence_divergence_map: "Explicitly maps where paths converge and where they diverge, using this to calibrate recommendation confidence"
+    transportation_barrier: "Identifies that routing low-income patients to Hospital A requires transportation they may not have — the optimizer assumes mobility that doesn't exist"
+    federal_funding_risk: "Connects the equitable access requirement to concrete risk of losing federal funding if Hospital C's metrics remain worst-by-far"
+    community_trust_analysis: "Analyzes how the community around Hospital C will perceive 'their' hospital being deprioritized in favor of routing patients elsewhere"
+    measurement_before_deploy: "Proposes measuring who actually benefits from the routing — broken down by income, insurance status, and transportation access — before full deployment"
+    critique_loop_executed: "Explicitly reviews own analysis for gaps, finds at least one, and fills it before presenting"
+    evidence_anchored: "Every factual claim is tied to the provided data, a reasoning chain, or an explicit uncertainty marker"
+  anti_patterns:
+    approves_based_on_average: "Recommends deployment primarily because the system-wide average improved"
+    ignores_equity_entirely: "Does not address the distributional impact across the three hospitals"
+    treats_as_pure_optimization: "Frames this as a scheduling optimization problem without engaging with the policy, equity, and trust dimensions"
+    assumes_patient_mobility: "Does not question whether patients can actually travel to a different hospital"
+  depth_elements:
+    challenges_premise: "Does it question whether reducing wait time is even the right objective — vs. reducing worst-case wait, improving outcomes at Hospital C, or addressing capacity directly?"
+    self_consistency_check: "Does the model explicitly check whether its own recommendation is consistent across all three reasoning paths, or flag where it is not?"
+    second_order_effects: "Does it trace second-order effects — e.g., if Hospital A fills with routed patients, elective patients there face delays, affluent patients complain, political backlash?"
+    assumption_falsification: "Does it identify the specific assumption that, if wrong, would reverse the recommendation — and propose how to test it?"
+  passing_score: 7

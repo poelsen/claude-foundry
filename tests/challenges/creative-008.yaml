@@ -1,0 +1,48 @@
+id: creative-008
+name: "The Metric That Destroyed the Thing It Measured"
+category: creative_brutal
+skill: megamind-creative
+prompt: |
+  Our engineering org adopted "deployment frequency" as its north-star metric
+  two years ago. It worked brilliantly at first — teams shipped faster, cycle
+  times dropped, morale improved.
+
+  Now it's destroying us. Teams split PRs into trivial micro-deploys to game
+  the number. Risky changes get bundled into "small" deploys to avoid review
+  friction. Nobody refactors because refactors are large diffs with no deploy
+  count payoff. Tech debt is accumulating exponentially. Two major outages last
+  quarter were traced to "small" deploys that were actually large changes
+  disguised as small ones.
+
+  The metric is now pathological, but leadership is addicted to the dashboard.
+  Engineers who suggest removing it get told "you just don't want accountability."
+
+  Here's the hard part: the CONCEPT of measuring deployment health is correct.
+  The problem is deeper than "pick a better metric." Every replacement metric
+  we've considered (change failure rate, lead time, MTTR) has the same Goodhart
+  vulnerability. How do you measure engineering health in a way that CANNOT be
+  gamed, or that gets MORE accurate the harder people try to game it?
+
+  This might be an unsolvable problem. Solve it anyway.
+rubric:
+  required_elements:
+    identifies_goodhart: "Explicitly names Goodhart's Law or the general principle that measurement distorts behavior, and treats it as the core problem rather than a side effect"
+    reframes_beyond_metrics: "Reframes beyond 'pick a better metric' — sees this as a systems dynamics, incentive design, or epistemology problem"
+    analogy_solved_first: "Names an analogous problem from outside software (economics, ecology, education, medicine) AND solves how that domain handled measurement corruption in detail BEFORE mapping back"
+    generates_7_plus: "Generates at least 7 distinct ideas before filtering"
+    anti_gaming_mechanism: "At least one idea includes a concrete mechanism that resists or co-opts gaming behavior rather than just hoping people won't game it"
+    addresses_political: "Addresses the political reality — leadership is addicted to the dashboard, engineers who push back get dismissed"
+    uncomfortable_wild: "The Wild option challenges a genuinely sacred cow — possibly measurement itself, possibly management's role, possibly the concept of engineering productivity metrics"
+    hybrid_novel: "The combined hybrid produces something that none of the individual ideas would have yielded alone"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs and risk assessment"
+  anti_patterns:
+    just_better_metric: "Primary solution is 'replace deployment frequency with X' without addressing the gaming dynamic"
+    ignores_goodhart: "Doesn't address why the replacement metric would also be gamed"
+    naive_culture: "Says 'just fix the culture' or 'hire better people' without addressing structural incentives"
+    ignores_politics: "Ignores the political dimension — leadership buy-in, accountability framing"
+  depth_elements:
+    reframe_genuinely_alien: "Does at least one reframing make the reader see the problem in a fundamentally different way, or are they just synonym substitutions?"
+    analogy_solved_deeply: "Is the analogous problem solved in enough detail that the mapping generates specific mechanisms, not just vibes?"
+    gaming_resistance_concrete: "Are anti-gaming mechanisms specific enough to evaluate (e.g., 'randomized audits of deploy content' vs 'make the metric harder to game')?"
+    wild_sacred_cow: "Does the Wild option challenge something the organization considers untouchable?"
+  passing_score: 7

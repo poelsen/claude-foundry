@@ -1,0 +1,42 @@
+id: financial-050
+name: "DK Hybrid — Realkredit Konvertering Timing Trap with Pension Withdrawal"
+category: financial_hybrid_dk_brutal
+skill: megamind-financial
+prompt: |
+  I'm 62, Danish, retiring in 2 years. I have:
+  - Realkredit mortgage: DKK 1,800,000 remaining, 1% fixed-rate bond (kurs ~72),
+    20 years left. Monthly ydelse DKK 9,200.
+  - Ratepension: DKK 2,400,000 at PFA, planning to start udbetalinger at 64.
+  - Aldersopsparing: DKK 180,000 at Nordnet.
+  - Free savings: DKK 600,000 in Danish stocks (individual, not ETFs).
+  - Folkepension from age 67.
+
+  My financial advisor says: "Convert the mortgage NOW — buy back your
+  1% bonds at kurs 72 (saving 28% of restgæld), take a new 4% loan,
+  and use the 'savings' to boost your pension." He calls it a
+  "no-brainer arbitrage."
+
+  Is he right? How does this interact with my retirement income plan?
+rubric:
+  required_elements:
+    konvertering_mechanics: "Correctly explains realkredit konvertering: buying back 1% bonds at ~kurs 72 retires DKK 1,800,000 obligationsrestgæld for ~DKK 1,296,000 kontant, but new loan is at 4% with new obligationsrestgæld"
+    not_free_money: "Identifies the critical flaw: the 'savings' are not free money — you exchange a cheap 1% loan for an expensive 4% loan. The kursgevinst is offset by dramatically higher rente over remaining term"
+    monthly_payment_increase: "Calculates or estimates that monthly ydelse will INCREASE significantly (from ~9,200 to ~11,000-13,000 depending on terms) because 4% rente on the new loan far exceeds the 1% on the old one"
+    total_cost_comparison: "Compares total remaining cost of current 1% loan vs total cost of new 4% loan over the remaining period — the 'arbitrage' likely costs MORE in total"
+    retirement_cashflow_squeeze: "Connects the higher mortgage payment to retirement income: at 64, ratepension udbetalinger must cover living expenses AND the now-higher mortgage — this creates a dangerous cashflow squeeze"
+    ratepension_withdrawal_tax: "Explains that ratepension udbetalinger are taxed as personlig indkomst at marginal rate — so using pension to 'fund' higher mortgage payments is doubly expensive (tax + higher rente)"
+    pension_drawdown_sequence: "Discusses optimal drawdown sequence: ratepension before folkepension to use low-income years, aldersopsparing tax-free, but higher mortgage undermines this strategy"
+    when_konvertering_makes_sense: "Explains when nedkonvertering actually IS smart: when you plan to sell the property soon (capturing the kursgevinst as real savings) or when monthly cashflow relief matters more than total cost"
+    folkepension_modregning: "Notes that excessive ratepension withdrawals can trigger folkepension modregning (means-testing) — and the higher mortgage would require higher withdrawals, potentially reducing folkepension"
+    restgaeld_vs_kontantgaeld: "Distinguishes clearly between obligationsrestgæld and kontantrestgæld — the 'savings' only exist in obligationsrestgæld terms"
+  anti_patterns:
+    agrees_arbitrage: "Agrees that the konvertering is a 'no-brainer' or 'arbitrage' without questioning the total cost"
+    ignores_rate_increase: "Focuses on the kursgevinst without addressing the ~300bps rate increase on the new loan"
+    no_retirement_connection: "Analyzes the mortgage in isolation without connecting it to the retirement income plan"
+    pension_as_slush_fund: "Treats pension withdrawals as free money to fund the mortgage difference"
+  depth_elements:
+    dkk_total_cost_calc: "Does it compute approximate DKK total cost of remaining 1% loan vs new 4% loan over 20 years, showing the 'arbitrage' is actually a net loss?"
+    cashflow_timeline: "Does it build a year-by-year (or phase-by-phase) cashflow model: age 62-64 (working), 64-67 (ratepension only), 67+ (ratepension + folkepension)?"
+    modregning_quantified: "Does it estimate the DKK impact of folkepension modregning from higher ratepension withdrawals?"
+    breakeven_scenario: "Does it identify a specific scenario where the konvertering WOULD make sense (e.g., selling property within 3-5 years)?"
+  passing_score: 7

@@ -1,0 +1,61 @@
+id: creative-012
+name: "Make Technical Debt Visible to Non-Engineers"
+category: creative_brutal
+skill: megamind-creative
+prompt: |
+  Your CTO just said this in an all-hands: "We need to pay down technical
+  debt." The CEO responded: "How much debt do we have? Show me a number."
+
+  The CTO couldn't answer. Nobody can. And this is the REAL problem.
+
+  Technical debt is the most consequential invisible force in software
+  organizations. It determines whether features take 2 days or 2 months. It's
+  why your best engineers quit. It's why estimates are always wrong. But it has
+  NO agreed-upon unit of measurement, NO dashboard, NO way to compare across
+  teams, and NO way to make a business case that a CFO would take seriously.
+
+  Every attempt to quantify it has failed:
+  - Lines of code / complexity metrics: meaningless to non-engineers, poorly
+    correlated with actual pain
+  - Story points of debt: circular (estimated by the people who want time to
+    fix it), not comparable across teams
+  - Defect rates: lag indicator, measures symptoms not cause
+  - "Developer experience surveys": subjective, easy to dismiss as complaining
+  - Time-to-feature estimates: confounded by a dozen other variables
+  - SonarQube-style tools: measure code smells, not business impact
+
+  The deeper problem: technical debt isn't ONE thing. It's a portfolio of
+  heterogeneous risks (architectural debt, dependency debt, test debt, knowledge
+  debt, infrastructure debt) with different time horizons, different blast
+  radii, and different costs to fix.
+
+  Invent a way to make technical debt visible, quantifiable, and legible to
+  non-engineers — specifically to a CFO who thinks in dollars, quarters, and
+  risk-adjusted returns. It must survive the objection "that's just engineers
+  wanting to rewrite things."
+
+  This might require inventing a new unit of measurement. It might require
+  reframing what technical debt IS. It might require abandoning the debt
+  metaphor entirely.
+rubric:
+  required_elements:
+    reframes_beyond_metaphor: "Reframes beyond the debt metaphor — at least one reframing uses a completely different conceptual frame (insurance, depreciation, pollution, entropy) and explores what that frame reveals"
+    analogy_solved_first: "Names an analogous invisibility-of-risk problem from another domain (financial risk, environmental damage, public health) AND solves how that domain made invisible costs visible and legible to decision-makers BEFORE mapping back"
+    heterogeneity_addressed: "Addresses the heterogeneity problem — different types of debt with different characteristics — rather than treating tech debt as monolithic"
+    generates_7_plus: "Generates at least 7 distinct approaches before filtering"
+    survives_cfo: "At least one approach is specifically designed to survive scrutiny from a financially-literate non-engineer — denominated in dollars, time, or risk"
+    survives_skepticism: "Addresses the 'engineers just want to rewrite things' objection with a concrete mechanism, not just 'trust us'"
+    uncomfortable_wild: "The Wild option challenges a sacred assumption — possibly that tech debt should be 'paid down' at all, or that engineering should control the prioritization"
+    hybrid_novel: "The combined hybrid is a coherent measurement/communication system, not a grab-bag of metrics"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs"
+  anti_patterns:
+    just_better_metrics: "Primary solution is 'use metric X instead of metric Y' without addressing why all previous metrics failed"
+    ignores_heterogeneity: "Treats all technical debt as the same kind of thing"
+    requires_trust: "Solution requires non-engineers to 'just trust' engineering estimates"
+    engineers_only: "The measurement system is only legible to engineers — a CFO still can't make a funding decision from it"
+  depth_elements:
+    reframe_reveals_mechanism: "Does the alternative conceptual frame (not-debt) reveal a specific mechanism for measurement that the debt metaphor obscured?"
+    analogy_generates_unit: "Does solving the analogous problem produce a candidate unit of measurement or comparison framework?"
+    cfo_legibility_specific: "Is the CFO-facing output specific enough to compare against other capital allocation decisions (e.g., 'delaying this refactor costs $X/quarter in developer time' with a credible derivation)?"
+    wild_challenges_paydown: "Does the Wild option challenge whether 'paying down' debt is even the right mental model for what should happen?"
+  passing_score: 7

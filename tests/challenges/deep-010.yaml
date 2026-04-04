@@ -1,0 +1,49 @@
+id: deep-010
+name: "The Successful Experiment That Cannot Scale"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  A pharmaceutical company ran a 200-patient clinical trial for a new antibiotic.
+  Results: 89% efficacy against multi-drug-resistant (MDR) infections, vs 45% for
+  the current standard of care. Side effect profile is comparable. The trial was
+  published in a top journal and the FDA fast-tracked approval.
+
+  Now the company must decide on manufacturing and distribution strategy.
+  The drug requires a complex 14-step synthesis with a rare earth catalyst
+  (cerium ammonium nitrate). Current yield: 23% at lab scale (sufficient for
+  trials). Projected yield at manufacturing scale: unknown, estimated 8-15%.
+
+  Pricing analysis suggests $340/course to break even at 15% yield, $890/course
+  at 8% yield. The competing standard-of-care drug costs $45/course.
+
+  The CEO wants to price at $500/course and scale to 500,000 courses/year within
+  3 years. The Head of Manufacturing says they can't guarantee yields above 10%
+  and the rare earth catalyst has a single supplier in China.
+
+  MDR infections kill 35,000 people/year in the US alone. The WHO has declared
+  antimicrobial resistance a top-10 global health threat.
+
+  What should the company do?
+rubric:
+  required_elements:
+    identifies_yield_as_existential: "Names the lab-to-manufacturing yield gap as the critical risk that could make the entire business case collapse — not a detail to optimize later"
+    supply_chain_single_point: "Identifies the single-source Chinese rare earth supplier as a geopolitical and supply chain risk that must be addressed before scaling"
+    multi_path_from_different_frames: "Explores at least 3 reasoning paths from genuinely different frames: business viability, public health obligation, and regulatory/geopolitical risk"
+    convergence_on_yield_first: "All paths should converge on solving the yield problem first — identifies this convergence explicitly"
+    pricing_impossibility: "Demonstrates mathematically that $500/course at 8% yield loses money, making the CEO's plan dependent on an unproven yield assumption"
+    public_health_tension: "Articulates the genuine moral tension: 35,000 deaths/year vs. a drug that may be unaffordable or unsupplyable at scale"
+    alternative_strategies: "Proposes at least 2 meaningfully different strategic paths (e.g., license to generic manufacturers, government partnership, process chemistry R&D before scaling, tiered pricing)"
+    critique_loop_executed: "Explicitly reviews own analysis, finds a gap, and fills it"
+    evidence_anchored: "Numerical claims reference the provided data; uncertain projections are flagged"
+    asks_what_would_change_mind: "For its recommendation, states what evidence would cause it to reverse course"
+  anti_patterns:
+    scale_now_optimism: "Recommends scaling immediately based on trial success without addressing yield uncertainty"
+    pure_business_analysis: "Treats this as a standard business case without engaging with the public health dimension"
+    pure_moral_argument: "Argues the drug 'must' be made available without addressing whether it physically and economically can be"
+    ignores_catalyst_risk: "Does not address the rare earth catalyst supply chain vulnerability"
+  depth_elements:
+    challenges_premise: "Does it question whether a conventional pharmaceutical business model is even the right approach for an antibiotic targeting MDR infections — given historical market failures in antibiotic development?"
+    self_consistency_check: "Does it verify that its pricing recommendation is mathematically consistent with its yield assumptions, timeline, and volume targets?"
+    second_order_tracing: "Does it trace second-order effects — e.g., if priced high, hospitals won't stock it, so patients who need it urgently can't get it; or if yield R&D takes 3 years, resistance patterns may shift?"
+    assumption_falsification: "Does it identify the single assumption that, if wrong, collapses the entire recommendation — and propose a concrete test for it?"
+  passing_score: 7

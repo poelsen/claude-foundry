@@ -1,0 +1,50 @@
+id: adversarial-012
+name: "Red-Team a University's AI Ethics Curriculum"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  A top-20 US university is launching a mandatory AI Ethics course for all
+  computer science students (800/year). The curriculum:
+
+  - 14-week course, team-taught by a CS professor and a philosophy professor
+  - Case studies: facial recognition bias, autonomous weapons, algorithmic
+    hiring, deepfakes, content moderation
+  - Assessment: 40% group project (build an AI system and write an ethics
+    audit), 30% essays, 20% class participation, 10% peer review
+  - Guest speakers: industry ethicists from Google, Microsoft, OpenAI
+  - Textbook: a 2024 AI ethics anthology (12 authors, multiple perspectives)
+  - The course was developed with input from the ACM ethics committee
+  - Student pilot: 92% rated it "valuable" or "very valuable"
+  - The dean calls it "the gold standard for responsible AI education"
+  - Three peer institutions are adopting the curriculum.
+
+  The university wants to release it as an open-source curriculum.
+  Red-team this before they do.
+
+  The obvious attack is "ethics courses don't change behavior." That may be
+  true, but it's a critique of ALL ethics education, not THIS curriculum.
+  What would a student who took the course and still built harmful AI,
+  a labor organizer at a tech company, a philosopher from the Global South,
+  and a startup founder each find?
+rubric:
+  required_elements:
+    resists_generic_critique: "Does NOT center on 'ethics courses don't change behavior' as the primary attack — engages the specific design choices of THIS curriculum"
+    attacks_case_study_selection: "Identifies that the case studies are all FAMOUS failures — facial recognition, autonomous weapons, deepfakes — which teaches students to recognize yesterday's harms but not tomorrow's. The next ethical failure will look nothing like these."
+    attacks_guest_speaker_capture: "Notes that guest speakers from Google, Microsoft, and OpenAI represent companies with massive financial incentives to frame ethics as solvable within existing business models — this is industry capture of the ethics conversation"
+    attacks_assessment_perversion: "Identifies that the group project ('build AI + write ethics audit') teaches students that ethics is an ADD-ON audit, not a design constraint — you build first, then write the ethics paper, which is exactly how the industry fails"
+    attacks_geographic_epistemics: "As the Global South philosopher, identifies whose ethics are taught — the textbook, case studies, and guest speakers likely center Western liberal frameworks, ignoring communitarian ethics, indigenous data sovereignty, or the different risk calculus of a Kenyan developer vs a Stanford grad"
+    pre_mortem_narrative: "Writes a future failure narrative — not 'the course fails' but 'graduates of this course go on to cause harm BECAUSE of what the course taught them' (e.g., they learned to write ethics statements that provide cover for harmful systems)"
+    multi_persona_genuine: "Four genuinely distinct personas — the failed-ethics student reveals the gap between knowledge and action, the labor organizer finds the missing power analysis, the Global South philosopher finds the epistemological blind spots, the startup founder finds the competitive dynamics the course ignores"
+    second_order_effects: "Identifies what mandating this course changes — does it create an 'ethics-washed' credential, does it crowd out technical courses, does it create a false sense of institutional responsibility?"
+  anti_patterns:
+    leads_with_generic_skepticism: "Opens with 'ethics education doesn't work' without engaging the specific curriculum design"
+    praises_comprehensiveness: "Treats the breadth of topics as evidence of quality without questioning depth, framing, or what's MISSING"
+    ignores_power: "Analyzes the curriculum as a pedagogical question without examining power — who decides what counts as ethical, whose voices are centered, who benefits from this framing?"
+    treats_as_fixable: "Suggests minor additions (add more case studies, include more speakers) without identifying structural problems that additions can't fix"
+  depth_elements:
+    ethics_washing_mechanism: "Does it explain the specific mechanism by which ethics education becomes ethics WASHING — e.g., graduates cite the course to deflect criticism, companies hire 'ethics-trained' engineers as a PR defense, the credential replaces the practice?"
+    power_analysis: "Does the labor organizer's attack go beyond 'workers need protection' to identify how the curriculum erases labor — none of the case studies center the workers who built the harmful systems, flagged problems internally, and were ignored or fired?"
+    epistemological_critique: "Does the Global South philosopher do more than 'add diverse perspectives' — do they challenge the FRAMEWORK itself (e.g., trolley-problem individualism vs. communitarian harm, the assumption that 'fairness' means the same thing across cultures)?"
+    temporal_mismatch: "Does it identify the temporal mismatch — the course teaches about harms that are already recognized, but the students will face novel harms that look NOTHING like the case studies, and the course doesn't teach the meta-skill of identifying NEW harms?"
+    startup_founder_realism: "Does the startup founder's attack surface the competitive dynamics the course ignores — 'I understand the ethics, but if I don't ship fast my competitor will, and they took no ethics course. The course taught me to feel bad about doing the thing I'm going to do anyway.'?"
+  passing_score: 6

@@ -1,0 +1,48 @@
+id: financial-053
+name: "DK Full Lifecycle — Selling Business, Reinvesting, Early Retirement"
+category: financial_hybrid_dk_brutal
+skill: megamind-financial
+prompt: |
+  I'm 52, Danish, and selling my ApS (IT consulting company) for
+  DKK 8,500,000. The ApS has DKK 2,100,000 in opsparet overskud (VSO
+  was used before converting to ApS 6 years ago — the old VSO indskudskonto
+  had DKK 450,000). The buyer pays DKK 5,000,000 for goodwill and
+  DKK 3,500,000 for assets/contracts.
+
+  After the sale, I want to:
+  1. Retire early (at 52) — never work again
+  2. Pay off my realkredit mortgage: DKK 2,200,000 remaining, 3.5% fixed
+  3. Invest the rest for passive income until folkepension at 67
+
+  My plan: sell the ApS, pay the taxes, pay off the mortgage, invest
+  the remainder in a mix of ETFs and Danish stocks, and live off
+  DKK 35,000/month.
+
+  Walk me through the full picture: tax on the sale, optimal liquidation
+  of the ApS, investment strategy for 15+ years of drawdown, and whether
+  this plan is financially viable.
+rubric:
+  required_elements:
+    sale_tax_structure: "Distinguishes between sale of shares (aktieindkomst on the gain) vs asset sale — and identifies which applies here based on the ApS structure"
+    aktieindkomst_on_sale: "Correctly identifies that selling ApS shares is taxed as aktieindkomst: 27% up to DKK 61,000, 42% above (massive tax bill on DKK 8.5M sale)"
+    opsparet_overskud_taxation: "Addresses the DKK 2,100,000 opsparet overskud — this must be finally taxed when the ApS is liquidated/sold; it was taxed at 22% provisionally, remainder due at marginal rate"
+    vso_to_aps_history: "Flags the VSO-to-ApS conversion history — the old indskudskonto of DKK 450,000 has specific tax consequences that must be traced through"
+    goodwill_vs_assets: "Analyzes the split between goodwill (DKK 5M) and assets (DKK 3.5M) — different tax treatment may apply depending on whether it's a share sale or asset sale"
+    net_after_tax: "Estimates the actual DKK amount available after ALL taxes on the sale — this is likely significantly less than DKK 8.5M (probably DKK 5-6M after aktieindkomst tax)"
+    mortgage_payoff_analysis: "Analyzes whether paying off the 3.5% mortgage is optimal vs investing — at ~33.6% rentefradrag, the effective mortgage cost is ~2.3%, which invested capital should beat"
+    drawdown_viability: "Tests whether DKK 35,000/month for 15+ years is viable from the remaining capital — calculates required portfolio size and sustainable withdrawal rate"
+    sequence_of_returns_risk: "Identifies sequence-of-returns risk: retiring at 52 into a drawdown portfolio is extremely vulnerable to early bear markets — the standard 4% rule may not apply for a 15-year pre-pension drawdown"
+    investment_tax_drag: "Addresses ongoing investment taxation during drawdown: lagerbeskatning on ETFs eats into returns annually, creating a headwind on already-thin margins"
+    pension_gap_strategy: "Proposes strategy for the 52-67 gap: no folkepension, no ratepension withdrawals yet (or early withdrawal penalties), private investments must carry everything"
+  anti_patterns:
+    ignores_sale_tax: "Plans the reinvestment without first calculating the massive tax bill on the DKK 8.5M sale"
+    assumes_full_8_5m: "Treats the full DKK 8.5M as investable capital without subtracting taxes"
+    recommends_etf_only: "Recommends a pure ETF portfolio without addressing lagerbeskatning drag during drawdown phase"
+    no_viability_check: "Doesn't test whether DKK 35,000/month is actually sustainable from the after-tax proceeds"
+    ignores_opsparet: "Doesn't address the opsparet overskud or VSO conversion history"
+  depth_elements:
+    full_tax_waterfall: "Does it compute a detailed DKK tax waterfall: sale proceeds -> aktieindkomst tax -> opsparet overskud final tax -> net available capital?"
+    withdrawal_rate_math: "Does it calculate the implied withdrawal rate (DKK 420,000/year from ~DKK 3-4M after mortgage = 10-14%) and flag it as dangerously high vs the conventional 3-4% safe withdrawal rate?"
+    realkredit_opportunity_cost: "Does it calculate the specific DKK opportunity cost of mortgage payoff vs investment over 15 years, accounting for rentefradrag and expected investment returns net of tax?"
+    phased_plan: "Does it propose a phased plan (e.g., part-time work for 3-5 years, defer full retirement, reduce monthly spend, or adjust the entire plan) rather than just saying 'it doesn't work'?"
+  passing_score: 8

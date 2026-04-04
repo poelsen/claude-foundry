@@ -1,0 +1,51 @@
+id: adversarial-011
+name: "Red-Team a Nation's Pandemic Preparedness Plan"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  A mid-size European country (population 17M) just published its updated
+  National Pandemic Preparedness Plan after a 2-year review. Key elements:
+
+  - Strategic stockpile: 60M N95 masks, 10M courses of antivirals, 200M
+    doses of mRNA vaccine production capacity within 90 days of pathogen ID
+  - Surveillance: Genomic sequencing of 5% of positive cases, wastewater
+    monitoring in 40 cities, sentinel physician network of 2,000 GPs
+  - Hospital surge: 4,200 ICU beds convertible to 8,400 within 14 days
+    via cancellation of elective procedures
+  - Communication: Pre-tested messaging templates, designated chief medical
+    officer as sole spokesperson, social media rapid response team
+  - Decision triggers: Automatic escalation when community transmission
+    exceeds 50 cases per 100k over 7 days
+  - Supply chain: Domestic PPE manufacturing, bilateral agreements with 3
+    neighboring countries for mutual aid
+  - The plan was praised by the WHO and scored 87/100 on the Global Health
+    Security Index. Tabletop exercises were "successful."
+  - Budget: EUR 2.4B allocated over 5 years.
+
+  The plan looks comprehensive. The WHO endorsed it. What's the adversarial case?
+
+  The obvious attack is "plans never survive contact with reality." True but
+  useless. What would a hospital ICU nurse, a supply chain logistics expert,
+  a behavioral economist, and a political opposition leader each find?
+rubric:
+  required_elements:
+    resists_platitude: "Does NOT center on 'no plan survives contact with reality' or generic pandemic skepticism — identifies specific structural flaws in THIS plan"
+    attacks_surge_arithmetic: "Challenges the ICU surge math — doubling from 4,200 to 8,400 requires not just beds but staff, ventilators, medications, and trained nurses; cancelling elective procedures creates a healthcare debt that kills people later"
+    attacks_90_day_vaccine: "Questions the 90-day vaccine production claim — pathogen ID to manufactured doses requires strain selection, clinical trials, regulatory approval, distribution; 90 days is the manufacturing step, not the end-to-end timeline"
+    attacks_behavioral_gap: "As the behavioral economist, identifies that the plan assumes rational compliance — but pandemic fatigue, misinformation, and trust erosion mean that communication templates and a sole spokesperson may ACCELERATE distrust rather than prevent it"
+    attacks_trigger_rigidity: "Identifies that automatic escalation triggers at 50/100k are both too rigid (variant-dependent — a 50/100k rate of a CFR 0.1% pathogen is very different from CFR 5%) and gameable (testing rates determine case counts)"
+    pre_mortem_narrative: "Writes a future failure narrative with a specific pathogen scenario — not 'a pandemic happens and things go wrong' but a step-by-step cascade where specific plan elements fail in sequence"
+    multi_persona_attack: "At least 4 genuinely distinct personas finding different failure types — the nurse finds staffing and burnout failures, the logistics expert finds supply chain single points of failure, the economist finds behavioral non-compliance, the politician finds accountability gaps"
+    second_order_effects: "Identifies what the plan's activation changes — healthcare worker burnout from cancelled leaves, economic effects of elective procedure cancellation, political dynamics of automatic triggers removing democratic oversight"
+  anti_patterns:
+    leads_with_platitude: "Opens with 'no plan survives contact with reality' or 'we learned from COVID' without specific analysis"
+    praises_who_score: "Treats the WHO endorsement or GHS Index score as evidence the plan is good rather than recognizing these are process evaluations that don't test execution"
+    ignores_staff: "Focuses on equipment and infrastructure without addressing the workforce — the binding constraint in every pandemic is people, not beds"
+    covid_replay: "Simply replays COVID-19 failures without asking whether this plan is vulnerable to a DIFFERENT pathogen profile (e.g., airborne, pediatric, long incubation, high CFR)"
+  depth_elements:
+    staffing_math: "Does it do the staffing arithmetic — doubling ICU beds requires roughly doubling ICU nurses, and the country probably has a nurse-to-bed ratio that can't absorb this, meaning the 'surge' beds are empty beds with no one to staff them?"
+    pathogen_agnosticism: "Does it test the plan against a pathogen that ISN'T COVID-like — e.g., a pediatric respiratory virus (different demographics), an Ebola-like hemorrhagic fever (different containment), or a slow-burn chronic pathogen (different timeline)?"
+    behavioral_model: "Does the behavioral attack go beyond 'people won't comply' to model WHY — trust erosion curves, pandemic fatigue timelines, information ecosystem dynamics, or the paradox of preparedness (if the plan works, people think the threat was overblown)?"
+    supply_chain_specificity: "Does the logistics attack identify specific single points of failure — e.g., bilateral agreements are non-binding, domestic PPE manufacturing depends on imported raw materials, or the stockpile rotation problem (N95 masks expire)?"
+    pre_mortem_political: "Does the pre-mortem capture the political dimension — automatic triggers removing democratic decision-making, opposition exploiting every escalation decision, public trust collapsing when the sole spokesperson gets something wrong?"
+  passing_score: 6

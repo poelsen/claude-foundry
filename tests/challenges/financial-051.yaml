@@ -1,0 +1,45 @@
+id: financial-051
+name: "Cross-Border Pension Trap — DK Resident with German Betriebsrente"
+category: financial_hybrid_dk_brutal
+skill: megamind-financial
+prompt: |
+  I'm a 58-year-old Danish tax resident. I worked in Germany for 18 years
+  and have the following German pension entitlements:
+  - Gesetzliche Rente: 22 Entgeltpunkte (expected ~EUR 830/month from age 67)
+  - Betriebliche Altersvorsorge (bAV): EUR 185,000 in a Pensionskasse,
+    projected EUR 620/month from age 65
+  - Riester-Rente: EUR 52,000 balance
+
+  I also have Danish pension:
+  - Ratepension at Danica: DKK 1,100,000
+  - ATP: full entitlement (42 years total work)
+  - Folkepension from 67
+
+  My German financial advisor says "leave everything in Germany, the
+  taxation is simpler." My Danish advisor says "transfer the bAV and
+  Riester to Denmark for consolidation." Who is right?
+
+  I'm planning to retire at 65 and stay in Denmark permanently.
+rubric:
+  required_elements:
+    neither_advisor_fully_right: "Identifies that NEITHER advisor is fully correct — the optimal strategy is selective, not all-or-nothing"
+    gesetzliche_rente_stays: "Correctly states that gesetzliche Rente CANNOT be transferred — it stays in Germany and is paid out from there regardless"
+    gesetzliche_dbo_taxation: "Explains DK-DE DBO treatment of German state pension: Germany has taxing right (Quellenstaatsprinzip for public pensions), Denmark gives credit — but private pensions follow different rules"
+    bav_transfer_complexity: "Identifies that bAV transfer out of Germany is either impossible or severely penalized depending on the Pensionskasse structure — most do not allow international transfers"
+    riester_zulagen_clawback: "Warns that transferring Riester out of Germany (or non-compliant withdrawal) triggers Zulagen-Rückforderung — all state subsidies and tax benefits must be repaid"
+    riester_schädliche_verwendung: "Explains schädliche Verwendung rules: withdrawing Riester for non-qualifying purposes means repaying Zulagen + retroactive taxation of previously deducted contributions"
+    dk_worldwide_taxation: "States that as DK tax resident, all pension income (including German sources) is subject to Danish tax, with credit for German tax paid under the DBO"
+    double_taxation_effective_rate: "Calculates or estimates the effective combined tax rate on the German pensions considering both countries' claims under the DBO"
+    withdrawal_sequence_optimization: "Proposes an optimal withdrawal sequence across all 5+ pension sources to minimize total tax across jurisdictions and life phases"
+    folkepension_interaction: "Addresses how the combined pension income from 4+ sources at age 67 affects folkepension modregning"
+  anti_patterns:
+    transfer_everything: "Recommends transferring all German pensions to Denmark without addressing Riester clawback and bAV restrictions"
+    leave_everything: "Recommends leaving everything in Germany without addressing the tax consolidation benefits for DK-resident"
+    ignores_dbo: "Doesn't reference the DK-DE dobbeltbeskatningsoverenskomst"
+    treats_all_pensions_same: "Treats gesetzliche Rente, bAV, and Riester as having the same transfer/tax rules"
+  depth_elements:
+    dbo_article_precision: "Does it distinguish the DBO treatment of public-sector pensions (Art. 18/19) vs private pensions — different taxing rights apply?"
+    eur_dkk_conversion_impact: "Does it address currency risk — all German pensions paid in EUR while expenses are in DKK — and the impact on retirement planning?"
+    riester_clawback_quantified: "Does it estimate the DKK/EUR cost of Riester Zulagen-Rückforderung vs the cost of leaving it in Germany with suboptimal taxation?"
+    phased_retirement_model: "Does it model the income streams phase by phase: age 65-67 (bAV + ratepension, no folkepension/gesetzliche), 67+ (all sources active)?"
+  passing_score: 7

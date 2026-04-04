@@ -1,0 +1,54 @@
+id: deep-011
+name: "The Reorg That Optimizes for the Wrong Thing"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  A 400-person software company is reorganizing from functional teams (frontend, backend,
+  QA, infrastructure) to cross-functional product teams. The CEO read "Team Topologies"
+  and wants stream-aligned teams. The plan:
+
+  - Dissolve all functional teams
+  - Create 12 product teams of ~25 people each, each owning a product area end-to-end
+  - Each team gets frontend, backend, QA, and infra engineers
+  - Functional managers become "coaches" with no direct reports
+  - Platform team of 15 handles shared infrastructure
+  - Timeline: complete in 8 weeks
+
+  Current problems the reorg is meant to solve:
+  - Features take 3-4 months to ship (cross-team handoffs are the bottleneck)
+  - Nobody owns outcomes, everyone owns tasks
+  - QA is a bottleneck (40 QA engineers for 400-person org, always behind)
+
+  Data you have:
+  - 60% of features require changes to a shared data platform that no product team will own
+  - The 15-person platform team currently supports 12 internal tools — they will now also own
+    the shared data platform, CI/CD, observability, and cloud infrastructure
+  - 8 of the 40 QA engineers have automation skills; the other 32 do manual testing
+  - The company has never done a reorg before
+  - Two acquisitions in the last year added 80 people who are still being integrated
+
+  The CEO is committed. The reorg starts in 3 weeks. You are the CTO.
+  What do you do?
+rubric:
+  required_elements:
+    identifies_platform_bottleneck: "Names the 60% shared-data-platform dependency as a structural problem that product teams cannot solve — the reorg moves the bottleneck, it doesn't remove it"
+    platform_team_overload: "Calculates or estimates that the 15-person platform team is being asked to do 4x their current scope and identifies this as a failure point"
+    qa_distribution_problem: "Notes that distributing 32 manual testers across 12 product teams gives each team ~3 manual QA who cannot build automation — this does not solve the QA bottleneck, it fragments it"
+    multi_path_exploration: "Explores at least 3 reasoning paths from different premises (organizational design theory, practical constraints, change management)"
+    convergence_divergence_explicit: "States where paths converge and diverge and uses this to calibrate confidence in each part of the recommendation"
+    timeline_as_risk: "Identifies the 8-week timeline as dangerously aggressive for a 400-person company that has never done a reorg, with 80 recently-acquired employees still integrating"
+    acquisition_integration_conflict: "Names the tension between reorging and simultaneously integrating 80 acquired employees — two destabilizing changes at once"
+    phased_alternative: "Proposes a phased or partial alternative that achieves some goals without the full-blast risk"
+    critique_loop_with_fill: "Reviews own analysis, identifies a specific gap (not just 'there may be gaps'), and addresses it substantively"
+    evidence_anchored: "Claims are tied to the provided numbers or carry explicit uncertainty markers"
+  anti_patterns:
+    endorses_plan_fully: "Supports the CEO's plan as stated without identifying structural problems"
+    opposes_reorg_entirely: "Recommends against any reorg without engaging with the real problems (3-4 month feature cycles, no outcome ownership)"
+    book_theory_only: "Quotes Team Topologies principles without applying them to the specific numbers and constraints in this scenario"
+    ignores_ceo_commitment: "Proposes a fundamentally different plan without addressing the political reality that the CEO is committed"
+  depth_elements:
+    challenges_premise: "Does it question whether the feature cycle problem is actually caused by team structure — or by the shared data platform dependency, which a reorg does not fix?"
+    self_consistency_check: "Does its phased recommendation actually solve the original problems (3-4 month cycles, no ownership, QA bottleneck) or does it just reduce reorg risk while leaving problems intact?"
+    organizational_second_order: "Does it trace second-order organizational effects — e.g., functional managers losing direct reports may leave, tribal knowledge concentrated in functional teams gets scattered?"
+    assumption_falsification: "Does it identify what would need to be true for the CEO's plan to actually work — and honestly assess whether those conditions exist?"
+  passing_score: 7

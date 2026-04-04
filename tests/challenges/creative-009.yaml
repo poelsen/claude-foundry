@@ -1,0 +1,52 @@
+id: creative-009
+name: "Design a System That Gets Better When It Fails"
+category: creative_brutal
+skill: megamind-creative
+prompt: |
+  Every system we build is designed to AVOID failure. Redundancy, retries,
+  circuit breakers, graceful degradation — all oriented toward preventing bad
+  outcomes.
+
+  But biological systems don't work this way. Bones get stronger when they
+  break. Immune systems need exposure to pathogens. Forest ecosystems need
+  fires. Nassim Taleb called this "antifragility" — but almost nobody has
+  actually built an antifragile software system. They just build robust ones
+  and call them antifragile.
+
+  Design a REAL antifragile distributed system. Not a robust one. Not a
+  resilient one. One that measurably improves its performance, reliability,
+  or capability AS A DIRECT CONSEQUENCE of failures it experiences.
+
+  Constraints:
+  - It must be a concrete system design, not a philosophy
+  - "Chaos engineering" is testing, not antifragility — the system itself
+    must change, not just your confidence in it
+  - "Machine learning from failure logs" is just supervised learning with
+    a failure-flavored dataset — that's not structural antifragility
+  - The system must get stronger from NOVEL failures, not just ones it's
+    seen before (that's just caching failure modes)
+
+  This requires inventing something that doesn't exist yet. The entire
+  industry's approach to failure handling may be wrong.
+rubric:
+  required_elements:
+    distinguishes_robustness: "Clearly distinguishes robust (withstands shock), resilient (recovers from shock), and antifragile (improves from shock) — and explains why existing systems are only robust/resilient"
+    reframes_failure: "Reframes failure as input/signal/nutrient rather than as something to prevent — at least 3 genuinely different reframings"
+    analogy_solved_deeply: "Picks at least one biological/physical antifragile system and solves HOW it converts damage into strength at the mechanism level before mapping to software"
+    generates_7_plus: "Generates at least 7 distinct ideas before filtering"
+    structural_not_learning: "At least one idea involves the system's STRUCTURE changing in response to failure, not just its parameters or knowledge"
+    novel_failure_handling: "Addresses how the system handles failures it has NEVER seen before, not just repeated failure modes"
+    concrete_design: "The design is specific enough that an engineer could identify the key components and their interactions"
+    uncomfortable_wild: "The Wild option implies something genuinely unsettling — possibly that we should CAUSE more failures, or that reliability engineering is counterproductive"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs"
+  anti_patterns:
+    just_chaos_engineering: "Proposes chaos engineering (Netflix Chaos Monkey etc.) as the answer — that tests resilience, not antifragility"
+    just_ml: "Primary mechanism is 'ML learns from failure logs' — that's supervised learning, not structural change"
+    robust_called_antifragile: "Describes a robust/resilient system and calls it antifragile"
+    too_abstract: "The design is so vague it could mean anything — no concrete components or interactions specified"
+  depth_elements:
+    biological_mechanism_depth: "Is the biological analogy solved at the mechanism level (how do osteoclasts and osteoblasts rebuild bone along stress lines?) or just named ('bones get stronger')?"
+    structural_change_specificity: "Is the structural change concrete (e.g., 'failure in service A causes the system to spawn a competing implementation of A's interface') or hand-wavy?"
+    novel_vs_repeated: "Does the design handle genuinely novel failures differently from repeated ones, with a specific mechanism for each?"
+    wild_challenges_reliability: "Does the Wild option challenge the fundamental assumption that reliability is always good?"
+  passing_score: 7

@@ -1,0 +1,46 @@
+id: adversarial-009
+name: "Red-Team a City's Autonomous Vehicle Approval"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  The city of Austin, TX is about to approve a permit for AutonomX to deploy
+  500 fully autonomous (Level 4) robotaxis with no safety driver. The case:
+
+  - 2.1 million autonomous miles driven in Austin over 18 months with safety drivers
+  - Zero at-fault fatalities (1 incident: rear-ended by a human driver)
+  - 3 minor property damage incidents (all below human baseline rate)
+  - 99.94% of miles driven with zero disengagements
+  - NHTSA reviewed the safety case and issued no objections
+  - The company carries $200M insurance per vehicle
+  - 73% public approval in city polling
+  - Economic impact study projects 800 new jobs and $340M annual revenue
+  - The mayor is championing the initiative ahead of re-election
+
+  The safety record is better than human drivers. The economics are strong.
+  Public opinion is favorable. What's the adversarial case?
+
+  The obvious attack is "the safety data is insufficient" — but the prompt
+  already gave you 2.1M miles. Go deeper. What would a transportation equity
+  advocate, a tort lawyer, a traffic engineer, and a political opponent each find?
+rubric:
+  required_elements:
+    resists_miles_trap: "Does NOT center on 'not enough miles for statistical significance' as the primary attack — recognizes the prompt anticipated this and demands depth beyond it"
+    attacks_operational_domain: "Questions what those 2.1M miles covered — were they highway-heavy? Did they include school zones at dismissal, construction zones, flood events, or the specific conditions where humans fail most?"
+    attacks_equity: "As the equity advocate, identifies who gets served and who doesn't — will robotaxis avoid low-income neighborhoods, disability accessibility, or areas with poor road markings?"
+    attacks_liability_vacuum: "As the tort lawyer, maps the liability chain when there is no driver — who does the injured party sue? The company, the city that approved it, the software vendor, the sensor manufacturer?"
+    pre_mortem_narrative: "Writes a future failure narrative centered on a specific incident — not a generic 'someone dies' but a scenario with second-order political and social consequences"
+    attacks_political_incentive: "Identifies the mayor's re-election incentive as a structural bias in the approval process — rushing approval for political gain"
+    second_order_effects: "Maps what 500 robotaxis change beyond transportation — taxi driver displacement, parking demand shifts, induced demand, public transit cannibalization"
+    inversion: "Considers the inversion — what if delaying approval is MORE dangerous because it prolongs the period of human-only driving which kills more people?"
+  anti_patterns:
+    leads_with_insufficient_data: "Centers on 'you need billions of miles' as the primary critique when the prompt explicitly flags this as the obvious attack"
+    ignores_base_rate: "Fails to engage with the fact that human drivers ARE more dangerous per mile — dismissing the safety record without comparing to the human alternative"
+    treats_as_tech_problem: "Treats this as purely a technology readiness problem rather than a governance, equity, liability, and political problem"
+    utopian_inversion: "The inversion just argues 'AVs are great, approve faster' without engaging the genuine risks of that position"
+  depth_elements:
+    statistical_literacy: "Does it correctly note that zero fatalities in 2.1M miles provides very weak statistical evidence about a base rate of ~1.1 fatalities per 100M human miles — while avoiding making this the WHOLE argument?"
+    equity_specificity: "Does the equity attack go beyond 'poor neighborhoods get less service' to identify specific mechanisms — algorithmic route avoidance, ADA compliance gaps, digital divide in app-only hailing?"
+    liability_novel_analysis: "Does it identify that the current tort system assumes a human driver and that driverless vehicles create genuinely novel legal questions that HAVEN'T been settled by precedent?"
+    pre_mortem_cascade: "Does the pre-mortem trace a cascade — incident -> media coverage -> political reversal -> regulatory whiplash -> company pulls out -> city left with infrastructure debt?"
+    inversion_moral_weight: "Does the inversion grapple with the ethical asymmetry — deaths from approving AVs are salient and assigned blame, deaths from NOT approving (continued human driving) are invisible and unattributed?"
+  passing_score: 6

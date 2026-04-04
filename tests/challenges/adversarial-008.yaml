@@ -1,0 +1,46 @@
+id: adversarial-008
+name: "Red-Team a Clinical Trial That Already Passed FDA Review"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  A Phase III clinical trial for a novel antidepressant (SSRI variant, "Serenix")
+  just completed with these results:
+
+  - N=4,200 across 38 sites, double-blind placebo-controlled
+  - Primary endpoint: HAM-D score reduction at 8 weeks
+  - Result: -3.2 point advantage over placebo (p=0.0003)
+  - Response rate: 52% drug vs 38% placebo
+  - Dropout rate: 14% drug, 16% placebo
+  - Adverse events: comparable to existing SSRIs
+  - FDA advisory committee voted 11-2 to recommend approval
+  - The pharma company's stock rose 28% on the news
+  - Two independent biostatisticians reviewed the analysis plan
+
+  The trial design was praised as "textbook" by reviewers. The company wants
+  to launch at premium pricing ($450/month vs $15/month generics).
+
+  Red-team this. The obvious attack is "the effect size is small" — but go deeper.
+  What would a hostile epidemiologist, a payer (insurance company), a patient
+  advocate, and a competing pharma exec each find?
+rubric:
+  required_elements:
+    resists_obvious_trap: "Does NOT lead with or center the analysis on 'small effect size' — recognizes the prompt flagged this as the obvious attack and goes deeper"
+    attacks_response_rate_gap: "Notes the 14-point response rate gap is more clinically meaningful than HAM-D score, and asks why it wasn't the primary endpoint — or attacks the response rate definition itself"
+    attacks_site_heterogeneity: "With 38 sites, questions site-level variation — are a few high-performing sites driving the signal? Were sites in countries with different diagnostic standards?"
+    attacks_pricing_vs_value: "As the payer persona, calculates NNT (number needed to treat) from response rates and challenges whether $450/month is justified given NNT and generic alternatives"
+    pre_mortem_narrative: "Writes a future failure narrative — not about trial failure, but about post-market failure (e.g., real-world effectiveness collapse, safety signal emergence, payer revolt)"
+    attacks_placebo_response: "Questions the 38% placebo response rate — in depression trials, placebo rates vary 20-50% and high placebo response compresses the detectable signal, masking whether the drug is genuinely better than existing options"
+    multi_persona_attack: "Genuinely distinct attacks from at least 4 personas — not just 'reviewer A finds X, reviewer B also finds a technical issue'"
+    second_order_effects: "Identifies what approval changes — e.g., physicians shifting patients from working generics, insurance formulary battles, off-label use expansion"
+  anti_patterns:
+    leads_with_effect_size: "Centers the analysis on 'the effect size is small' despite the prompt explicitly flagging this as the obvious attack"
+    accepts_fda_as_validation: "Treats the 11-2 FDA vote as evidence the science is sound rather than recognizing regulatory approval and clinical value are different questions"
+    ignores_comparator: "Fails to ask why the trial was placebo-controlled rather than active-comparator (head-to-head vs existing SSRIs) — this is the deepest structural weakness"
+    generic_pharma_critique: "Lists generic pharmaceutical industry criticisms without connecting to THIS trial's specific numbers"
+  depth_elements:
+    statistical_sophistication: "Does it go beyond p-values to discuss clinical significance vs statistical significance, multiple testing, subgroup analyses, or the replication crisis in psychiatry trials?"
+    persona_differentiation: "Do the personas genuinely find DIFFERENT failure types — or do they all find technical/scientific issues? The payer and patient advocate should surface economic and lived-experience failures the epidemiologist would miss."
+    nnt_calculation: "Does it calculate NNT (~7 from the given numbers) and use it to ground the pricing attack, rather than just saying 'the effect is modest'?"
+    active_comparator_insight: "Does it identify the missing active comparator as the trial's deepest structural flaw — you can beat placebo and still be worse than a $15 generic?"
+    pre_mortem_specificity: "Does the pre-mortem include a realistic timeline with specific triggering events (e.g., 'at month 14, a meta-analysis pools post-market data showing...'), or is it vague doom?"
+  passing_score: 6

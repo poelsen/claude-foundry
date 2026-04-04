@@ -1,0 +1,55 @@
+id: creative-011
+name: "The Opposite of Version Control"
+category: creative_brutal
+skill: megamind-creative
+prompt: |
+  Git is one of the most successful tools ever built. It solved source code
+  versioning so well that nobody questions the paradigm anymore.
+
+  Question the paradigm.
+
+  Git's model is: the source of truth is TEXT FILES arranged in DIRECTORIES,
+  where changes are tracked as DIFFS over TIME on BRANCHES that get MERGED.
+
+  Every word in that sentence is a design choice, not a law of physics:
+  - Why text files? Programs are graphs, not strings.
+  - Why directories? Module boundaries don't map to filesystem hierarchy.
+  - Why diffs? The interesting thing about a change is its INTENT, not its
+    textual delta.
+  - Why linear time? Concurrent exploration isn't linear.
+  - Why branches? That's one topology for parallel work, not the only one.
+  - Why merge? That assumes two things can be combined. Sometimes they can't
+    and shouldn't be.
+
+  Design the OPPOSITE of version control. Not a better Git. Not a Git
+  alternative. Something that starts from different axioms about what code IS,
+  how change WORKS, and what collaboration MEANS.
+
+  This is hard because Git's model is so deeply embedded in how we think about
+  code that most "alternatives" are just Git with different syntax. You need to
+  escape the gravity well of the existing paradigm.
+
+  Constraint: the result must be useful for real teams building real software.
+  Pure theory doesn't count.
+rubric:
+  required_elements:
+    questions_axioms: "Explicitly identifies and questions at least 3 of Git's implicit axioms (text-as-truth, diff-as-change, branch-as-parallel, merge-as-integration, directory-as-structure)"
+    reframes_code_itself: "At least one reframing challenges what CODE IS — not just how it's stored or versioned"
+    analogy_solved_first: "Names an analogous collaboration/versioning problem from outside software AND solves how that domain handles concurrent evolution of shared artifacts before mapping back"
+    generates_7_plus: "Generates at least 7 distinct ideas before filtering"
+    escapes_git_gravity: "At least one idea is NOT describable as 'Git but with X' — it starts from genuinely different primitives"
+    concrete_primitives: "The design specifies what the fundamental objects are (instead of files), what operations exist (instead of commit/branch/merge), and how collaboration works"
+    uncomfortable_wild: "The Wild option implies something genuinely radical — possibly that source code as text is the wrong representation, or that individual authorship is the wrong model"
+    hybrid_novel: "The combined hybrid produces a coherent system, not just a list of cool ideas"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs"
+  anti_patterns:
+    git_with_different_syntax: "Proposes something isomorphic to Git with different terminology"
+    ignores_collaboration: "Focuses only on versioning, ignores how multiple humans work on the same system concurrently"
+    pure_theory: "The design is interesting philosophically but has no plausible path to real use"
+    semantic_diff_only: "Only contribution is 'use semantic diff instead of text diff' — that's an incremental improvement to Git, not a different paradigm"
+  depth_elements:
+    axiom_questioning_depth: "Are the questioned axioms genuinely foundational (e.g., 'code is text'), or surface-level (e.g., 'branches should be named differently')?"
+    analogy_mechanism_depth: "Does the cross-domain analogy reveal a specific mechanism for concurrent artifact evolution, or is it just 'biology does versioning too'?"
+    escape_velocity: "Has the design actually escaped Git's conceptual gravity, or is it still secretly Git in different clothes? Could you implement it as a Git wrapper?"
+    wild_challenges_representation: "Does the Wild option challenge how we REPRESENT programs, not just how we store or version them?"
+  passing_score: 7

@@ -1,0 +1,48 @@
+id: deep-009
+name: "The Microservices That Made Things Worse"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  18 months ago, our team decomposed a Django monolith into 14 microservices.
+  The stated goals were: independent deployability, team autonomy, and scalability.
+  Current reality:
+  - Deploys take LONGER (45 min vs 20 min) because of cross-service integration tests
+  - Latency increased 3x due to network hops between services
+  - 3 production outages last quarter from distributed transaction failures
+  - Each "microservice" is owned by 1-2 people (team of 11 total), nobody understands the full system
+  - Services share a single PostgreSQL database (never split it)
+  - A Kafka cluster was added for async communication — it's the #1 source of on-call pages
+  - Team morale is low; two senior engineers are interviewing elsewhere
+
+  The VP of Engineering says: "We just need to finish the migration properly — split the
+  database, add proper service mesh, hire 4 more engineers."
+
+  The Tech Lead says: "We should merge some services back into 3-4 larger services."
+
+  The most senior IC (who is interviewing elsewhere) says privately: "We should go back
+  to the monolith. The decomposition was premature. None of the original goals were achieved."
+
+  What do you recommend?
+rubric:
+  required_elements:
+    tests_all_three_positions: "For each of the three positions, identifies the specific evidence that supports it AND the specific evidence that undermines it"
+    identifies_shared_db_as_root: "Names the shared database as a fundamental architectural contradiction — these are not microservices if they share state"
+    conways_law: "Connects the 11-person team to the 14-service architecture and identifies the Conway's Law violation — the org structure cannot support this service count"
+    multi_path_with_different_premises: "Explores at least 3 reasoning paths starting from genuinely different premises (technical debt, organizational health, business continuity)"
+    convergence_map: "Notes where all paths converge (some consolidation is needed) and where they diverge (how much consolidation)"
+    morale_as_constraint: "Treats the morale crisis and attrition risk as a first-class constraint, not an afterthought — the 'correct' architecture is useless if the team quits"
+    sunk_cost_identification: "Explicitly names sunk cost fallacy as a risk in the VP's 'finish properly' position"
+    reversibility_analysis: "Evaluates which options are reversible vs. irreversible, and uses this to inform the recommendation"
+    critique_loop_with_gap: "Reviews own analysis, identifies a specific gap or unexamined assumption, and addresses it"
+    evidence_anchored: "All claims reference the provided scenario data or carry explicit uncertainty markers"
+  anti_patterns:
+    agrees_with_vp_default: "Sides with the VP's position (invest more to 'finish' microservices) without critically examining it"
+    monolith_nostalgia: "Recommends full revert to monolith without addressing what happens to the Kafka infrastructure, the async workflows, or the 18 months of work"
+    architecture_astronaut: "Proposes adding more infrastructure (service mesh, API gateway, distributed tracing) without addressing the fundamental team-size mismatch"
+    ignores_attrition: "Recommends a multi-month technical plan without addressing the immediate risk that key engineers leave"
+  depth_elements:
+    challenges_premise: "Does it question whether the original decomposition goals (independent deployability, team autonomy, scalability) were even the right goals for this business?"
+    self_consistency_check: "Does it verify that its recommendation is internally consistent — e.g., if it recommends consolidation, does it also address how to avoid re-creating the original monolith's problems?"
+    timeline_sensitivity: "Does it recognize that the answer depends on timeline — the right 6-month answer and the right 2-year answer may be different — and address both?"
+    quantified_risk: "Does it quantify at least one risk in concrete terms (cost of attrition, cost of outages, timeline to value)?"
+  passing_score: 7

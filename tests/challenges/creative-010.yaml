@@ -1,0 +1,55 @@
+id: creative-010
+name: "Kill the Backlog"
+category: creative_brutal
+skill: megamind-creative
+prompt: |
+  Here is a heretical claim: the product backlog — the central artifact of
+  every agile team — is actively harmful and should be abolished.
+
+  Evidence:
+  - Our backlog has 2,400 items. The bottom 2,000 will never be built.
+  - Engineers spend 6 hours/week in grooming ceremonies for items that are
+    months from implementation and will be re-groomed 3 more times.
+  - The backlog creates an illusion of progress (look how many items we
+    refined!) while actual delivery stalls.
+  - Product managers use backlog size as political ammunition ("we need
+    more engineers, look at our backlog").
+  - Items older than 3 months are essentially fiction — the context has
+    changed so much they'd need to be rewritten from scratch.
+  - The backlog creates learned helplessness: "it's in the backlog" = "it
+    will never happen."
+
+  BUT: the backlog also serves real functions. It's institutional memory.
+  It prevents duplicate work. It gives stakeholders something to point at.
+  It's the input to sprint planning.
+
+  Design a replacement for the product backlog that serves its legitimate
+  functions without its pathologies. You cannot just say "smaller backlog"
+  or "groom more often" — the STRUCTURE of an ordered list of future work
+  is the problem.
+
+  The hard part: the replacement must work in a real organization with
+  politics, stakeholders who need visibility, and engineers who need to
+  know what to work on next.
+rubric:
+  required_elements:
+    identifies_structural_flaw: "Identifies why the STRUCTURE of an ordered list specifically causes these pathologies — not just 'it got too big'"
+    separates_functions: "Explicitly separates the backlog's legitimate functions (memory, dedup, visibility, planning input) from its pathological ones and addresses each"
+    reframes_beyond_process: "Reframes beyond 'better process for the backlog' — sees this as an information theory, organizational design, or decision-making problem"
+    analogy_solved_first: "Names an analogous problem from outside software AND solves how that domain handles the tension between memory and action before mapping back"
+    generates_7_plus: "Generates at least 7 distinct replacement approaches before filtering"
+    addresses_politics: "Addresses organizational politics — stakeholder visibility, PM ammunition, the 'accountability theater' of grooming ceremonies"
+    uncomfortable_wild: "The Wild option challenges something considered sacred about agile/product development — possibly planning itself, possibly the PM role, possibly roadmaps"
+    hybrid_novel: "The combined hybrid is a genuinely new artifact/process, not a patched backlog"
+    feasibility_gradient: "Presents Safe/Bold/Wild with genuine tradeoffs"
+  anti_patterns:
+    smaller_backlog: "Primary solution is 'keep the backlog but make it smaller' or 'groom more often'"
+    just_tooling: "Proposes a better backlog tool (Jira alternative) without changing the fundamental structure"
+    ignores_politics: "Ignores the political reality — stakeholders need something, PMs need something, engineers need something"
+    naive_no_planning: "Suggests 'just stop planning' without replacing the planning function"
+  depth_elements:
+    structural_analysis_depth: "Does the analysis explain WHY an ordered list specifically creates these pathologies (vs. other data structures for future work), or just assert that it does?"
+    function_replacement_specificity: "For each legitimate function the backlog serves, is the replacement mechanism specific and concrete?"
+    political_realism: "Does the solution account for how real stakeholders, PMs, and executives would actually react?"
+    wild_challenges_agile: "Does the Wild option challenge a core tenet of agile methodology, not just a specific ceremony?"
+  passing_score: 7
