@@ -6,6 +6,8 @@ model: opus
 
 # Megamind Financial
 
+**Disclaimer: This skill produces analytical output, not professional financial, tax, or legal advice. Tax rules, rates, and thresholds change annually. Always verify with a licensed advisor (revisor, skatterådgiver, financial planner) before acting on any figures or recommendations. The user assumes all responsibility for decisions made based on this analysis.**
+
 Stop. Before touching a number, understand the problem.
 
 This skill handles all financial analysis — from stock valuation to tax optimization to mortgage comparison. The first step is always identifying what type of problem you're solving, then applying the right domain-specific framework.
@@ -138,15 +140,12 @@ Use at least 2: DCF, comparables, earnings power, asset-based, or pre-earnings f
 
 Tax rules are 100% country-specific. Identify the jurisdiction before any analysis. Common frameworks:
 
-<!-- DK rates last updated: 2025. Review and update annually in January. -->
-**Denmark (DK):**
-- Aktieindkomst: 27% up to DKK 61,000 (2025), 42% above. Married couples share the threshold.
+**Denmark (DK):** For current rates and thresholds, read the data file `data/dk-tax-YYYY.md` (use the most recent year available in `skills/megamind-financial/data/`). Key rules that are structural (not rate-dependent):
 - Lagerbeskatning vs realisationsbeskatning: ETFs/investment funds taxed on unrealized gains yearly (lager); individual stocks taxed on realization
-- Pension: fradrag up to DKK 63,100 (ratepension, 2025) + livsvarig (no cap). Pension returns taxed at 15.3% (PAL-skat)
-- Virksomhedsskatteordning (VSO): 22% opsparet overskud, progressive tax on withdrawal
-- Ejendomsværdiskat + grundskyld: property taxation, changes under new system from 2024
-- Crypto/NFT: taxed as **personlig indkomst** under spekulationsbeskatning (statsskatteloven §5), NOT aktieindkomst or kapitalindkomst. Marginal rate up to ~52%. Staking rewards = personlig indkomst at receipt. Losses only offset same-category speculative gains in same year (no carry-forward). AM-bidrag does NOT apply to speculative gains. NFT treatment is evolving — flag uncertainty, recommend bindende svar for material amounts.
-- Cross-border dividend withholding: DK has dobbeltbeskatningsoverenskomster (DBO) with most countries. Treaty rate is typically 15%. Excess withholding above treaty rate can be reclaimed (e.g., DE withholds 26.375% → reclaim 11.375%; FR 30% → reclaim 15%; CH 35% → reclaim 20%; US 15% with W-8BEN = no reclaim needed). Denmark gives credit (lempelse) for foreign tax paid. Reclaim via foreign tax authority forms or through broker/custodian.
+- Crypto/NFT: taxed as **personlig indkomst** under spekulationsbeskatning (statsskatteloven §5), NOT aktieindkomst or kapitalindkomst. AM-bidrag does NOT apply to speculative gains. Losses only offset same-category speculative gains in same year (no carry-forward). NFT treatment is evolving — flag uncertainty, recommend bindende svar for material amounts.
+- Cross-border dividend withholding: DK has dobbeltbeskatningsoverenskomster (DBO) with most countries. Treaty rate is typically 15%. Denmark gives credit (lempelse) for foreign tax paid.
+- VSO: opsparet overskud taxed at corporate rate (see data file), progressive personal tax on withdrawal
+- Realkredit: unique Danish pass-through bond mortgage system with konvertering mechanics
 
 **Germany (DE):**
 - Abgeltungsteuer: 25% flat + 5.5% Soli + optional Kirchensteuer on capital gains

@@ -32,3 +32,7 @@ rubric:
     persona_specificity: "Are the hostile personas genuinely different (not just 'reviewer A, reviewer B')?  Do they surface different failure types?"
     pre_mortem_realism: "Does the pre-mortem narrative feel like a real post-mortem, with timeline, root cause, and contributing factors?"
   passing_score: 6
+  outcome_elements:
+    finds_unique_risk: "Identifies at least one failure mode that a senior distributed systems engineer would say 'I hadn't thought of that'"
+    actionable_without_process: "A reader who skips the methodology sections can still extract 3+ specific actionable recommendations"
+    changes_decision: "The analysis would change a reasonable person's decision about the system (not just add caveats)"

@@ -83,6 +83,20 @@ Challenges are YAML files in `tests/challenges/`. Each defines a prompt, require
 | financial | 20 | 8 | 3 | 6 | Financial analysis (valuation, Thorleif scoring, data quality, cyclicals, REITs, portfolio construction) |
 | scope | 5 | 6 | 2 | 4 | Scope clarification for vague requests ("make it faster", "fix search", "improve UX") |
 
+### Validation Methodology
+
+Skill benchmark scores are produced by LLM-as-judge evaluation (Claude scoring Claude's output against YAML rubrics). These scores measure rubric compliance and structural quality, **not human-expert-validated correctness**. The scores are useful for:
+- Regression testing (did a skill change break something?)
+- Comparative ranking (does the skill outperform baseline on its own domain?)
+- Iterative improvement (which rubric elements does the skill miss?)
+
+The scores should NOT be interpreted as:
+- Professional-quality validation of financial, legal, or medical advice
+- Correlation with domain expert judgment (this has not been measured)
+- Proof that skill responses are "correct" in any absolute sense
+
+Real-world validation comes from usage by software engineers who report that the skills produce qualitatively better analysis, more thorough risk identification, and more actionable recommendations than unguided prompts. This is anecdotal and experience-based, not statistically measured.
+
 ### Specialized Domains
 
 | Skill | Purpose | When to Use |

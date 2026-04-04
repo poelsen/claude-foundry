@@ -70,11 +70,28 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
         return result.stdout.strip()
 
 
-def _build_subject_prompt(challenge: Challenge, skill_content: str | None) -> str:
-    """Build the prompt sent to the subject model."""
+def _build_subject_prompt(
+    challenge: Challenge,
+    skill_content: str | None,
+    length_match: int | None = None,
+) -> str:
+    """Build the prompt sent to the subject model.
+
+    Args:
+        challenge: The challenge to respond to.
+        skill_content: Optional skill instructions to prepend.
+        length_match: If set, instructs the model to write approximately this
+            many words. Used for length-controlled baseline experiments to
+            separate skill-technique effects from length effects.
+    """
     parts: list[str] = []
     if skill_content:
         parts.append(f"<skill>\n{skill_content}\n</skill>\n")
+    if length_match and not skill_content:
+        parts.append(
+            f"Write a thorough, detailed response of approximately {length_match} words. "
+            "Cover all aspects of the problem in depth.\n"
+        )
     parts.append(challenge.prompt)
     return "\n".join(parts)
 

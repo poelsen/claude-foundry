@@ -29,3 +29,7 @@ rubric:
     assumption_verification: "Does it verify specific numbers/thresholds rather than asserting from memory?"
     alternative_depth: "Are alternatives meaningfully different architectures, or just parameter tweaks?"
   passing_score: 6
+  outcome_elements:
+    correct_diagnosis: "Correctly identifies that profiling must precede any architectural decision — the diagnosis is unknown"
+    would_save_money: "The recommendation, if followed, would save the company 6+ months of wasted engineering effort vs the CTO's proposal"
+    expert_endorsement: "A principal engineer with 15 years of experience would endorse this recommendation as sound"
