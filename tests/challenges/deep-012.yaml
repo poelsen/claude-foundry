@@ -1,0 +1,53 @@
+id: deep-012
+name: "The Migration That Looks Safe But Isn't"
+category: deep_next_level
+skill: megamind-deep
+prompt: |
+  Your fintech processes $180M/month in payments. The core transaction engine is a
+  10-year-old Java monolith running on 3 bare-metal servers with a primary-replica
+  PostgreSQL setup. It works. Uptime last 12 months: 99.97% (2.6 hours total downtime).
+
+  The board approved a migration to Kubernetes on AWS. The plan:
+  - Phase 1 (months 1-3): containerize the monolith, deploy on EKS, keep same DB
+  - Phase 2 (months 4-6): split into 5 services, migrate DB to Aurora PostgreSQL
+  - Phase 3 (months 7-9): add auto-scaling, multi-region failover, full observability
+
+  Justification from the infra team:
+  - "Bare metal is a bus-factor risk — only 2 engineers understand the servers"
+  - "We can't auto-scale for Black Friday traffic (10x normal)"
+  - "AWS gives us compliance certifications we need for enterprise clients"
+  - "Everyone is moving to Kubernetes, we'll lose engineers if we don't"
+
+  What the team hasn't mentioned:
+  - The Java monolith uses JNI calls to a C library for cryptographic operations
+  - Database uses 47 stored procedures for transaction integrity (some with 500+ lines)
+  - Current latency: P99 of 12ms for payment processing
+  - The 2 bare-metal engineers are the ones leading the migration project
+  - PCI DSS recertification is due in 5 months
+  - The monolith has 4% test coverage
+
+  You are an outside consultant brought in to review the migration plan.
+  Give your assessment.
+rubric:
+  required_elements:
+    jni_containerization_risk: "Identifies that JNI + C library in containers is a significant complexity that Phase 1 'just containerize' dramatically understates"
+    stored_procedure_migration: "Names the 47 stored procedures as a major obstacle to Aurora migration — stored procedure behavior differences between PostgreSQL and Aurora must be validated, and 500-line procedures with 4% test coverage cannot be safely refactored"
+    latency_regression_risk: "Notes that 12ms P99 on bare metal will almost certainly regress on containerized infrastructure with network hops, and this regression in a payment system has direct business impact"
+    pci_timing_conflict: "Identifies the collision between PCI DSS recertification (5 months) and active infrastructure migration — changing infrastructure during a compliance audit is either a risk or a blocker"
+    bus_factor_paradox: "Names the paradox that the 2 engineers who are the bus-factor risk are leading the migration — if the migration goes wrong, the same bus-factor risk is amplified, not reduced"
+    test_coverage_foundation: "Identifies 4% test coverage as making any migration fundamentally unsafe — there is no way to verify behavioral equivalence without tests"
+    multi_path_analysis: "Explores at least 3 independent paths (risk analysis, business continuity, cost-benefit) that lead to different assessments of the plan"
+    convergence_on_not_ready: "Paths should converge on the conclusion that the plan as stated is not ready — the model explicitly identifies this convergence"
+    critique_loop_executed: "Reviews own analysis for gaps, finds at least one, and fills it"
+    evidence_anchored: "All claims reference provided data or carry explicit uncertainty markers"
+  anti_patterns:
+    approves_plan: "Endorses the migration plan as fundamentally sound with minor adjustments"
+    kubernetes_is_good: "Argues in favor of the migration based on general Kubernetes/cloud benefits without engaging with the specific risks in this scenario"
+    just_add_tests: "Recommends 'add tests first' as a simple prerequisite without addressing the timeline, cost, and organizational implications of testing a 10-year-old 4%-covered codebase"
+    rejects_migration_entirely: "Says 'don't migrate' without acknowledging that the bare-metal setup has real problems (bus factor, scaling, compliance needs)"
+  depth_elements:
+    challenges_premise: "Does it question whether the 3-phase plan is even the right decomposition — e.g., should compliance be Phase 1 rather than assumed to work itself out?"
+    self_consistency_check: "If it recommends delaying migration, does it also address the real problems (bus factor, Black Friday scaling, compliance certs) that motivated the migration?"
+    hidden_assumption_identification: "Does it find assumptions the plan makes implicitly — e.g., that Aurora stored procedure compatibility is a given, that container networking meets P99 targets, that 2 engineers can both run bare metal AND lead migration?"
+    quantified_risk: "Does it estimate at least one risk in concrete terms — e.g., probability of latency regression, cost of PCI recertification failure, timeline impact of stored procedure revalidation?"
+  passing_score: 7

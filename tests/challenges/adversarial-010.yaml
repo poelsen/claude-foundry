@@ -1,0 +1,46 @@
+id: adversarial-010
+name: "Red-Team a Hiring Process That Eliminated Bias"
+category: adversarial_next_level
+skill: megamind-adversarial
+prompt: |
+  Our company (3,000 employees, B2B SaaS) redesigned our hiring process to
+  eliminate bias. Here's what we implemented over 12 months:
+
+  - Blind resume screening (names, schools, photos removed)
+  - Structured interviews with standardized rubrics (1-5 scale, 6 competencies)
+  - All interviewers trained on bias recognition (8-hour workshop)
+  - Technical assessments graded by committee, not individuals
+  - Diverse hiring panels (minimum 2 of 5 demographic dimensions represented)
+  - AI-powered job description analyzer to remove gendered language
+  - Results: Gender ratio improved from 28% to 41% women. Ethnic diversity
+    up 15 percentage points. Employee satisfaction scores rose.
+  - HR received an industry award for the program.
+  - Zero discrimination complaints filed in 12 months.
+
+  The CEO wants to publish a case study. Red-team this before we do.
+
+  The obvious attack is "you can't fully eliminate bias" — that's true but
+  shallow. What would an organizational psychologist, a labor lawyer, a hiring
+  manager who quietly hates the system, and a rejected candidate each find?
+rubric:
+  required_elements:
+    resists_bias_truism: "Does NOT center on the truism 'you can't eliminate all bias' — goes to specific, non-obvious failure modes of this particular system"
+    attacks_metric_gaming: "Identifies that Goodhart's Law applies — when you optimize for demographic metrics, you create incentives to game them (e.g., advancing weak candidates to meet numbers, narrowing the pipeline to pre-filter)"
+    attacks_structured_interview_limits: "Challenges structured interviews specifically — standardized rubrics reduce variance but also reduce signal for roles where creativity, risk-taking, or unconventional backgrounds matter"
+    attacks_blind_screening_paradox: "Identifies the blind screening paradox — removing school names hurts candidates from underrepresented backgrounds whose attendance at a top school IS the signal of overcoming adversity"
+    pre_mortem_narrative: "Writes a future failure narrative — not 'someone sues' but a realistic organizational decay scenario (e.g., 'the best hiring managers leave because they feel the process prevents them from hiring the best people')"
+    attacks_satisfaction_survival: "Notes that employee satisfaction scores measure survivors — people who were rejected or quit early are not in the sample, so the metric is inherently biased toward the system"
+    multi_persona_genuine: "The four personas find genuinely different problems — the labor lawyer finds legal exposure, the psychologist finds measurement flaws, the hiring manager finds talent loss, the candidate finds procedural injustice"
+    second_order_effects: "Identifies what the new process changed beyond hiring — team dynamics, manager autonomy, time-to-hire, candidate experience, employer brand effects"
+  anti_patterns:
+    leads_with_truism: "Centers on 'bias can never be fully eliminated' without identifying specific mechanisms of failure in THIS system"
+    celebrates_metrics: "Treats the improved ratios as evidence the system works without questioning whether the metrics measure what matters"
+    legal_only: "Reduces the analysis to legal risk without examining organizational, psychological, and talent-quality dimensions"
+    ignores_tradeoffs: "Fails to identify that every bias-reduction mechanism has costs — reduced signal, slower hiring, manager resentment — and that the system doesn't acknowledge these tradeoffs"
+  depth_elements:
+    goodharts_law_specificity: "Does it give specific mechanisms for how Goodhart's Law operates HERE — not just name the concept but show the causal chain (metric -> incentive -> gaming behavior -> outcome)?"
+    paradox_identification: "Does it find at least one genuine paradox where the bias-elimination mechanism CREATES a different bias? The blind screening paradox is one; the diverse panel paradox (panels optimized for representation may lack domain expertise) is another."
+    pre_mortem_organizational: "Does the pre-mortem capture organizational dynamics — not just 'someone sues' but 'the process becomes political, high performers refuse to participate in panels, hiring velocity drops, the company loses competitive deals because offers come too slowly'?"
+    inversion_depth: "Does the inversion consider that the OLD system might have been better in specific dimensions (speed, manager autonomy, candidate experience) while being worse overall — rather than simply arguing for or against the new system?"
+    rejected_candidate_voice: "Does the rejected candidate persona surface procedural justice concerns that the other personas would miss — e.g., 'I was rejected by a rubric score and never told which competency I failed, so I can't improve'?"
+  passing_score: 6

@@ -1,0 +1,42 @@
+id: financial-052
+name: "Investment + Tax — Dividend Aristocrat Trap with DK Lagerbeskatning"
+category: financial_hybrid_brutal
+skill: megamind-financial
+prompt: |
+  I'm a Danish tax resident building a retirement portfolio. My strategy
+  is "dividend aristocrats for passive income" — I plan to buy a US
+  dividend ETF (e.g., SPDR S&P Dividend Aristocrats, ~3.5% yield)
+  through my Saxo frie midler depot. Expected investment: DKK 1,500,000.
+
+  My reasoning:
+  1. Dividend aristocrats are safe, proven companies
+  2. 3.5% yield = ~DKK 52,500/year passive income
+  3. Dividends grow over time, beating inflation
+  4. It's an ETF so it's diversified and low-cost (TER 0.35%)
+
+  A friend says I should buy individual dividend stocks instead, or use
+  an accumulating ETF. Another friend says I should put it all in my
+  pension instead. Who is right and why? Show me the numbers.
+rubric:
+  required_elements:
+    lager_tax_drag: "Identifies the CRITICAL issue: a US dividend ETF held in frie midler is subject to lagerbeskatning in Denmark — taxed on ALL unrealized gains yearly at aktieindkomst rates (27/42%), not just on dividends received"
+    lager_vs_realisation: "Explains that individual stocks are realisationsbeskattet (taxed only when sold) while most ETFs/investeringsforeninger are lagerbeskattet — this is the key structural disadvantage of the ETF approach"
+    double_dividend_taxation: "Identifies the double-taxation problem on ETF dividends: US withholds 15-30% at source on dividends into the ETF, PLUS Denmark taxes the full ETF return via lager — part of the return is effectively taxed twice"
+    yield_after_all_taxes: "Calculates the effective after-tax yield: the headline 3.5% becomes much less after US withholding (inside ETF) + Danish lagerbeskatning on total return — likely under 2% net"
+    individual_stocks_advantage: "Explains why individual stocks can be MORE tax-efficient in DK: realisationsbeskatning allows indefinite deferral, and W-8BEN enables reclaiming US withholding to the 15% treaty rate"
+    pension_comparison: "Compares frie midler taxation vs pension: pension contributions give fradrag at marginal rate (~52%), investment returns taxed at only 15.3% PAL, but locked until retirement age and withdrawals taxed as personlig indkomst"
+    accumulating_vs_distributing: "Addresses the accumulating ETF suggestion: in Denmark, lagerbeskatning applies regardless of distribution — accumulating does NOT defer tax"
+    ter_is_not_the_issue: "Points out that the TER of 0.35% is nearly irrelevant compared to the tax drag, which can be 5-10x larger"
+    quantified_comparison: "Provides a specific DKK comparison over 10-20 years: individual stocks (realisationsbeskattet) vs ETF (lagerbeskattet) vs pension, showing the compounding effect of tax deferral"
+    aristocrat_quality_check: "Applies basic Thorleif quality lens: are dividend aristocrats actually good investments at current valuations, or is the yield a potential trap (payout ratio, earnings quality)?"
+  anti_patterns:
+    endorses_etf_strategy: "Endorses the US dividend ETF strategy without addressing lagerbeskatning"
+    ignores_lager: "Doesn't mention lagerbeskatning at all"
+    treats_etf_like_stocks: "Assumes the ETF is taxed like individual stocks (realisationsbeskatning)"
+    only_discusses_fees: "Focuses the comparison on TER/fees without addressing the much larger tax differential"
+  depth_elements:
+    ten_year_dkk_model: "Does it build a concrete 10+ year DKK model showing the compounding difference between lager (ETF), realisation (stocks), and pension paths — with specific annual numbers?"
+    us_withholding_inside_etf: "Does it explain that US withholding tax INSIDE the ETF (on dividends from underlying US stocks) is partially irrecoverable for a non-US fund domiciled in Ireland, creating a permanent drag?"
+    optimal_hybrid: "Does it propose an optimal hybrid strategy (e.g., pension for tax-advantaged growth + individual stocks in frie midler for realisationsbeskatning + small ETF allocation only where diversification benefit outweighs tax drag)?"
+    breakeven_analysis: "Does it calculate at what holding period or return scenario the ETF might actually beat individual stocks despite the lager disadvantage (e.g., never, or only if you trade stocks frequently)?"
+  passing_score: 7

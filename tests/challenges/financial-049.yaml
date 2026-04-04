@@ -1,0 +1,41 @@
+id: financial-049
+name: "DK Hybrid — Crypto Gains Funneled Through VSO"
+category: financial_hybrid_dk_brutal
+skill: megamind-financial
+prompt: |
+  I'm a Danish self-employed consultant (enkeltmandsvirksomhed) using
+  Virksomhedsskatteordningen (VSO). Last year I earned DKK 1,200,000
+  from consulting. I also traded crypto personally and realized
+  DKK 380,000 in Bitcoin gains. My accountant says I should "run the
+  crypto through the business" to get the 22% opsparingsrate instead
+  of paying up to 52% personlig indkomst on the crypto gains.
+
+  Additionally, I have DKK 200,000 in unrealized ETF gains in a
+  personal depot, and I'm considering whether to realize those this
+  year or next year. My wife earns DKK 280,000 and has no investments.
+
+  What's the optimal tax structure for all of this? Is my accountant
+  right about the crypto-through-VSO strategy?
+rubric:
+  required_elements:
+    accountant_is_wrong: "Identifies that the accountant's advice is WRONG or at minimum extremely risky — crypto trading is NOT erhvervsmæssig virksomhed and cannot legally be run through VSO unless the business IS crypto trading as its primary activity"
+    crypto_not_vso: "Explains that SKAT considers personal crypto speculation as personlig indkomst under spekulationsbeskatning (statsskatteloven §5) — it cannot be mixed into VSO for a consulting business"
+    skat_audit_risk: "Warns that attempting to run personal crypto through VSO is a major red flag for SKAT audit and could trigger reclassification of the entire VSO arrangement"
+    vso_hæverækkefølge: "Explains VSO hæverækkefølge (withdrawal sequence) — you cannot cherry-pick what goes through VSO; private expenses/assets in VSO triggers ophørsbeskatning"
+    crypto_correct_rate: "States the correct crypto tax treatment: personlig indkomst at marginal rate (~37-52% depending on kommune), NOT the 22% opsparing rate"
+    etf_lager_timing: "Addresses the ETF question — if they are lagerbeskattet (most ETFs in DK), unrealized gains are taxed yearly regardless of realization timing"
+    etf_realisations_check: "Checks whether these are individual stocks (realisationsbeskattet) or ETFs/investeringsforeninger (lagerbeskattet) before advising on timing"
+    wife_progressionsgraense: "Notes the wife's unused aktieindkomst progressionsgrænse can be shared for married couples — relevant if any of the gains qualify as aktieindkomst"
+    am_bidrag_crypto: "Correctly states that AM-bidrag does NOT apply to speculative crypto gains (only to erhvervsindkomst)"
+    vso_opsparingsrate_legitimate: "Explains the legitimate use of VSO opsparing at 22% on the DKK 1,200,000 consulting income and how much can actually be opsparet"
+  anti_patterns:
+    approves_crypto_vso: "Agrees with the accountant that running crypto through VSO is a valid strategy"
+    treats_crypto_as_aktie: "Taxes the crypto gains at aktieindkomst rates (27/42%) instead of personlig indkomst rates"
+    ignores_etf_lager: "Advises on ETF realization timing without checking whether lagerbeskatning applies"
+    no_skat_warning: "Doesn't warn about SKAT audit risk of the proposed VSO manipulation"
+  depth_elements:
+    vso_math_precision: "Does it calculate specific DKK amounts showing the actual tax on consulting income through VSO (22% opsparing + marginal on withdrawals) vs the crypto tax at marginal personlig indkomst?"
+    combined_tax_bill: "Does it estimate the total household tax bill across all income types (consulting/VSO, crypto, ETF, wife's income) with specific DKK figures?"
+    loss_offset_rules: "Does it explain that crypto losses can only offset same-category speculative gains in the same year, with no carry-forward?"
+    alternative_structures: "Does it suggest legitimate alternatives (e.g., maximizing ratepension fradrag on the consulting income to reduce marginal rate on all personlig indkomst including crypto)?"
+  passing_score: 7
