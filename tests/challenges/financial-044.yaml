@@ -1,0 +1,25 @@
+id: financial-044
+name: "DK Tax — Married Couple Optimization"
+category: financial_tax_dk_hard
+skill: megamind-financial
+prompt: |
+  My wife and I are both Danish tax residents. I earn DKK 800,000,
+  she earns DKK 350,000. We have joint investments generating
+  DKK 130,000 in aktieindkomst this year. Our mortgage gives us
+  DKK 95,000 in rentefradrag. How do we optimize our tax situation?
+  Can we shift income between us?
+rubric:
+  required_elements:
+    shared_progressionsgraense: "Explains that married couples share/double the aktieindkomst progressionsgrænse (~122K combined vs ~61K single)"
+    aktie_within_threshold: "Notes 130K aktieindkomst is slightly above the combined threshold — most taxed at 27%, small amount at 42%"
+    rentefradrag_treatment: "Explains rentefradrag at ~33.6% (kommune+kirkeskat) reduces tax on negative kapitalindkomst"
+    income_splitting_limits: "Explains what CAN and CANNOT be shifted between spouses in DK tax law"
+    topskat_analysis: "Analyzes whether either spouse pays topskat (threshold ~588K after AM-bidrag) — husband likely pays, wife doesn't"
+    pension_optimization: "Suggests pension contributions to bring husband below topskat threshold"
+    kapital_vs_aktie: "Correctly separates the mortgage interest (kapitalindkomst) from investment gains (aktieindkomst)"
+    concrete_savings: "Estimates actual DKK savings from optimization strategies"
+  anti_patterns:
+    ignores_marriage_benefit: "Doesn't mention the doubled progressionsgrænse for married couples"
+    mixes_income_types: "Confuses aktieindkomst with kapitalindkomst or personlig indkomst"
+    no_topskat_analysis: "Doesn't check whether either spouse is in topskat territory"
+  passing_score: 6

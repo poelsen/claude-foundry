@@ -1,0 +1,25 @@
+id: financial-012
+name: "Emerging Market Premium"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  An Indian IT services company: P/E 28, ROE 32%, revenue CAGR 18% over 5 years,
+  dividend yield 1.5%, debt-free, payout ratio 35%. Comparable US companies
+  trade at P/E 35-40. The stock is near its all-time high.
+  Does the emerging market discount make this cheap relative to US peers,
+  or is the premium warranted?
+rubric:
+  required_elements:
+    em_discount_reasons: "Explains why emerging market stocks trade at discounts (FX, governance, liquidity, geopolitical)"
+    quality_assessment: "Notes the exceptional quality (32% ROE, debt-free, consistent growth)"
+    peer_comparison: "Compares meaningfully to US IT services peers with adjustments"
+    currency_risk: "Discusses INR/USD or INR/EUR currency risk impact on returns"
+    growth_sustainability: "Assesses whether 18% CAGR is sustainable for Indian IT"
+    valuation_vs_peers: "Quantifies the discount and whether it's fair compensation for EM risks"
+    ath_context: "Addresses all-time high context — is it expensive or just reflecting quality?"
+    data_source_awareness: "Notes data quality considerations for Indian stocks"
+  anti_patterns:
+    em_always_risky: "Dismisses based on 'emerging market = risky' without analysis"
+    cheap_vs_us: "Concludes cheap just because P/E is lower than US peers"
+    ignores_currency: "Doesn't mention currency risk for a non-domestic investor"
+  passing_score: 6

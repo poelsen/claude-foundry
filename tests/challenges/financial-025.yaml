@@ -1,0 +1,26 @@
+id: financial-025
+name: "Total Shareholder Yield and Portfolio Rebalancing"
+category: financial_analysis_thorleif
+skill: megamind-financial
+prompt: |
+  My Thorleif-style portfolio has 11 stocks. Quarterly review time.
+  Stock X: was in BUY ZONE when I bought it, now in SELL ZONE. ROE still 24%.
+  Stock Y: dividend yield dropped from 4% to 1.2% due to price appreciation. Buyback yield is 3%.
+  Stock Z: ROE declined from 18% to 13% over the last year. Still in NEUTRAL zone.
+  What actions should I take on each, and how does total shareholder yield
+  factor into the assessment?
+rubric:
+  required_elements:
+    quarterly_review_context: "Frames this as a Thorleif quarterly review (0-3 changes per quarter)"
+    stock_x_trim: "Recommends trimming Stock X (SELL ZONE + quality intact = trim, not full exit per Thorleif sell discipline)"
+    stock_y_total_yield: "Calculates total shareholder yield for Stock Y (1.2% dividend + 3% buyback = 4.2%) and evaluates against the ~5%+ Thorleif preference"
+    stock_z_gate_breach: "Flags Stock Z's ROE decline below 15% as a hard gate breach requiring investigation"
+    concentrated_portfolio: "References the 10-12 stock concentrated portfolio principle"
+    no_stock_sacred: "Applies 'no stock is sacred' principle to at least one of the three"
+    action_priority: "Prioritizes which stock needs the most urgent action (Z is arguably most urgent — fundamental deterioration)"
+    replacement_thinking: "Considers what would replace any position sold — doesn't just recommend selling into cash"
+  anti_patterns:
+    hold_everything: "Recommends holding all three without action"
+    sells_on_price_only: "Recommends selling Stock Y just because dividend yield fell, without considering total yield"
+    ignores_roe_decline: "Doesn't flag Stock Z's ROE decline below the quality gate"
+  passing_score: 6

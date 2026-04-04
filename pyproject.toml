@@ -14,15 +14,11 @@ dev = [
     "pytest-cov>=4",
     "ruff>=0.8",
 ]
-eval = [
-    "anthropic>=0.40",
-]
-
 [tool.pytest.ini_options]
 addopts = "-q --cov=tools --cov-report=term-missing"
 testpaths = ["tests"]
 markers = [
-    "eval: tests requiring API access (deselect with '-m not eval')",
+    "eval: tests requiring claude CLI (deselect with '-m not eval')",
 ]
 
 [tool.ruff]

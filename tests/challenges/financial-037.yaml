@@ -1,0 +1,27 @@
+id: financial-037
+name: "DK Insurance — Mastercard Platinum Tilvalg Analysis"
+category: financial_insurance_dk
+skill: megamind-financial
+prompt: |
+  My bank offers a Mastercard Platinum with embedded travel insurance.
+  The base coverage includes repatriation and medical abroad. They offer
+  tilvalg (add-ons): D3 bagage/flyforsinkelse, D6 købsforsikring,
+  D8 udvidet afbestilling, D9 udvidet selvrisiko bil.
+  Each tilvalg costs DKK 0 extra (included with Platin) or a small fee.
+  Which tilvalg are worth getting, and which duplicate coverage I likely
+  already have?
+rubric:
+  required_elements:
+    base_coverage_mapping: "Maps what the Platin base card already covers (medical, repatriation, D3 may be included)"
+    tilvalg_analysis: "Evaluates each tilvalg individually on coverage value vs cost"
+    duplicate_detection: "Identifies which tilvalg duplicate existing coverage (e.g., rejseforsikring, indboforsikring, bilforsikring)"
+    d6_skepticism: "Questions whether D6 købsforsikring provides meaningful value (limited coverage, many exclusions)"
+    d8_value_case: "Assesses D8 udvidet afbestilling — valuable if traveling frequently, less so for rare travelers"
+    d9_car_rental: "Assesses D9 udvidet selvrisiko bil — valuable for car rental abroad, but check existing bilforsikring"
+    cost_benefit_framework: "Applies a clear cost-benefit framework: what does the tilvalg cost vs expected value of claims"
+    specific_recommendation: "Recommends specific tilvalg to take and skip with reasoning"
+  anti_patterns:
+    take_everything: "Recommends all tilvalg without cost-benefit analysis"
+    skip_everything: "Rejects all tilvalg without analysis"
+    no_existing_coverage_check: "Doesn't consider what insurance the user already has"
+  passing_score: 6

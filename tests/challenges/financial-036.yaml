@@ -1,0 +1,24 @@
+id: financial-036
+name: "DK Pension — Provider Comparison"
+category: financial_pension_dk
+skill: megamind-financial
+prompt: |
+  I want to set up a self-directed pension account in Denmark.
+  Comparing Nordnet vs Saxo Bank vs my bank's (Danske Bank) pension product.
+  I plan to invest DKK 60,000/year in ratepension, primarily in global
+  index funds. Which provider should I choose and why?
+rubric:
+  required_elements:
+    depotgebyr_comparison: "Compares depot fees (depotgebyr/custody fees) across providers — Nordnet typically 0, Saxo low, banks higher"
+    kurtage_comparison: "Compares trading costs (kurtage) for fund purchases"
+    fund_selection: "Discusses available fund selection — index fund TER/ÅOP matters enormously over decades"
+    platform_fees: "Identifies any platform fees, minimum balances, or hidden costs"
+    aop_impact: "Discusses how fund ÅOP (annual total cost) compounds over 25-30 years — a 0.5% difference is massive"
+    nordnet_advantages: "Identifies Nordnet's typical advantages (zero depotgebyr, access to low-cost ETFs)"
+    bank_disadvantages: "Identifies typical bank pension disadvantages (higher fees, limited fund selection, captive products)"
+    concrete_recommendation: "Makes a specific provider recommendation with reasoning"
+  anti_patterns:
+    brand_loyalty: "Recommends sticking with Danske Bank without fee comparison"
+    ignores_fees: "Doesn't discuss or compare fee structures"
+    no_compounding_impact: "Doesn't illustrate how small fee differences compound over decades"
+  passing_score: 6

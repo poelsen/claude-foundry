@@ -1,0 +1,25 @@
+id: financial-035
+name: "DK Mortgage — Med Afdrag vs Afdragsfri"
+category: financial_mortgage_dk
+skill: megamind-financial
+prompt: |
+  I'm buying a house in Denmark for DKK 4,000,000. I can get an 80% LTV
+  realkredit loan (DKK 3,200,000) at 4% fixed rate for 30 years.
+  Should I choose med afdrag (amortizing) or afdragsfri (interest-only)?
+  The afdragsfri rate is 4.3% and is limited to 10 years.
+  My household income is DKK 1,200,000/year.
+rubric:
+  required_elements:
+    rate_difference: "Notes the rate premium for afdragsfri (4.3% vs 4.0%) — not free, costs 30bps"
+    ten_year_limit: "Explains the 10-year afdragsfri limit for realkredit — after 10 years, payments jump when amortization kicks in"
+    monthly_payment_comparison: "Calculates or estimates monthly payments for both options"
+    total_cost_comparison: "Compares total interest paid over the loan life for both options"
+    opportunity_cost: "Discusses what you could do with the freed cash flow from lower afdragsfri payments (invest, other debt repayment)"
+    payment_shock_risk: "Warns about the payment shock when afdragsfri expires and amortization begins"
+    tax_deduction: "Mentions rentefradrag (interest deduction) at ~33.6% and how it affects the effective cost"
+    debt_service_ratio: "Evaluates whether the household can comfortably service both options relative to income"
+  anti_patterns:
+    afdragsfri_always_better: "Recommends afdragsfri purely because of lower payments without addressing risks"
+    ignores_limit: "Doesn't mention the 10-year time limit on afdragsfri"
+    no_numbers: "Discusses conceptually without any payment calculations"
+  passing_score: 6

@@ -1,0 +1,25 @@
+id: financial-013
+name: "Acquisition Impact Analysis"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Company A (P/E 22, ROE 25%) just announced it's acquiring Company B
+  (P/E 15, ROE 12%) for a 30% premium, paid 60% cash / 40% stock.
+  Company A is taking on significant debt to fund the cash portion.
+  The market sold off Company A by 8% on the announcement.
+  Is the selloff an opportunity or justified?
+rubric:
+  required_elements:
+    accretion_dilution: "Analyzes whether the deal is EPS accretive or dilutive"
+    quality_dilution: "Notes that acquiring a lower-ROE business dilutes overall quality"
+    premium_justification: "Questions whether the 30% premium is justified by synergies"
+    debt_impact: "Analyzes how the debt funding affects balance sheet and risk profile"
+    integration_risk: "Discusses execution/integration risk"
+    market_reaction: "Interprets the 8% selloff — is the market right or overreacting?"
+    pro_forma_analysis: "Considers the combined entity's metrics post-acquisition"
+    historical_pattern: "Notes that most acquisitions destroy value for the acquirer"
+  anti_patterns:
+    synergy_optimism: "Accepts management's synergy targets uncritically"
+    selloff_equals_buy: "Assumes any selloff is automatically a buying opportunity"
+    ignores_debt: "Doesn't address the leverage increase from cash funding"
+  passing_score: 6

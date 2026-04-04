@@ -1,0 +1,24 @@
+id: financial-011
+name: "REIT Valuation"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Evaluate a European logistics REIT: P/FFO 15, P/B 0.85, dividend yield 5.5%,
+  LTV ratio 42%, occupancy 97%, WALE 7.2 years. NAV per share is 20% above
+  current price. Interest rates are elevated but expected to decline.
+  Is this an attractive entry?
+rubric:
+  required_elements:
+    reit_metrics: "Uses REIT-appropriate metrics (P/FFO, NAV discount, LTV) not just P/E"
+    nav_discount: "Analyzes the 20% NAV discount — is it justified or an opportunity?"
+    rate_sensitivity: "Discusses impact of interest rate path on REIT valuations"
+    asset_quality: "Evaluates occupancy, WALE, and logistics sector fundamentals"
+    pb_primary: "Recognizes P/B as important for asset-heavy real estate (sector-specific threshold)"
+    dividend_coverage: "Checks FFO coverage of dividend, not just payout from earnings"
+    debt_maturity: "Considers refinancing risk given elevated rates and 42% LTV"
+    sector_context: "Discusses logistics REIT sector dynamics (e-commerce, nearshoring)"
+  anti_patterns:
+    standard_pe_only: "Applies standard P/E analysis without REIT-specific adjustments"
+    yield_alone: "Recommends based on dividend yield without checking sustainability"
+    ignores_rates: "Doesn't address the interest rate environment for a leveraged REIT"
+  passing_score: 6

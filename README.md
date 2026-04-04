@@ -404,20 +404,17 @@ rubric:
 ### Running the Benchmark
 
 ```bash
-# Full run (30 challenges x 4 modes x 5 runs)
-python3 tools/run_benchmark.py --local --workers 24 --runs 5 --save results/output.json
+# Full run (50 challenges x 5 modes x 5 runs)
+python3 tools/run_benchmark.py --workers 24 --runs 5 --save results/output.json
 
 # Single challenge
-python3 tools/run_benchmark.py --local --runs 1 --challenges arch-001
+python3 tools/run_benchmark.py --runs 1 --challenges arch-001
 
 # Specific skill (always includes baseline for comparison)
-python3 tools/run_benchmark.py --local --skill megamind-deep --runs 3
+python3 tools/run_benchmark.py --skill megamind-deep --runs 3
 
 # Compare against saved baseline
-python3 tools/run_benchmark.py --local --runs 5 --save results/new.json --compare results/old.json
-
-# API mode (no CLI needed, requires ANTHROPIC_API_KEY)
-ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --runs 2
+python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare results/old.json
 ```
 
 ## Credits

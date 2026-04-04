@@ -1,0 +1,24 @@
+id: financial-022
+name: "P/E Channel Construction and Interpretation"
+category: financial_analysis_thorleif
+skill: megamind-financial
+prompt: |
+  A Nordic consumer staples company has traded at the following trailing P/E
+  over the past 10 years: 14, 16, 18, 22, 25, 20, 17, 15, 19, 23.
+  Current P/E is 24. Using the Thorleif P/E channel methodology, what zone
+  is this stock in? Should I buy, hold, or sell based on the channel position?
+rubric:
+  required_elements:
+    percentile_method: "Uses 15th/50th/85th percentile methodology (not just simple average) to define channel boundaries"
+    calculates_boundaries: "Attempts to calculate or estimate the LOW (15th), AVERAGE (50th), and HIGH (85th) lines from the data"
+    identifies_zone: "Correctly identifies the current P/E 24 as being in or near the SELL ZONE (above 85th percentile)"
+    rolling_window_mention: "Mentions or acknowledges the rolling 2-year centered window methodology, even if simplified for the given data"
+    buy_neutral_sell_labels: "Uses the specific BUY ZONE / NEUTRAL / SELL ZONE terminology"
+    channel_not_guarantee: "Explains that channel position is a timing signal, not a guarantee — doesn't say 'definitely sell'"
+    sell_discipline_nuance: "Applies sell discipline nuance: considers quality and whether to trim vs full exit"
+    pb_channel_exclusion: "Notes that P/B channel is NOT applicable for consumer staples (only for asset-heavy sectors)"
+  anti_patterns:
+    simple_average_only: "Only computes simple average P/E without percentile-based channel boundaries"
+    ignores_channel: "Doesn't construct or reference a P/E channel at all"
+    mechanical_verdict: "Gives a mechanical buy/sell without nuance about channel interpretation"
+  passing_score: 6

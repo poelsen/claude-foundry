@@ -1,0 +1,26 @@
+id: financial-017
+name: "Conglomerate Discount Breakup"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A Japanese conglomerate trades at P/E 10, P/B 0.6. It has 4 divisions:
+  electronics (30% of revenue, 8% margins), automotive parts (25%, 12% margins),
+  chemicals (25%, 15% margins), and real estate (20%, 25% margins).
+  It holds a cross-shareholding portfolio worth 40% of market cap.
+  An activist investor has taken a 5% stake demanding a breakup.
+  How would you value this and assess the activist's thesis?
+rubric:
+  required_elements:
+    sum_of_parts: "Performs or proposes sum-of-parts valuation for each division"
+    conglomerate_discount: "Identifies and quantifies the conglomerate discount"
+    cross_shareholdings: "Values the cross-shareholding portfolio and discusses Japan's unwinding trend"
+    activist_catalyst: "Assesses likelihood and timeline of activist succeeding"
+    japan_context: "Discusses Japanese corporate governance reforms (TSE push on P/B > 1)"
+    margin_disparity: "Notes the wide margin range across divisions and capital allocation implications"
+    breakup_value: "Estimates what the parts would be worth independently"
+    risks_of_breakup: "Discusses what could go wrong with a breakup (dis-synergies, tax, execution)"
+  anti_patterns:
+    ignores_divisions: "Values as a single entity without analyzing parts"
+    activist_always_wins: "Assumes activist will succeed without assessing obstacles"
+    ignores_japan: "Doesn't consider Japan-specific corporate governance dynamics"
+  passing_score: 6

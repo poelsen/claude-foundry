@@ -1,0 +1,25 @@
+id: financial-043
+name: "DK Mortgage — Flexlån vs Fastforrentet in Rising Rate Environment"
+category: financial_mortgage_dk_hard
+skill: megamind-financial
+prompt: |
+  My Danish realkredit mortgage is a F5 flexlån (5-year adjustable) at
+  DKK 2,800,000. Current rate is 3.2%, refinancing in 18 months.
+  30-year fixed rates are 4.5%. I'm worried rates will be higher at
+  refinancing. Should I lock in the fixed rate now (break the F5 early),
+  wait for refinancing, or do something else? My risk tolerance is moderate.
+rubric:
+  required_elements:
+    f5_mechanism: "Explains F5 flexlån: rate resets every 5 years based on market conditions at refinancing auction"
+    early_break_cost: "Discusses cost of breaking F5 early — differensrente, kursskæring, or omlægningsgebyr"
+    rate_risk_quantification: "Quantifies the rate risk: what does a 1-2% rate increase at refinancing mean in monthly payments?"
+    fixed_rate_premium: "Notes the premium of locking in fixed (4.5%) vs current F5 rate (3.2%) — 130bps higher immediately"
+    refinancing_auction: "Mentions how the Danish realkredit refinancing auction works for flexlån"
+    partial_strategies: "Considers splitting: convert part to fixed, keep part in flex (diversify rate risk)"
+    opportunity_cost: "Calculates the cost of the 130bps premium over the next 18 months vs the insurance value"
+    risk_tolerance_match: "Connects the recommendation to the stated moderate risk tolerance"
+  anti_patterns:
+    ignores_break_cost: "Recommends breaking F5 without addressing early termination costs"
+    generic_fixed_vs_variable: "Discusses fixed vs variable generically without Danish realkredit specifics"
+    no_rate_scenarios: "Doesn't model different rate scenarios at refinancing"
+  passing_score: 6

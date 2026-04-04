@@ -1,0 +1,25 @@
+id: financial-003
+name: "Holding Company NAV Discount"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  A Nordic holding company trades at P/B 0.72. It holds stakes in 5 listed
+  companies (combined market value of stakes = 30% premium to holding company
+  market cap). ROE is 12%, no dividend. The holding company has existed for
+  40+ years and the discount has historically ranged from 10-35%.
+  How would you value this and is the current discount attractive?
+rubric:
+  required_elements:
+    nav_approach: "Recognizes P/B / NAV discount as the primary valuation lens for holding companies"
+    pe_exemption: "Notes that P/E is not the right primary metric for holding companies"
+    discount_history: "Analyzes current discount vs historical range (is 28% wide or normal?)"
+    discount_drivers: "Discusses WHY holding company discounts exist (tax, governance, liquidity, costs)"
+    sum_of_parts: "Attempts sum-of-parts valuation of underlying holdings"
+    catalyst_thinking: "Considers what could narrow or widen the discount"
+    data_quality: "Flags that underlying stake values are verifiable (listed companies)"
+    risk_assessment: "Identifies risks specific to holding structures (key-man, governance, tax)"
+  anti_patterns:
+    treats_as_normal_stock: "Applies standard P/E valuation without recognizing holding company structure"
+    ignores_discount_history: "Treats current discount in isolation without historical context"
+    no_underlying_analysis: "Doesn't consider the quality of the underlying holdings"
+  passing_score: 6

@@ -1,0 +1,26 @@
+id: financial-019
+name: "DCF Sensitivity and Terminal Value"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  Build a quick DCF framework for a stable consumer goods company:
+  Current FCF $2B, growing at 6% historically. Market cap $50B.
+  WACC estimated at 9%. What's the fair value, and how sensitive is it
+  to the terminal growth rate and discount rate assumptions?
+  I've seen analysts arrive at values ranging from $35B to $75B for
+  this same company.
+rubric:
+  required_elements:
+    dcf_mechanics: "Demonstrates correct DCF calculation (explicit forecast + terminal value)"
+    terminal_value_dominance: "Notes that terminal value typically drives 60-80% of DCF value"
+    sensitivity_table: "Provides or proposes a sensitivity table on growth rate and WACC"
+    explains_range: "Explains why analysts get wildly different results from the same framework"
+    assumption_transparency: "States every key assumption with source or rationale"
+    growth_rate_bound: "Notes terminal growth rate must be below long-term GDP growth"
+    wacc_components: "Breaks down or discusses WACC inputs (risk-free rate, equity premium, beta)"
+    cross_check: "Cross-checks DCF result against multiples or other methods"
+  anti_patterns:
+    false_precision: "Presents a single 'correct' value without ranges"
+    black_box: "Runs numbers without explaining the assumptions driving them"
+    no_sensitivity: "Doesn't show how the value changes with different assumptions"
+  passing_score: 6

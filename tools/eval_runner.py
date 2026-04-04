@@ -1,21 +1,22 @@
-"""API-based evaluation runner for skill benchmarks.
+"""Evaluation runner for skill benchmarks.
 
-Uses Claude-as-judge to score responses against challenge rubrics.
-Requires ANTHROPIC_API_KEY environment variable.
+Uses Claude-as-judge via the claude CLI to score responses against challenge rubrics.
+Requires the claude CLI to be installed and available in PATH.
 """
 
 from __future__ import annotations
 
 import json
-import os
+import shutil
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from eval_rubric import Challenge, ElementScore, EvalResult, score_response
 from skill_parser import parse_skill
 
-JUDGE_MODEL = "claude-opus-4-6-20250929"
-SUBJECT_MODEL = "claude-opus-4-6-20250929"
+JUDGE_MODEL = "opus"
+SUBJECT_MODEL = "opus"
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,32 @@ class RunConfig:
     runs_per_challenge: int = 3
     subject_model: str = SUBJECT_MODEL
     judge_model: str = JUDGE_MODEL
+
+
+def _claude_cli(prompt: str, model: str = "opus") -> str:
+    """Run a prompt through the claude CLI in non-interactive mode."""
+    claude_bin = shutil.which("claude")
+    if not claude_bin:
+        raise RuntimeError("claude CLI not found in PATH")
+
+    result = subprocess.run(
+        [
+            claude_bin,
+            "--print",
+            "--model", model,
+            "--no-session-persistence",
+            "--tools", "",
+        ],
+        input=prompt,
+        capture_output=True,
+        text=True,
+        timeout=1200,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(f"claude CLI failed: {result.stderr.strip()}")
+
+    return result.stdout.strip()
 
 
 def _build_subject_prompt(challenge: Challenge, skill_content: str | None) -> str:
@@ -74,16 +101,6 @@ Respond with ONLY valid JSON in this exact format:
 }}"""
 
 
-def _call_model(client, model: str, prompt: str) -> str:
-    """Call the Anthropic API and return the response text."""
-    message = client.messages.create(
-        model=model,
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return message.content[0].text
-
-
 def _parse_judge_response(
     challenge: Challenge, judge_text: str
 ) -> tuple[list[ElementScore], list[ElementScore]]:
@@ -122,17 +139,16 @@ def _parse_judge_response(
 
 
 def run_single_eval(
-    client,
     challenge: Challenge,
     skill_content: str | None,
     config: RunConfig,
 ) -> EvalResult:
     """Run a single evaluation: subject responds, judge scores."""
     subject_prompt = _build_subject_prompt(challenge, skill_content)
-    response = _call_model(client, config.subject_model, subject_prompt)
+    response = _claude_cli(subject_prompt, config.subject_model)
 
     judge_prompt = _build_judge_prompt(challenge, response)
-    judge_text = _call_model(client, config.judge_model, judge_prompt)
+    judge_text = _claude_cli(judge_prompt, config.judge_model)
 
     element_scores, anti_scores = _parse_judge_response(challenge, judge_text)
 
@@ -146,7 +162,6 @@ def run_single_eval(
 
 
 def run_challenge(
-    client,
     challenge: Challenge,
     config: RunConfig,
 ) -> list[EvalResult]:
@@ -166,11 +181,11 @@ def run_challenge(
 
     for _ in range(config.runs_per_challenge):
         # Run with skill
-        result_with = run_single_eval(client, challenge, skill_content, config)
+        result_with = run_single_eval(challenge, skill_content, config)
         results.append(result_with)
 
         # Run baseline (without skill)
-        baseline = run_single_eval(client, challenge, None, config)
+        baseline = run_single_eval(challenge, None, config)
         results.append(
             EvalResult(
                 challenge_id=baseline.challenge_id,
@@ -189,27 +204,17 @@ def run_challenge(
 def run_evaluation(config: RunConfig) -> list[EvalResult]:
     """Run the full evaluation suite.
 
-    Requires ANTHROPIC_API_KEY environment variable.
+    Requires the claude CLI to be installed and available in PATH.
 
     Returns list of all EvalResults across all challenges and runs.
     """
-    try:
-        from anthropic import Anthropic
-    except ImportError as e:
-        raise ImportError(
-            "anthropic package required for evaluation. Install with: "
-            "uv pip install -e '.[eval]'"
-        ) from e
+    if not shutil.which("claude"):
+        raise RuntimeError("claude CLI not found in PATH")
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY environment variable not set")
-
-    client = Anthropic(api_key=api_key)
     all_results: list[EvalResult] = []
 
     for challenge in config.challenges:
-        results = run_challenge(client, challenge, config)
+        results = run_challenge(challenge, config)
         all_results.extend(results)
 
     return all_results

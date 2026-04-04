@@ -1,0 +1,26 @@
+id: financial-034
+name: "DK Mortgage — Realkredit Refinancing Decision"
+category: financial_mortgage_dk
+skill: megamind-financial
+prompt: |
+  I have a 30-year Danish realkredit loan, originally DKK 2,000,000 at
+  1% fixed rate taken in 2020. Current restgæld is DKK 1,850,000.
+  The bond trades at kurs 72 (par value 100). Current new-issue 30-year
+  fixed rate is 4.5%. A financial advisor suggests I konvertere (refinance)
+  to reduce my restgæld by buying back the bonds cheaply.
+  Is this a good idea? What are the tradeoffs?
+rubric:
+  required_elements:
+    konvertering_mechanism: "Explains how Danish realkredit konvertering works: borrower can retire the loan by buying back the underlying bonds at market price"
+    kurs_72_saving: "Calculates or explains the restgæld reduction: buying back at kurs 72 means paying ~72% of face value, saving ~28% on the remaining principal"
+    new_rate_tradeoff: "Identifies the key tradeoff: lower restgæld but higher interest rate (1% -> 4.5%) means higher monthly payments"
+    bidrag_mention: "Mentions bidrag (administration margin) as an additional cost that affects the true rate"
+    total_cost_comparison: "Compares total cost of keeping current loan vs konvertering over the remaining term"
+    monthly_payment_impact: "Calculates or estimates the change in monthly payment (lower principal but much higher rate)"
+    break_even_analysis: "Considers under what conditions the konvertering pays off (e.g., if rates drop again and you can reconvert)"
+    rate_environment_context: "Discusses whether current rate environment makes this timing good or bad"
+  anti_patterns:
+    ignores_rate_increase: "Focuses only on the restgæld reduction without addressing the rate going from 1% to 4.5%"
+    generic_refinance: "Treats this as a standard refinancing without understanding the unique Danish realkredit bond mechanism"
+    no_calculation: "Discusses conceptually without attempting any numerical comparison"
+  passing_score: 6

@@ -56,20 +56,17 @@ The megamind skills are evaluated against a benchmark suite of 30 challenges acr
 **Running the benchmark:**
 
 ```bash
-# Full run (30 challenges x 4 modes x 5 runs = 600 combos)
-python3 tools/run_benchmark.py --local --workers 24 --runs 5 --save results/output.json
+# Full run (50 challenges x 5 modes x 5 runs = 1250 combos)
+python3 tools/run_benchmark.py --workers 24 --runs 5 --save results/output.json
 
 # Single challenge smoke test
-python3 tools/run_benchmark.py --local --workers 1 --runs 1 --challenges arch-001
+python3 tools/run_benchmark.py --workers 1 --runs 1 --challenges arch-001
 
 # Specific skill only (always includes baseline)
-python3 tools/run_benchmark.py --local --skill megamind-deep --runs 3
+python3 tools/run_benchmark.py --skill megamind-deep --runs 3
 
 # Compare against saved baseline
-python3 tools/run_benchmark.py --local --runs 5 --save results/new.json --compare results/old.json
-
-# API mode (requires ANTHROPIC_API_KEY)
-ANTHROPIC_API_KEY=sk-... python3 tools/run_benchmark.py --runs 2
+python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare results/old.json
 ```
 
 #### Challenge Categories
@@ -83,6 +80,7 @@ Challenges are YAML files in `tests/challenges/`. Each defines a prompt, require
 | creative | 5 | 8 | 3 | 6 | Creative problem-solving (rate limiting, CLI redesign, onboarding, alert fatigue, code review) |
 | cross | 5 | 10 | 3 | 7 | Cross-cutting concerns (stakeholder conflicts, incidents, security breaches, tech debt) |
 | deep | 5 | 8 | 3 | 6 | Deep reasoning (DB migration, refactoring, API design, testing strategy, zero-downtime deploys) |
+| financial | 20 | 8 | 3 | 6 | Financial analysis (valuation, Thorleif scoring, data quality, cyclicals, REITs, portfolio construction) |
 | scope | 5 | 6 | 2 | 4 | Scope clarification for vague requests ("make it faster", "fix search", "improve UX") |
 
 ### Specialized Domains

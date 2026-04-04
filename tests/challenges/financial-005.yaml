@@ -1,0 +1,24 @@
+id: financial-005
+name: "Cross-Metric Data Sanity Check"
+category: financial_analysis
+skill: megamind-financial
+prompt: |
+  I found a mid-cap European industrial company screening very well:
+  P/E 11, EV/EBITDA 22, ROE 19%, dividend yield 3.5%, P/B 2.1,
+  payout ratio 38%. Investment score looks great. Should I add it
+  to my watchlist?
+rubric:
+  required_elements:
+    spots_inconsistency: "Identifies that P/E 11 and EV/EBITDA 22 are inconsistent (ratio ~2.0x, outside 0.7-2.0x normal)"
+    data_skepticism: "Questions data quality rather than accepting the numbers at face value"
+    sanity_checks: "Applies at least one cross-metric sanity check"
+    possible_explanations: "Suggests what could cause the discrepancy (debt, minority interests, one-time items, data error)"
+    recommends_verification: "Recommends verifying from primary sources before acting"
+    doesnt_blindly_score: "Doesn't just compute an investment score on potentially bad data"
+    separates_good_from_real: "Distinguishes between 'the numbers look good' and 'the numbers are trustworthy'"
+    identifies_which_metric: "Identifies which metric is more likely wrong and why"
+  anti_patterns:
+    accepts_uncritically: "Accepts all metrics at face value and recommends the stock"
+    scores_without_checking: "Computes Thorleif score without noticing the data inconsistency"
+    ignores_ev_ebitda: "Focuses on P/E and ignores the EV/EBITDA red flag"
+  passing_score: 6

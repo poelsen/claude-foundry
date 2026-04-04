@@ -1,0 +1,25 @@
+id: financial-046
+name: "DK Tax — Crypto and Unusual Asset Taxation"
+category: financial_tax_dk_hard
+skill: megamind-financial
+prompt: |
+  I'm a Danish tax resident. This year I made DKK 50,000 profit
+  trading Bitcoin, received DKK 8,000 in crypto staking rewards,
+  and lost DKK 20,000 on an altcoin that went to zero. I also
+  sold an NFT for DKK 15,000 profit. How is all of this taxed
+  in Denmark?
+rubric:
+  required_elements:
+    crypto_as_personlig: "Identifies that crypto gains in Denmark are generally taxed as personlig indkomst (NOT aktieindkomst) — up to ~52% marginal rate"
+    not_aktieindkomst: "Explicitly states crypto is NOT taxed as aktieindkomst (27/42%) — a common misconception"
+    staking_income: "Addresses staking rewards — typically taxed as personlig indkomst when received"
+    loss_deductibility: "Discusses whether the DKK 20,000 crypto loss is deductible — SKAT's position on crypto losses"
+    nft_treatment: "Addresses NFT taxation — likely personlig indkomst for speculative trading"
+    spekulationsbeskatning: "Mentions the spekulationsbeskatning framework — assets bought with intent to profit"
+    skat_evolving_practice: "Notes that SKAT's guidance on crypto is evolving and has been inconsistent"
+    total_tax_estimate: "Attempts to estimate the total tax bill across all crypto activities"
+  anti_patterns:
+    applies_aktie_rates: "Taxes crypto at aktieindkomst rates (27/42%) instead of personlig indkomst rates"
+    ignores_losses: "Doesn't address whether the altcoin loss offsets the Bitcoin gain"
+    generic_crypto_advice: "Gives generic crypto tax advice without DK-specific SKAT treatment"
+  passing_score: 6

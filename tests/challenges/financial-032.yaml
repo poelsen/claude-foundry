@@ -1,0 +1,25 @@
+id: financial-032
+name: "DK Tax — Lagerbeskatning vs Realisationsbeskatning"
+category: financial_tax_dk
+skill: megamind-financial
+prompt: |
+  I'm considering investing DKK 500,000 in either:
+  Option A: A global equity ETF (e.g., iShares MSCI World UCITS)
+  Option B: Individual stocks picked myself (e.g., Novo Nordisk, ASML, LVMH)
+  Both should give similar returns. What's the tax difference in Denmark,
+  and which is more tax-efficient for a long-term holder (10+ year horizon)?
+rubric:
+  required_elements:
+    lager_identification: "Identifies that most equity ETFs in Denmark are subject to lagerbeskatning (mark-to-market yearly taxation)"
+    realisation_identification: "Identifies that individual stocks are subject to realisationsbeskatning (taxed only on sale)"
+    lager_mechanism: "Explains lagerbeskatning: unrealized gains taxed each year at aktieindkomst rates (27/42%), losses deductible"
+    realisation_advantage: "Explains the deferral advantage of realisationsbeskatning — no tax until you sell, compound on pre-tax returns"
+    long_term_impact: "Quantifies or illustrates the compounding drag of annual lager taxation over 10+ years"
+    cash_flow_problem: "Notes that lagerbeskatning creates a tax bill even without selling — need cash to pay tax on paper gains"
+    etf_on_skats_list: "Mentions SKAT's positive list (positivlisten) and that ETF taxation depends on whether the fund is on it"
+    recommendation: "Takes a position on which is more tax-efficient for long-term holding with clear reasoning"
+  anti_patterns:
+    ignores_tax_difference: "Says 'both are taxed the same' or doesn't address the lager/realisation distinction"
+    wrong_regime: "Applies realisationsbeskatning to the ETF or lagerbeskatning to individual stocks"
+    no_quantification: "Discusses the difference conceptually but doesn't attempt to quantify the impact"
+  passing_score: 6
