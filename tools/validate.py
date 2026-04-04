@@ -119,6 +119,8 @@ class Validator:
         for skill_dir in sorted(skills_dir.iterdir()):
             if not skill_dir.is_dir() or skill_dir.name in ("learned", "learned-local"):
                 continue
+            if skill_dir.name.startswith("_"):
+                continue
             skill_md = skill_dir / "SKILL.md"
             if not skill_md.exists():
                 self.error(f"Skill directory {skill_dir.name}/ missing SKILL.md")

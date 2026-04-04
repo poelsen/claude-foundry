@@ -944,7 +944,7 @@ def copy_skills(
     wanted = set(skills)
     # Remove stale foundry skills not in current selection.
     # Skip: learned/, learned-local/, and private-prefixed dirs.
-    protected = {"learned", "learned-local"}
+    protected = {"learned", "learned-local", "_lib"}
     for existing in skills_dir.iterdir():
         if not existing.is_dir():
             continue
@@ -1244,8 +1244,13 @@ def cmd_init(
                             auto.add(i)
                         if skill == "python-qt-gui" and "desktop-gui-qt.md" in sfd:
                             auto.add(i)
-                        if skill.startswith("megamind-") or skill.startswith("private-") or skill in (
-                            "update-foundry", "learn", "learn-recall", "snapshot-list",
+                        if (
+                            skill.startswith("megamind-")
+                            or skill.startswith("private-")
+                            or skill.startswith("prj-")
+                            or skill in (
+                                "update-foundry", "learn", "learn-recall", "snapshot-list",
+                            )
                         ):
                             auto.add(i)
                     if interactive:
