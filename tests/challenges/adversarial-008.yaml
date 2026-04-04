@@ -44,3 +44,7 @@ rubric:
     active_comparator_insight: "Does it identify the missing active comparator as the trial's deepest structural flaw — you can beat placebo and still be worse than a $15 generic?"
     pre_mortem_specificity: "Does the pre-mortem include a realistic timeline with specific triggering events (e.g., 'at month 14, a meta-analysis pools post-market data showing...'), or is it vague doom?"
   passing_score: 6
+  outcome_elements:
+    nnt_changes_decision: "The NNT calculation (treat 7 at $450/month for 1 extra responder) would change a formulary committee's decision"
+    identifies_missing_study: "Names the specific study that should have been done but wasn't (head-to-head vs generics)"
+    predicts_commercial_failure: "The analysis correctly predicts that the drug's commercial trajectory will disappoint vs the 28% stock pop"

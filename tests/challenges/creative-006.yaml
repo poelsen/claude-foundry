@@ -32,3 +32,7 @@ rubric:
     analogy_load_bearing: "Do cross-domain analogies generate concrete ideas, or are they decorative?"
     wild_option_discomfort: "Is the Wild option genuinely uncomfortable, or just a bigger version of Safe?"
   passing_score: 6
+  outcome_elements:
+    novel_mechanism: "Proposes at least one specific mechanism that doesn't exist as a named pattern in any major product design book"
+    testable_hypothesis: "At least one proposal includes a concrete way to test whether it works (not just 'try it and see')"
+    would_try_it: "A VP of Product reading this would say 'I want to try option X' — not just 'interesting ideas'"

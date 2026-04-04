@@ -32,3 +32,7 @@ rubric:
     framework_adaptation: "Does it adapt the analytical framework to the specific stock/asset type?"
     risk_quantification: "Are risks quantified with probability and impact, not just listed?"
   passing_score: 6
+  outcome_elements:
+    correct_skepticism: "Identifies the inventory flag as the most important signal, not the price targets"
+    would_prevent_loss: "Following this advice would prevent a reader from buying at DKK 680 when the bear case is DKK 480"
+    independent_view: "Forms a view that isn't simply picking one of the three analysts or averaging their targets"
