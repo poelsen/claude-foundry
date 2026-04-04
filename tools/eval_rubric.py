@@ -20,6 +20,7 @@ class Rubric:
     anti_patterns: dict[str, str]  # id -> description (binary: present/absent, -2 each)
     passing_score: int
     depth_elements: dict[str, str] = None  # id -> description (0-3: absent/mentioned/addressed/deep)
+    outcome_elements: dict[str, str] = None  # id -> description (process-blind: tests decision quality)
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,15 @@ class DepthScore:
 
 
 @dataclass(frozen=True)
+class OutcomeScore:
+    """Score for a process-blind outcome element (Y/N: did the response change the decision?)."""
+
+    element_id: str
+    met: bool
+    evidence: str = ""
+
+
+@dataclass(frozen=True)
 class EvalResult:
     """Result of evaluating a response against a rubric."""
 
@@ -65,6 +75,8 @@ class EvalResult:
     raw_response: str = ""
     depth_scores: tuple[DepthScore, ...] = ()
     depth_total: int = 0  # sum of depth scores (max = 3 * num_depth_elements)
+    outcome_scores: tuple[OutcomeScore, ...] = ()
+    outcome_met: int = 0  # count of outcome elements met
 
 
 def load_challenge(path: Path) -> Challenge:
@@ -100,6 +112,7 @@ def load_challenge(path: Path) -> Challenge:
         anti_patterns=rubric_data.get("anti_patterns", {}),
         passing_score=rubric_data["passing_score"],
         depth_elements=rubric_data.get("depth_elements"),
+        outcome_elements=rubric_data.get("outcome_elements"),
     )
 
     return Challenge(
@@ -130,17 +143,22 @@ def score_response(
     skill_used: str | None = None,
     raw_response: str = "",
     depth_scores: list[DepthScore] | None = None,
+    outcome_scores: list[OutcomeScore] | None = None,
 ) -> EvalResult:
     """Score a response against a challenge rubric.
 
     Points: +1 for each required element present, -2 for each anti-pattern present.
-    Depth scores (0-3 per element) are tracked separately and do not affect pass/fail.
+    Depth scores (0-3 per element) and outcome scores (met/not met) are tracked
+    separately and do not affect pass/fail.
     """
     score = sum(1 for e in element_scores if e.present)
     score -= sum(2 for a in anti_pattern_scores if a.present)
 
     depth_scores = depth_scores or []
     depth_total = sum(d.score for d in depth_scores)
+
+    outcome_scores = outcome_scores or []
+    outcome_met = sum(1 for o in outcome_scores if o.met)
 
     return EvalResult(
         challenge_id=challenge.id,
@@ -152,4 +170,6 @@ def score_response(
         raw_response=raw_response,
         depth_scores=tuple(depth_scores),
         depth_total=depth_total,
+        outcome_scores=tuple(outcome_scores),
+        outcome_met=outcome_met,
     )

@@ -12,7 +12,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from eval_rubric import Challenge, DepthScore, ElementScore, EvalResult, score_response
+from eval_rubric import Challenge, DepthScore, ElementScore, EvalResult, OutcomeScore, score_response
 from skill_parser import parse_skill
 
 JUDGE_MODEL = "opus"
@@ -220,6 +220,57 @@ def _parse_depth_response(
     return depth_scores
 
 
+def _build_outcome_judge_prompt(challenge: Challenge, response: str) -> str:
+    """Build a separate prompt for outcome scoring (process-blind).
+
+    Tests whether the response would change decisions, prevent losses, or earn
+    expert endorsement — without reference to any specific analytical process.
+    """
+    outcome_desc = "\n".join(
+        f"  - {oid}: {desc}"
+        for oid, desc in challenge.rubric.outcome_elements.items()
+    )
+
+    return f"""You are evaluating whether an AI response produces REAL-WORLD VALUE — not whether it follows a process. Ignore methodology, structure, and formatting. Focus only on whether the content would actually help a decision-maker.
+
+## Challenge
+{challenge.prompt}
+
+## Response to evaluate
+{response}
+
+## Outcome criteria (score each as met/not_met with evidence)
+{outcome_desc}
+
+Respond with ONLY valid JSON:
+{{
+  "outcomes": {{
+    "<outcome_id>": {{"met": true/false, "evidence": "brief explanation"}},
+    ...
+  }}
+}}"""
+
+
+def _parse_outcome_response(
+    challenge: Challenge, outcome_text: str
+) -> list[OutcomeScore]:
+    """Parse the outcome judge's JSON response into OutcomeScores."""
+    text = _extract_json(outcome_text)
+    data = json.loads(text)
+
+    outcome_scores: list[OutcomeScore] = []
+    for oid in (challenge.rubric.outcome_elements or {}):
+        entry = data.get("outcomes", {}).get(oid, {})
+        outcome_scores.append(
+            OutcomeScore(
+                element_id=oid,
+                met=entry.get("met", False),
+                evidence=entry.get("evidence", ""),
+            )
+        )
+    return outcome_scores
+
+
 def _extract_json(text: str) -> str:
     """Extract JSON from text, handling markdown code blocks."""
     text = text.strip()
@@ -250,6 +301,13 @@ def run_single_eval(
         depth_text = _claude_cli(depth_prompt, config.judge_model)
         depth_scores = _parse_depth_response(challenge, depth_text)
 
+    # Separate outcome judge call (process-blind, tests decision quality)
+    outcome_scores = []
+    if challenge.rubric.outcome_elements:
+        outcome_prompt = _build_outcome_judge_prompt(challenge, response)
+        outcome_text = _claude_cli(outcome_prompt, config.judge_model)
+        outcome_scores = _parse_outcome_response(challenge, outcome_text)
+
     return score_response(
         challenge,
         element_scores,
@@ -257,6 +315,7 @@ def run_single_eval(
         skill_used=challenge.skill,
         raw_response=response,
         depth_scores=depth_scores,
+        outcome_scores=outcome_scores,
     )
 
 
