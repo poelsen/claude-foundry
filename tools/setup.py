@@ -153,6 +153,7 @@ SKILLS = [
     "megamind-deep", "megamind-creative", "megamind-adversarial", "megamind-financial",
     "update-foundry", "learn", "learn-recall", "snapshot-list",
     "private-list", "private-remove",
+    "prj-new", "prj-list", "prj-pause", "prj-resume", "prj-done", "prj-delete",
 ]
 
 LSP_PLUGINS = {
@@ -960,6 +961,13 @@ def copy_skills(
             if dest.exists():
                 shutil.rmtree(dest)
             shutil.copytree(src, dest)
+    # Copy shared libraries (e.g., _lib/session-id.sh used by prj-* skills)
+    lib_src = REPO_ROOT / "skills" / "_lib"
+    if lib_src.is_dir():
+        lib_dest = skills_dir / "_lib"
+        if lib_dest.exists():
+            shutil.rmtree(lib_dest)
+        shutil.copytree(lib_src, lib_dest)
 
 
 def copy_hooks(project: Path, hooks: list[str]) -> None:
