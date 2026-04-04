@@ -138,6 +138,7 @@ Use at least 2: DCF, comparables, earnings power, asset-based, or pre-earnings f
 
 Tax rules are 100% country-specific. Identify the jurisdiction before any analysis. Common frameworks:
 
+<!-- DK rates last updated: 2025. Review and update annually in January. -->
 **Denmark (DK):**
 - Aktieindkomst: 27% up to DKK 61,000 (2025), 42% above. Married couples share the threshold.
 - Lagerbeskatning vs realisationsbeskatning: ETFs/investment funds taxed on unrealized gains yearly (lager); individual stocks taxed on realization

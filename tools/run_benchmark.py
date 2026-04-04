@@ -53,7 +53,11 @@ def load_skill_content(skill_name: str) -> str | None:
 
 
 def _claude_cli(prompt: str, model: str = "opus") -> str:
-    """Run a prompt through the claude CLI in non-interactive mode."""
+    """Run a prompt through the claude CLI in non-interactive mode.
+
+    Uses --output-format json for structured output and --permission-mode
+    bypassPermissions for non-interactive / CI use.
+    """
     claude_bin = shutil.which("claude")
     if not claude_bin:
         raise RuntimeError("claude CLI not found in PATH")
@@ -62,8 +66,10 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
         [
             claude_bin,
             "--print",
+            "--output-format", "json",
             "--model", model,
             "--no-session-persistence",
+            "--permission-mode", "bypassPermissions",
             "--tools", "",
         ],
         input=prompt,
@@ -75,7 +81,17 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
     if result.returncode != 0:
         raise RuntimeError(f"claude CLI failed: {result.stderr.strip()}")
 
-    return result.stdout.strip()
+    # --output-format json wraps the response in a JSON object
+    try:
+        data = json.loads(result.stdout)
+        # The JSON format returns {"type": "result", "result": "..."}
+        if isinstance(data, dict) and "result" in data:
+            return data["result"].strip()
+        # Fallback: if format differs, return raw text content
+        return result.stdout.strip()
+    except json.JSONDecodeError:
+        # Fallback for non-JSON output
+        return result.stdout.strip()
 
 
 def run_one(challenge: Challenge, skill_name: str | None) -> EvalResult:

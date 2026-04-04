@@ -53,10 +53,10 @@ The megamind skills are evaluated against a benchmark suite of 30 challenges acr
 - Scope challenges expose a fundamental weakness: Opus jumps to solutions instead of asking clarifying questions for vague prompts, even with skills active
 - Cross-cutting challenges (stakeholder conflicts, incident response) score highest across all modes
 
-**Running the benchmark:**
+**Running the benchmark** (requires `claude` CLI authenticated and in PATH):
 
 ```bash
-# Full run (50 challenges x 5 modes x 5 runs = 1250 combos)
+# Full run (76 challenges x 5 modes x 5 runs = 3800 combos)
 python3 tools/run_benchmark.py --workers 24 --runs 5 --save results/output.json
 
 # Single challenge smoke test

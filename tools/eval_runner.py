@@ -31,7 +31,11 @@ class RunConfig:
 
 
 def _claude_cli(prompt: str, model: str = "opus") -> str:
-    """Run a prompt through the claude CLI in non-interactive mode."""
+    """Run a prompt through the claude CLI in non-interactive mode.
+
+    Uses --output-format json for structured output and --permission-mode
+    bypassPermissions for non-interactive / CI use.
+    """
     claude_bin = shutil.which("claude")
     if not claude_bin:
         raise RuntimeError("claude CLI not found in PATH")
@@ -40,8 +44,10 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
         [
             claude_bin,
             "--print",
+            "--output-format", "json",
             "--model", model,
             "--no-session-persistence",
+            "--permission-mode", "bypassPermissions",
             "--tools", "",
         ],
         input=prompt,
@@ -53,7 +59,15 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
     if result.returncode != 0:
         raise RuntimeError(f"claude CLI failed: {result.stderr.strip()}")
 
-    return result.stdout.strip()
+    # --output-format json wraps the response in a JSON object
+    import json as _json
+    try:
+        data = _json.loads(result.stdout)
+        if isinstance(data, dict) and "result" in data:
+            return data["result"].strip()
+        return result.stdout.strip()
+    except _json.JSONDecodeError:
+        return result.stdout.strip()
 
 
 def _build_subject_prompt(challenge: Challenge, skill_content: str | None) -> str:

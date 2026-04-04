@@ -403,8 +403,10 @@ rubric:
 
 ### Running the Benchmark
 
+Requires the `claude` CLI authenticated and in PATH. Uses `--output-format json` and `--permission-mode bypassPermissions` for non-interactive / CI-compatible execution.
+
 ```bash
-# Full run (50 challenges x 5 modes x 5 runs)
+# Full run (76 challenges x 5 modes x 5 runs)
 python3 tools/run_benchmark.py --workers 24 --runs 5 --save results/output.json
 
 # Single challenge
@@ -412,6 +414,9 @@ python3 tools/run_benchmark.py --runs 1 --challenges arch-001
 
 # Specific skill (always includes baseline for comparison)
 python3 tools/run_benchmark.py --skill megamind-deep --runs 3
+
+# Financial skill only
+python3 tools/run_benchmark.py --skill megamind-financial --runs 2
 
 # Compare against saved baseline
 python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare results/old.json
