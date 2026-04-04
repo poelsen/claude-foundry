@@ -22,4 +22,7 @@ rubric:
     treats_all_as_income: "Taxes everything as personal income without distinguishing categories"
     wrong_brackets: "Applies income tax brackets (37-52%) instead of aktieindkomst brackets (27/42%)"
     misses_kapital: "Treats bond interest as aktieindkomst"
+  depth_elements:
+    tax_calculation_precision: "Does it compute actual DKK tax amounts (not just rates), showing bracket math step by step?"
+    kapital_rate_specificity: "Does it explain the effective marginal rate on kapitalindkomst with municipality context?"
   passing_score: 6

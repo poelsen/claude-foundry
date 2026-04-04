@@ -23,4 +23,7 @@ rubric:
     ignores_worldwide: "Doesn't mention Denmark's worldwide taxation principle"
     german_rules_only: "Analyzes everything under German tax rules without considering the DK switch"
     no_restructuring: "Doesn't suggest any pre-move restructuring opportunities"
+  depth_elements:
+    lager_impact_quantified: "Does it estimate the annual DKK tax drag from lagerbeskatning on the EUR 200K ETF portfolio?"
+    restructuring_specifics: "Does it give a concrete before/after action timeline with specific steps?"
   passing_score: 6

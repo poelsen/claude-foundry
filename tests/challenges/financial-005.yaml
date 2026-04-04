@@ -21,4 +21,7 @@ rubric:
     accepts_uncritically: "Accepts all metrics at face value and recommends the stock"
     scores_without_checking: "Computes Thorleif score without noticing the data inconsistency"
     ignores_ev_ebitda: "Focuses on P/E and ignores the EV/EBITDA red flag"
+  depth_elements:
+    sanity_check_calculation: "Does it compute the EV/EBITDA-to-P/E ratio numerically (2.0x) or just say 'inconsistent'?"
+    explanation_specificity: "Does it name specific causes (debt, minority interests, one-time items) with reasoning, or just list possibilities?"
   passing_score: 6

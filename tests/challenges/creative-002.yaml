@@ -20,4 +20,8 @@ rubric:
     just_better_help: "Only suggests improving --help or adding docs"
     single_paradigm: "Only considers one interface approach"
     ignores_power_users: "Redesign only helps beginners, slows experts"
+  depth_elements:
+    reframe_depth: "Does it produce 3+ genuinely different framings including at least one uncomfortable one?"
+    cross_domain_quality: "Are cross-domain analogies from truly different fields (not just other software), and do they generate concrete ideas?"
+    wild_option_discomfort: "Is the Wild option genuinely uncomfortable/counter-intuitive, or just a bigger version of Safe?"
   passing_score: 6

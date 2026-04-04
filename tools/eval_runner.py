@@ -12,7 +12,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from eval_rubric import Challenge, ElementScore, EvalResult, score_response
+from eval_rubric import Challenge, DepthScore, ElementScore, EvalResult, score_response
 from skill_parser import parse_skill
 
 JUDGE_MODEL = "opus"
@@ -80,7 +80,7 @@ def _build_subject_prompt(challenge: Challenge, skill_content: str | None) -> st
 
 
 def _build_judge_prompt(challenge: Challenge, response: str) -> str:
-    """Build the prompt for the judge model to score a response."""
+    """Build the prompt for the binary judge (present/absent scoring only)."""
     elements_desc = "\n".join(
         f"  - {eid}: {desc}" for eid, desc in challenge.rubric.required_elements.items()
     )
@@ -115,16 +115,47 @@ Respond with ONLY valid JSON in this exact format:
 }}"""
 
 
+def _build_depth_judge_prompt(challenge: Challenge, response: str) -> str:
+    """Build a separate prompt for depth scoring (0-3 scale).
+
+    Kept separate from binary judging to avoid halo effect — the depth judge
+    doesn't see binary scores and makes independent quality assessments.
+    """
+    depth_desc = "\n".join(
+        f"  - {did}: {desc}"
+        for did, desc in challenge.rubric.depth_elements.items()
+    )
+
+    return f"""You are evaluating the DEPTH and QUALITY of an AI response. Do not judge presence/absence — only judge how deeply each topic is covered.
+
+## Challenge
+{challenge.prompt}
+
+## Response to evaluate
+{response}
+
+## Depth elements (score each 0-3)
+- 0 = absent or not addressed
+- 1 = mentioned briefly without detail
+- 2 = addressed with reasoning or explanation
+- 3 = deep analysis with specific numbers, calculations, or concrete examples
+
+{depth_desc}
+
+Respond with ONLY valid JSON:
+{{
+  "depth": {{
+    "<depth_id>": {{"score": 0, "evidence": "brief explanation"}},
+    ...
+  }}
+}}"""
+
+
 def _parse_judge_response(
     challenge: Challenge, judge_text: str
 ) -> tuple[list[ElementScore], list[ElementScore]]:
-    """Parse the judge's JSON response into ElementScores."""
-    # Extract JSON from response (handle markdown code blocks)
-    text = judge_text.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        text = "\n".join(lines[1:-1])
-
+    """Parse the binary judge's JSON response into ElementScores."""
+    text = _extract_json(judge_text)
     data = json.loads(text)
 
     element_scores: list[ElementScore] = []
@@ -152,6 +183,35 @@ def _parse_judge_response(
     return element_scores, anti_scores
 
 
+def _parse_depth_response(
+    challenge: Challenge, depth_text: str
+) -> list[DepthScore]:
+    """Parse the depth judge's JSON response into DepthScores."""
+    text = _extract_json(depth_text)
+    data = json.loads(text)
+
+    depth_scores: list[DepthScore] = []
+    for did in (challenge.rubric.depth_elements or {}):
+        entry = data.get("depth", {}).get(did, {})
+        depth_scores.append(
+            DepthScore(
+                element_id=did,
+                score=min(3, max(0, entry.get("score", 0))),
+                evidence=entry.get("evidence", ""),
+            )
+        )
+    return depth_scores
+
+
+def _extract_json(text: str) -> str:
+    """Extract JSON from text, handling markdown code blocks."""
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        text = "\n".join(lines[1:-1])
+    return text
+
+
 def run_single_eval(
     challenge: Challenge,
     skill_content: str | None,
@@ -166,12 +226,20 @@ def run_single_eval(
 
     element_scores, anti_scores = _parse_judge_response(challenge, judge_text)
 
+    # Separate depth judge call (avoids halo effect from binary scoring)
+    depth_scores = []
+    if challenge.rubric.depth_elements:
+        depth_prompt = _build_depth_judge_prompt(challenge, response)
+        depth_text = _claude_cli(depth_prompt, config.judge_model)
+        depth_scores = _parse_depth_response(challenge, depth_text)
+
     return score_response(
         challenge,
         element_scores,
         anti_scores,
         skill_used=challenge.skill,
         raw_response=response,
+        depth_scores=depth_scores,
     )
 
 

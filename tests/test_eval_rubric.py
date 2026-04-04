@@ -149,7 +149,7 @@ class TestScoring:
 
         result = score_response(sample_challenge, elements, anti)
 
-        assert result.total_score == 1  # 2 - 1
+        assert result.total_score == 0  # 2 - 2 (anti-patterns cost -2 each)
         assert result.passed is False
 
     def test_skill_recorded(self, sample_challenge: Challenge):

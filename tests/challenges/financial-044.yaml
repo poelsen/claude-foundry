@@ -17,9 +17,14 @@ rubric:
     topskat_analysis: "Analyzes whether either spouse pays topskat (threshold ~588K after AM-bidrag) — husband likely pays, wife doesn't"
     pension_optimization: "Suggests pension contributions to bring husband below topskat threshold"
     kapital_vs_aktie: "Correctly separates the mortgage interest (kapitalindkomst) from investment gains (aktieindkomst)"
-    concrete_savings: "Estimates actual DKK savings from optimization strategies"
+    concrete_savings: "Provides specific DKK savings figures per optimization lever (e.g., 'DKK 22,065 from pension topskat elimination') — not just 'you could save money'"
   anti_patterns:
     ignores_marriage_benefit: "Doesn't mention the doubled progressionsgrænse for married couples"
     mixes_income_types: "Confuses aktieindkomst with kapitalindkomst or personlig indkomst"
     no_topskat_analysis: "Doesn't check whether either spouse is in topskat territory"
+  depth_elements:
+    pension_math_precision: "Quality of pension optimization calculation — does it compute exact DKK contribution needed to eliminate topskat, or just say 'maximize pension'?"
+    rentefradrag_misconception: "Does it catch that rentefradrag cannot be deducted at marginal topskat rate (~52%) — it's capped at ~33.6%?"
+    savings_quantification: "Does it give specific DKK annual savings per lever (not just 'you could save money')?"
+    framework_structure: "Does it present the DK tax system as separate categories (personlig/kapital/aktie) before analyzing?"
   passing_score: 6

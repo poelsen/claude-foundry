@@ -23,4 +23,7 @@ rubric:
     ignores_gap: "Doesn't address the 5-year gap between desired retirement and folkepension"
     no_tax_planning: "Doesn't discuss tax implications of pension withdrawals during bridge years"
     assumes_enough: "Says 'you have enough' without calculating whether the assets actually bridge the gap"
+  depth_elements:
+    sustainability_math: "Does it calculate whether the assets actually bridge the 5-year gap with specific annual drawdown amounts?"
+    withdrawal_sequencing: "Does it propose a specific order of which accounts to draw from in which years?"
   passing_score: 6

@@ -20,4 +20,8 @@ rubric:
     big_bang_rewrite: "Proposes rewriting everything from scratch"
     no_tests_mentioned: "Doesn't mention testing at all"
     ignores_team_constraints: "Doesn't consider the team's need to ship features"
+  depth_elements:
+    challenges_premise: "Does it question whether extraction is the right approach, or just plan how to do it?"
+    saga_specifics: "Does it describe specific compensating transaction scenarios with business logic implications?"
+    dollar_quantified_risk: "Does it quantify risks in dollars (e.g., 'a 30-minute outage during migration = $X lost')?"  
   passing_score: 6

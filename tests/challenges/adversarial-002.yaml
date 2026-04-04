@@ -24,4 +24,8 @@ rubric:
     approves_plan: "Approves the plan without significant criticism"
     vague_concerns: "Raises only general concerns without specifics"
     no_synthesis: "Only attacks without proposing a hardened alternative"
+  depth_elements:
+    historical_grounding: "Does it cite real incidents or historical examples to ground failure scenarios?"
+    inversion_strength: "Does the inversion genuinely challenge the premise (e.g., 'don't use a third party at all') or just tweak it?"
+    second_attack_quality: "Does the second-round stress-test find new weaknesses in the hardened approach, or just repeat earlier concerns?"
   passing_score: 6

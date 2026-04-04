@@ -20,4 +20,8 @@ rubric:
     jumps_to_implementation: "Immediately writes migration scripts"
     single_strategy: "Only considers one sharding approach"
     ignores_downtime: "Doesn't address the downtime constraint"
+  depth_elements:
+    challenges_premise: "Does it question whether sharding is even the right solution (vs read replicas, partitioning, vertical scaling)?"
+    cutover_specifics: "Does the migration plan include specific SQL commands, replication lag checks, or minute-by-minute cutover sequence?"
+    cross_shard_analysis: "Does it analyze which of the 200 tables would require cross-shard joins and what to do about them?"
   passing_score: 6
