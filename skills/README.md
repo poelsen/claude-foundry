@@ -20,8 +20,11 @@ Skills are reusable knowledge modules that provide domain-specific patterns, bes
 | [megamind-deep](megamind-deep/) | Systematic analysis, multiple approaches, risk assessment | Complex or ambiguous problems |
 | [megamind-creative](megamind-creative/) | Structured creative chaos — pattern-mining, mutation, analogies, compression | Creative tasks, hard problems, when conventional approaches fail |
 | [megamind-adversarial](megamind-adversarial/) | Red-team — attack the obvious approach, stress-test | When you need to find weaknesses |
+| [megamind-financial](megamind-financial/) | Multi-domain financial analysis — investment valuation (Thorleif Jackson methodology), DK/DE tax planning, mortgage, pension, insurance | Stock valuation, tax optimization, loan analysis, retirement planning |
 
-**Auto-selected:** `megamind-deep`, `megamind-creative`. The adversarial variant is opt-in.
+**Auto-selected:** `megamind-deep`, `megamind-creative`. The adversarial and financial variants are opt-in.
+
+The `megamind-financial` skill uses country-specific data files in `data/` (e.g., `dk-tax-2026.md`). See [IMPROVEMENT-PROCESS.md](IMPROVEMENT-PROCESS.md) for the annual DK tax data update procedure.
 
 #### Benchmark Results (Opus 4.6, 30 challenges, 5 runs each)
 
@@ -102,6 +105,23 @@ Real-world validation comes from usage by software engineers who report that the
 | Skill | Purpose | When to Use |
 |-------|---------|-------------|
 | [clickhouse-io](clickhouse-io/) | ClickHouse analytics patterns | Data engineering |
+
+### Project Management
+
+Named project contexts let you work on multiple parallel initiatives without losing state. Each project lives in `.claude/prjs/<name>.md` with goals, status, decisions, and key files.
+
+| Skill | Purpose | Command |
+|-------|---------|---------|
+| [prj-new](prj-new/) | Create a new named project | `/prj-new <name>` |
+| [prj-list](prj-list/) | List all projects with status | `/prj-list` |
+| [prj-pause](prj-pause/) | Save session state, mark paused | `/prj-pause <name>` |
+| [prj-resume](prj-resume/) | Load project context, resume work | `/prj-resume <name>` |
+| [prj-done](prj-done/) | Mark project complete | `/prj-done <name>` |
+| [prj-delete](prj-delete/) | Delete a project file | `/prj-delete <name>` |
+
+The script-based prj-* skills share [`_lib/session-id.sh`](_lib/session-id.sh) to detect the current Claude session and record it on pause, so `/prj-resume` can suggest `--resume <session_id>`.
+
+**Auto-selected:** All prj-* skills are installed by default via `setup.py`.
 
 ## Skill Structure
 
