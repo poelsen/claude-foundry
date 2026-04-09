@@ -208,6 +208,12 @@ Slash commands are available inside Claude Code after running `setup.py init`:
 | `/update-codemaps` | Generates or refreshes architecture documentation per module. |
 | `/private-list` | Lists registered private config sources with status. |
 | `/private-remove` | Removes a private source by prefix. `/private-remove company` removes all `company-*` files. |
+| `/prj-new <name>` | Creates a new named project in `.claude/prjs/<name>.md`. See [Project Management](#project-management). |
+| `/prj-list` | Lists all named projects with status and resume commands. |
+| `/prj-pause <name>` | Saves current session state and marks the project paused. |
+| `/prj-resume <name>` | Loads a project's context and resumes work (suggests `--resume <session_id>`). |
+| `/prj-done <name>` | Marks a project complete. |
+| `/prj-delete <name>` | Deletes a project file. |
 
 ## Agents
 
@@ -352,8 +358,11 @@ The megamind skills are reasoning enhancers that improve Claude's performance on
 | **megamind-deep** | Systematic analysis — surface assumptions, consider alternatives, assess risks | Architecture decisions, debugging, scope clarification |
 | **megamind-creative** | Structured creative chaos — pattern-mining, analogies, constraint mutation | Creative problem-solving, brainstorming, unconventional solutions |
 | **megamind-adversarial** | Red-team — attack the obvious approach, find failure modes, stress-test | Security review, design review, finding weaknesses |
+| **megamind-financial** | Multi-domain financial analysis — investment valuation (Thorleif Jackson methodology), DK/DE tax planning, mortgage, pension, insurance | Stock valuation, tax optimization, loan/mortgage analysis, retirement planning |
 
-`megamind-deep` and `megamind-creative` are auto-selected during `setup.py init`. The adversarial variant is opt-in.
+`megamind-deep` and `megamind-creative` are auto-selected during `setup.py init`. The adversarial and financial variants are opt-in.
+
+The `megamind-financial` skill uses country-specific data files in `skills/megamind-financial/data/` (e.g., `dk-tax-2026.md`). See [skills/IMPROVEMENT-PROCESS.md](skills/IMPROVEMENT-PROCESS.md) for the annual DK tax data update procedure.
 
 ### Benchmark (Opus 4.6, 30 challenges, 5 runs each)
 
@@ -421,6 +430,67 @@ python3 tools/run_benchmark.py --skill megamind-financial --runs 2
 # Compare against saved baseline
 python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare results/old.json
 ```
+
+## Project Management
+
+Named project contexts let you juggle multiple parallel initiatives without losing state between sessions. Each project lives in `.claude/prjs/<name>.md` — a simple markdown file with YAML frontmatter tracking goal, status, decisions, key files, and the last Claude session ID.
+
+### Workflow
+
+```
+/prj-new bank-refactor          # Create project, open file for editing
+/prj-pause bank-refactor        # Save state (records current session_id)
+/prj-list                       # See all projects, their status, resume commands
+/prj-resume bank-refactor       # Reload context — suggests `claude --resume <id>`
+/prj-done bank-refactor         # Mark complete
+/prj-delete bank-refactor       # Remove
+```
+
+### Project file
+
+A project file looks like:
+
+```markdown
+---
+name: bank-refactor
+status: active            # active | paused | done
+updated: 2026-04-04T14:22
+session_id: abc123...     # Set on /prj-pause
+---
+
+## Goal
+Migrate the legacy /api/accounts endpoints to the new service.
+
+## Status
+- [x] Inventoried existing callers
+- [ ] Draft compatibility shim
+- [ ] Migration plan
+
+## Decisions
+- Use adapter pattern rather than parallel rewrite
+
+## Key Files
+- src/api/accounts.py
+- tests/test_accounts.py
+
+## Resume
+What to pick up next session...
+```
+
+### How session tracking works
+
+On `/prj-pause`, the script records the current Claude session ID into the project file via the shared `skills/_lib/session-id.sh` library (it reads `.claude/projects/<encoded-cwd>/` to find the active session JSONL). On `/prj-resume`, the skill reads it back and suggests `claude --resume <session_id>` so you can continue the exact same conversation — or start a fresh session with full project context loaded.
+
+### When to use this vs `/snapshot`
+
+| Feature | Use `/prj-*` | Use `/snapshot` |
+|---------|--------------|-----------------|
+| Long-lived named initiative | ✓ | |
+| Running multiple projects in parallel | ✓ | |
+| Point-in-time session capture | | ✓ |
+| Stateful session resumption by ID | ✓ | |
+
+All `prj-*` skills are auto-installed by `setup.py`.
 
 ## Credits
 
