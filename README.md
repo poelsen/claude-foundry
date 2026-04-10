@@ -434,7 +434,18 @@ python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare result
 
 ## Copilot MCP (opt-in)
 
-Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge. Saves Anthropic API tokens by using your existing GitHub Copilot subscription. **Disabled by default** — selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init` enables the whole thing: 7 slash-command skills, MCP server registration, and building the VS Code extension.
+Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge. Saves Anthropic API tokens by using your existing GitHub Copilot subscription. **Disabled by default** — selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init` enables the whole thing: 7 slash-command skills, MCP server registration, and installing the VS Code extension.
+
+> **⚠ Runtime requirements — read this before you try the commands:**
+>
+> Every time you want to use a `/copilot-*` slash command, **all of these must be true**:
+>
+> 1. **VS Code is running** on your machine
+> 2. **The project folder is opened** as a workspace in VS Code (File → Open Folder)
+> 3. **Claude Code is launched from within that workspace tree** — the MCP bridge walks up from your cwd looking for `.vscode/copilot-mcp.json`. If Claude Code runs from `~/unrelated/` while VS Code has `~/my-project/` open, the bridge will not find the extension.
+> 4. **The extension is enabled for that workspace** — see the "Enable per workspace" step below. The extension is installed machine-wide but **idle by default**; it only starts when a workspace's `.vscode/settings.json` opts in.
+>
+> Without all four, `/copilot-*` commands fail with "extension not reachable". Closing VS Code stops the bridge until you reopen the workspace.
 
 ### Components
 
@@ -448,13 +459,13 @@ During `setup.py init`, toggle `copilot-mcp` in the MCP-servers menu. That singl
 
 1. Writes the `copilot-mcp` entry to `.claude.json` with an absolute path to `<foundry>/vscode-copilot-mcp/mcp/server.js`
 2. Auto-selects all 7 `copilot-*` skills for deployment to `.claude/skills/`
-3. Runs [`tools/install-copilot-mcp.sh`](tools/install-copilot-mcp.sh) to build and install the VS Code extension:
-   - Interactive mode: prompts before building
+3. Runs [`tools/install-copilot-mcp.sh`](tools/install-copilot-mcp.sh) to install the VS Code extension:
+   - Interactive mode: prompts before installing
    - Non-interactive mode (e.g. `/update-foundry`): auto-runs if all prereqs are present, skips gracefully with a clear notice if not
 
-The install script performs: `npm install` → `tsc` → `vsce package` → `code --install-extension --force`. Idempotent — re-running is safe and picks up source changes.
+The install script uses a **pre-built `.vsix`** when available (shipped in every foundry release tarball, built by CI) — in that case the install is just `code --install-extension vscode-copilot-mcp-*.vsix --force` plus `npm install` in the MCP bridge directory. If you're on a bare git clone with no pre-built .vsix, the script falls back to the full build chain (`npm install` → `tsc` → `vsce package`). Both paths are idempotent.
 
-To **disable** Copilot MCP on a project that previously had it enabled, run `setup.py init` interactively and toggle `copilot-mcp` OFF in the MCP-servers menu. Setup.py will strip the copilot-* skills and remove the MCP entry from `.claude.json`.
+To **disable** Copilot MCP on a project that previously had it enabled, run `setup.py init` interactively and toggle `copilot-mcp` OFF in the MCP-servers menu. Setup.py will strip the copilot-* skills and remove the MCP entry from `.claude.json`. Optionally also remove the `copilot-mcp.autoStart` line from the workspace's `.vscode/settings.json` and uninstall the extension from VS Code.
 
 ### Requirements
 
@@ -463,13 +474,33 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 - `code` CLI on PATH (install via VS Code: `Shell Command: Install 'code' command in PATH`)
 - `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
 
-### After install
+### After install (REQUIRED — the extension is disabled by default)
 
-1. Restart Claude Code (MCP server processes are spawned at startup)
-2. Open the target workspace in VS Code — the extension auto-starts and writes `.vscode/copilot-mcp.json`
-3. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models
-4. Add to the project's `.gitignore`: `.vscode/copilot-mcp.json`, `.vscode/copilot-mcp-sessions/`
-5. First request will trigger a one-time VS Code "Allow" popup granting the extension LM API access — click Allow
+1. **Enable the extension for your workspace.** In the project root, add or edit `.vscode/settings.json`:
+
+   ```json
+   {
+     "copilot-mcp.autoStart": true
+   }
+   ```
+
+   The extension is installed machine-wide but **idle by default** — it only starts the HTTP bridge in workspaces where you explicitly opt in via this setting. This prevents it from running in unrelated VS Code windows.
+
+2. **Restart Claude Code** (MCP server processes are spawned at startup)
+
+3. **Open the target workspace in VS Code** — the extension now auto-starts (because of step 1) and writes `.vscode/copilot-mcp.json`
+
+4. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models
+
+5. Add to the project's `.gitignore`:
+   ```
+   .vscode/copilot-mcp.json
+   .vscode/copilot-mcp-sessions/
+   ```
+
+6. First LM request triggers a one-time VS Code "Allow" popup granting the extension LM API access — click Allow. It persists for the VS Code session.
+
+You can verify the extension is installed and its state from the VS Code Extensions panel (`Ctrl+Shift+X` → search "Copilot MCP"). Its logs are in `Output → Copilot MCP`.
 
 ### Usage
 
@@ -497,19 +528,22 @@ All seven commands are available inside Claude Code once the extension is runnin
 
 When you run `/update-foundry` in Claude Code (or `setup.py init` non-interactively), the updater:
 
-1. Downloads the latest foundry tarball (which now includes `vscode-copilot-mcp/`)
+1. Downloads the latest foundry tarball (which includes both `vscode-copilot-mcp/` source AND the pre-built `vscode-copilot-mcp-*.vsix`)
 2. Redeploys skills and re-writes `.claude.json`
-3. **Auto-rebuilds the VS Code extension** if `copilot-mcp` is in your manifest AND all prereqs (`code`, `node`, `npm`, etc.) are present on PATH. This keeps the installed extension in sync with the foundry source without a manual step.
+3. **Auto-installs the pre-built extension** if `copilot-mcp` is in your manifest AND all prereqs (`code`, `node`, `npm`, etc.) are present on PATH. The install script detects the pre-built .vsix, skips the build chain, and runs `code --install-extension --force`. Keeps the installed extension in sync with the foundry release without a manual step.
 
 If a prereq is missing (e.g. running updates from a headless CI machine with no VS Code), the updater prints a skip message and the manual command to run later — the update itself still succeeds.
 
-Restart Claude Code after any update that rebuilt the extension so the MCP server picks up the new bridge.
+Your per-workspace `.vscode/settings.json` with `copilot-mcp.autoStart: true` is **not touched** by updates — your enable state persists across foundry releases.
+
+Restart Claude Code after any update that reinstalled the extension so the MCP server picks up the new bridge.
 
 ### Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| `/copilot-list-models` says "extension not reachable" | Is VS Code open on the same workspace tree Claude Code is running from? The bridge walks up from cwd looking for `.vscode/copilot-mcp.json`. |
+| `/copilot-list-models` says "extension not reachable" | Check the 4 runtime requirements (top of this section). Most common cause: `.vscode/settings.json` missing `copilot-mcp.autoStart: true`, so the extension is idle. Second most common: VS Code has a *different* folder open than the one Claude Code is running from. |
+| Extension installed but server doesn't start | `copilot-mcp.autoStart` is `false` (the default). Add `{ "copilot-mcp.autoStart": true }` to the workspace's `.vscode/settings.json`, then reload VS Code (`Ctrl+Shift+P` → "Developer: Reload Window"). |
 | 401 Unauthorized | Stale token from extension restart — restart Claude Code so the MCP bridge re-reads the token. |
 | Empty response from a model | Should not happen; extension forces `vendor: 'copilot'`. If it does, check the VS Code output channel for `[copilot-mcp]`. |
 | Port collision / `EADDRINUSE` | Someone set `copilot-mcp.port` to a fixed value. Set it back to `0` in VS Code settings (auto-assign). |

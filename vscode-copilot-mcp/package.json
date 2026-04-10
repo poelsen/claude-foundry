@@ -36,8 +36,8 @@
         },
         "copilot-mcp.autoStart": {
           "type": "boolean",
-          "default": true,
-          "description": "Automatically start the server on VS Code launch"
+          "default": false,
+          "description": "Automatically start the HTTP bridge when VS Code opens this workspace. Disabled by default so the extension stays idle in windows where you don't need it. Enable per-workspace by adding '.vscode/settings.json' with { \"copilot-mcp.autoStart\": true }."
         },
         "copilot-mcp.allowUnsafeCommands": {
           "type": "boolean",

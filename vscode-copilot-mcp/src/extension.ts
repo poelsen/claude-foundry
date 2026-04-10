@@ -55,8 +55,13 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('copilot-mcp.listModels', () => listModels()),
   );
 
-  if (config.get<boolean>('autoStart', true)) {
+  // Disabled by default. Users opt in per-workspace via .vscode/settings.json
+  // ({ "copilot-mcp.autoStart": true }) so the server only runs in windows
+  // where they actually want to use the bridge.
+  if (config.get<boolean>('autoStart', false)) {
     await startServer(config);
+  } else {
+    log.info('autoStart=false — extension idle. Run "Copilot MCP: Start Server" or enable via .vscode/settings.json');
   }
 }
 

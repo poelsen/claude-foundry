@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# install-copilot-mcp.sh — Build and install the VS Code Copilot MCP extension.
+# install-copilot-mcp.sh — Install the VS Code Copilot MCP extension.
+#
+# Prefers a pre-built .vsix from the foundry release tarball (fast path,
+# ~2s install). Falls back to building from source when no .vsix exists
+# (git clone without a prior build), using the full build chain:
+#   npm install -> tsc -> vsce package -> code --install-extension
+#
+# Always installs MCP bridge dependencies in vscode-copilot-mcp/mcp/ — the
+# bridge runs on the host, not inside VS Code, and depends on
+# @modelcontextprotocol/sdk at runtime regardless of how the extension
+# itself was built.
 #
 # Invoked by setup.py when the user selects the copilot-mcp MCP server,
 # or run manually by a user after `setup.py init`.
 #
-# Requirements (checked up front, fail gracefully if missing):
-#   - VS Code CLI (`code`)
-#   - Node.js >= 20
-#   - npm
-#   - bash, curl, python3, awk, mktemp (for watch-job.sh)
-#
-# Idempotent: can be re-run safely to pick up source changes.
+# Idempotent — re-runs safely.
 
 set -euo pipefail
 
@@ -23,9 +27,14 @@ if [[ ! -d "$EXT_DIR" ]]; then
     exit 1
 fi
 
+# ── Detect pre-built .vsix ──────────────────────────────────────────
+PREBUILT_VSIX=$(ls -1 "$EXT_DIR"/vscode-copilot-mcp-*.vsix 2>/dev/null | head -n1)
+
 # ── Prerequisite checks ─────────────────────────────────────────────
+# Always required (bridge runtime + final install step)
+always_required=("code" "node" "npm" "bash" "curl" "python3" "awk" "mktemp")
 missing=()
-for cmd in code node npm bash curl python3 awk mktemp; do
+for cmd in "${always_required[@]}"; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         missing+=("$cmd")
     fi
@@ -35,7 +44,7 @@ if (( ${#missing[@]} > 0 )); then
     echo "ERROR: missing required commands: ${missing[*]}" >&2
     echo "" >&2
     echo "Install the missing tools and re-run:" >&2
-    echo "  - code   — VS Code CLI (install 'code' command from VS Code: Shell Command: Install 'code' command in PATH)" >&2
+    echo "  - code   — VS Code CLI (install via VS Code: 'Shell Command: Install code command in PATH')" >&2
     echo "  - node   — Node.js 20+ (https://nodejs.org)" >&2
     echo "  - others — standard on Linux/macOS/WSL/Git Bash" >&2
     exit 1
@@ -49,32 +58,40 @@ fi
 
 echo "==> Prerequisites OK (node v$(node --version | sed 's/^v//'), npm $(npm --version))"
 
-# ── Build the extension ─────────────────────────────────────────────
-echo "==> Installing extension devDependencies"
-cd "$EXT_DIR"
-npm install --no-audit --no-fund --silent
+# ── Path A: Pre-built .vsix available ──────────────────────────────
+if [[ -n "$PREBUILT_VSIX" ]]; then
+    echo "==> Using pre-built extension: $(basename "$PREBUILT_VSIX")"
+    VSIX="$PREBUILT_VSIX"
+else
+    # ── Path B: Build from source ──────────────────────────────────
+    echo "==> No pre-built .vsix found — building extension from source"
+    cd "$EXT_DIR"
 
-echo "==> Compiling TypeScript"
-npm run compile --silent
+    echo "==> Installing extension devDependencies"
+    npm install --no-audit --no-fund --silent
 
-# ── Package the .vsix ──────────────────────────────────────────────
-echo "==> Packaging .vsix"
-rm -f vscode-copilot-mcp-*.vsix
-npx --yes @vscode/vsce package --allow-missing-repository --out "$EXT_DIR" >/dev/null
+    echo "==> Compiling TypeScript"
+    npm run compile --silent
 
-VSIX=$(ls -1 "$EXT_DIR"/vscode-copilot-mcp-*.vsix 2>/dev/null | head -n1)
-if [[ -z "$VSIX" ]]; then
-    echo "ERROR: vsce package did not produce a .vsix" >&2
-    exit 1
+    echo "==> Packaging .vsix"
+    rm -f vscode-copilot-mcp-*.vsix
+    npx --yes @vscode/vsce package --allow-missing-repository --out "$EXT_DIR" >/dev/null
+
+    VSIX=$(ls -1 "$EXT_DIR"/vscode-copilot-mcp-*.vsix 2>/dev/null | head -n1)
+    if [[ -z "$VSIX" ]]; then
+        echo "ERROR: vsce package did not produce a .vsix" >&2
+        exit 1
+    fi
+    echo "==> Built: $(basename "$VSIX")"
 fi
 
-echo "==> Built: $(basename "$VSIX")"
-
-# ── Install in VS Code ─────────────────────────────────────────────
+# ── Install .vsix in VS Code ───────────────────────────────────────
 echo "==> Installing extension in VS Code"
 code --install-extension "$VSIX" --force >/dev/null
 
-# ── Install MCP bridge deps ────────────────────────────────────────
+# ── Install MCP bridge runtime deps ─────────────────────────────────
+# Required regardless of how the extension was built — server.js runs
+# on the host and depends on @modelcontextprotocol/sdk.
 echo "==> Installing MCP bridge dependencies"
 cd "$EXT_DIR/mcp"
 npm install --no-audit --no-fund --silent
@@ -86,22 +103,40 @@ cat <<EOF
   Copilot MCP extension installed successfully.
 ══════════════════════════════════════════════════════════════════════
 
-Next steps:
+Next steps (REQUIRED — the extension is DISABLED by default):
 
-  1. Restart Claude Code
+  1. Enable the extension for your project workspace
+     In your project root, add or edit .vscode/settings.json:
+
+         {
+           "copilot-mcp.autoStart": true
+         }
+
+     The extension is disabled in every VS Code window by default so
+     it only runs in workspaces where you actually want the bridge.
+     This per-workspace opt-in prevents it from running in unrelated
+     VS Code windows.
+
+  2. Restart Claude Code
      The MCP server process is spawned at startup and will not see
      the new entry until you restart.
 
-  2. Open your project workspace in VS Code
-     The extension auto-starts and writes connection info to
-     .vscode/copilot-mcp.json in the workspace root.
+  3. Open your project workspace in VS Code
+     The extension auto-starts (because you enabled it in step 1) and
+     writes connection info to .vscode/copilot-mcp.json.
 
-  3. Verify from Claude Code in that workspace:
+  4. Verify from Claude Code in that workspace:
         /copilot-list-models
 
-  4. Add to your project's .gitignore:
+  5. Add to your project's .gitignore:
         .vscode/copilot-mcp.json
         .vscode/copilot-mcp-sessions/
+
+RUNTIME REQUIREMENTS (every time you use /copilot-* commands):
+  - VS Code is running
+  - The project folder is open as a workspace in VS Code
+  - Claude Code is launched from within that workspace tree
+  - .vscode/settings.json has copilot-mcp.autoStart = true
 
 Requires a GitHub Copilot subscription with model access.
 See vscode-copilot-mcp/FOUNDRY-INTEGRATION.md for tribal knowledge

@@ -160,6 +160,26 @@ class TestInstallScript:
         assert "vsce package" in content
         assert "code --install-extension" in content
 
+    def test_script_prefers_prebuilt_vsix(self):
+        """Install script must detect and use a pre-built .vsix when present."""
+        content = self.SCRIPT.read_text(encoding="utf-8")
+        assert "PREBUILT_VSIX" in content, (
+            "install script should define PREBUILT_VSIX variable"
+        )
+        assert "vscode-copilot-mcp-*.vsix" in content
+        # Both code paths must exist: pre-built install + source build fallback
+        assert "Using pre-built extension" in content
+        assert "building extension from source" in content.lower() or \
+               "Building from source" in content or \
+               "No pre-built" in content
+
+    def test_script_documents_per_workspace_enable(self):
+        """Post-install notice must tell the user to enable per workspace."""
+        content = self.SCRIPT.read_text(encoding="utf-8")
+        assert "copilot-mcp.autoStart" in content
+        assert ".vscode/settings.json" in content
+        assert "disabled by default" in content.lower() or "idle" in content.lower()
+
     def test_script_syntax_valid(self):
         import subprocess
         result = subprocess.run(
@@ -216,6 +236,68 @@ class TestCopilotSkillGating:
             selected_skills = [s for s in selected_skills if s not in setup_py.COPILOT_SKILLS]
         for preserved in ["megamind-deep", "learn", "prj-new"]:
             assert preserved in selected_skills
+
+
+class TestReleaseWorkflowPreBuild:
+    """Verify release.yml pre-builds the .vsix and ships it in the tarball."""
+
+    WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
+
+    def test_workflow_sets_up_node(self):
+        content = self.WORKFLOW.read_text(encoding="utf-8")
+        assert "actions/setup-node" in content, "release workflow must install Node"
+        assert "node-version: '20'" in content or 'node-version: "20"' in content
+
+    def test_workflow_prebuilds_extension(self):
+        content = self.WORKFLOW.read_text(encoding="utf-8")
+        assert "Pre-build vscode-copilot-mcp extension" in content
+        assert "npm ci" in content or "npm install" in content
+        assert "npm run compile" in content or "tsc" in content
+        assert "vsce package" in content
+
+    def test_tarball_does_not_exclude_vsix(self):
+        """Since CI pre-builds the .vsix, the tarball must include it."""
+        content = self.WORKFLOW.read_text(encoding="utf-8")
+        # The previous version had --exclude='vscode-copilot-mcp/*.vsix'; must be removed
+        assert "--exclude='vscode-copilot-mcp/*.vsix'" not in content, (
+            "release tarball must NOT exclude the pre-built .vsix"
+        )
+
+    def test_release_uploads_vsix_asset(self):
+        content = self.WORKFLOW.read_text(encoding="utf-8")
+        assert "vscode-copilot-mcp-*.vsix" in content
+        assert "gh release create" in content
+
+
+class TestExtensionDisabledByDefault:
+    """Verify the VS Code extension is disabled by default (opt-in per workspace)."""
+
+    EXT_DIR = REPO_ROOT / "vscode-copilot-mcp"
+
+    def test_package_json_autoStart_default_is_false(self):
+        pkg = json.loads((self.EXT_DIR / "package.json").read_text(encoding="utf-8"))
+        autoStart = pkg["contributes"]["configuration"]["properties"]["copilot-mcp.autoStart"]
+        assert autoStart["default"] is False, (
+            "copilot-mcp.autoStart default must be False so the extension "
+            "is idle until explicitly enabled per workspace"
+        )
+
+    def test_package_json_autoStart_description_mentions_opt_in(self):
+        pkg = json.loads((self.EXT_DIR / "package.json").read_text(encoding="utf-8"))
+        desc = pkg["contributes"]["configuration"]["properties"]["copilot-mcp.autoStart"]["description"]
+        assert ".vscode/settings.json" in desc
+        assert "disabled" in desc.lower() or "idle" in desc.lower()
+
+    def test_extension_ts_default_is_false(self):
+        """extension.ts fallback to config.get('autoStart', <default>) must be false."""
+        src = (self.EXT_DIR / "src" / "extension.ts").read_text(encoding="utf-8")
+        # The fallback default in the getConfig call should be `false`, not `true`
+        assert "config.get<boolean>('autoStart', false)" in src, (
+            "extension.ts must default autoStart to false"
+        )
+        assert "config.get<boolean>('autoStart', true)" not in src, (
+            "extension.ts still has old autoStart=true default"
+        )
 
 
 class TestCopilotPrereqCheck:
