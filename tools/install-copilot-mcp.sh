@@ -44,9 +44,24 @@ if (( ${#missing[@]} > 0 )); then
     echo "ERROR: missing required commands: ${missing[*]}" >&2
     echo "" >&2
     echo "Install the missing tools and re-run:" >&2
-    echo "  - code   — VS Code CLI (install via VS Code: 'Shell Command: Install code command in PATH')" >&2
     echo "  - node   — Node.js 20+ (https://nodejs.org)" >&2
     echo "  - others — standard on Linux/macOS/WSL/Git Bash" >&2
+    if [[ " ${missing[*]} " == *" code "* ]]; then
+        echo "" >&2
+        echo "  About 'code': it's a SHELL command on your PATH that controls VS Code" >&2
+        echo "  from outside (used here for 'code --install-extension <vsix>'). It is" >&2
+        echo "  NOT the integrated terminal panel inside VS Code." >&2
+        echo "" >&2
+        echo "  Install on Linux/macOS/native Windows:" >&2
+        echo "    VS Code → Ctrl+Shift+P → 'Shell Command: Install code command in PATH'" >&2
+        echo "    Then restart your shell." >&2
+        echo "" >&2
+        echo "  WSL note: 'code' is typically NOT available in a plain WSL shell." >&2
+        echo "  The VS Code Server CLI only works from inside an integrated VS Code" >&2
+        echo "  terminal. Open VS Code with your WSL workspace attached, open a" >&2
+        echo "  terminal panel inside VS Code (Ctrl+\`), then re-run this script from" >&2
+        echo "  that terminal — 'code' will be on PATH there." >&2
+    fi
     exit 1
 fi
 
