@@ -48,21 +48,16 @@ if (( ${#missing[@]} > 0 )); then
     echo "  - others — standard on Linux/macOS/WSL/Git Bash" >&2
     if [[ " ${missing[*]} " == *" code "* ]]; then
         echo "" >&2
-        echo "  About 'code': it's a SHELL command on your PATH that controls VS Code" >&2
-        echo "  from outside (used here for 'code --install-extension <vsix>'). It is" >&2
-        echo "  NOT the integrated terminal panel inside VS Code." >&2
+        echo "  Note: 'code' is the shell command on your PATH that controls VS Code" >&2
+        echo "  (used here for 'code --install-extension <vsix>'), NOT the integrated" >&2
+        echo "  terminal panel inside VS Code." >&2
         echo "" >&2
-        echo "  Install on Linux/macOS/native Windows:" >&2
-        echo "    VS Code → Ctrl+Shift+P → 'Shell Command: Install code command in PATH'" >&2
-        echo "    Then restart your shell." >&2
+        echo "  On Linux / macOS / native Windows: install via VS Code's command palette" >&2
+        echo "  ('Shell Command: Install code command in PATH'), then restart your shell." >&2
         echo "" >&2
-        echo "  WSL note: 'code' is typically NOT available in a plain WSL shell." >&2
-        echo "  The VS Code Server CLI only works from inside an integrated VS Code" >&2
-        echo "  terminal. Open VS Code with your WSL workspace attached, then open" >&2
-        echo "  a terminal panel via the menu: View → Terminal (the Ctrl+\` shortcut" >&2
-        echo "  works on US/UK layouts but not on Nordic/dead-key layouts; use the" >&2
-        echo "  menu or rebind 'Toggle Integrated Terminal' in Keyboard Shortcuts)." >&2
-        echo "  Re-run this script from that terminal — 'code' will be on PATH there." >&2
+        echo "  On WSL: 'code' is typically not available in a plain WSL shell. Open a" >&2
+        echo "  terminal inside VS Code (with your WSL workspace attached) and re-run" >&2
+        echo "  this script from there — 'code' will be on PATH inside that terminal." >&2
     fi
     exit 1
 fi
@@ -131,23 +126,23 @@ Next steps (REQUIRED — the extension is DISABLED by default):
 
      The extension is disabled in every VS Code window by default so
      it only runs in workspaces where you actually want the bridge.
-     This per-workspace opt-in prevents it from running in unrelated
-     VS Code windows.
 
-  2. Restart Claude Code
-     The MCP server process is spawned at startup and will not see
-     the new entry until you restart.
+  2. Make the setting take effect (extension reads autoStart at
+     activation, so a runtime change isn't picked up by the running
+     instance). Pick one:
+       - Run "Developer: Reload Window" from the VS Code command palette, OR
+       - Run "Copilot MCP: Start Server" from the command palette
+     A full VS Code restart is NOT required.
 
-  3. Open your project workspace in VS Code
-     The extension auto-starts (because you enabled it in step 1) and
-     writes connection info to .vscode/copilot-mcp.json.
+  3. Restart Claude Code (one-time, only after the very first install).
+     The MCP bridge process is spawned at startup and will not see the
+     new .claude.json entry until you restart.
 
-  4. Verify from Claude Code in that workspace:
+  4. Open your project workspace in VS Code (if not already open).
+     The extension writes connection info to .vscode/copilot-mcp.json.
+
+  5. Verify from Claude Code in that workspace:
         /copilot-list-models
-
-  5. Add to your project's .gitignore:
-        .vscode/copilot-mcp.json
-        .vscode/copilot-mcp-sessions/
 
 RUNTIME REQUIREMENTS (every time you use /copilot-* commands):
   - VS Code is running
@@ -156,8 +151,6 @@ RUNTIME REQUIREMENTS (every time you use /copilot-* commands):
   - .vscode/settings.json has copilot-mcp.autoStart = true
 
 Requires a GitHub Copilot subscription with model access.
-See vscode-copilot-mcp/FOUNDRY-INTEGRATION.md for tribal knowledge
-and troubleshooting.
 
 ══════════════════════════════════════════════════════════════════════
 EOF

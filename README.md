@@ -511,13 +511,7 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 - **`code` shell command on PATH** — this is the *external* `code` executable used by `code --install-extension <vsix>`, NOT the integrated terminal panel inside VS Code. Install via VS Code: `Ctrl+Shift+P` → `Shell Command: Install 'code' command in PATH`, then restart your shell.
 - `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
 
-> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. If you're on WSL:
->
-> 1. Open VS Code with your WSL workspace attached
-> 2. Open the integrated terminal via the menu: **View → Terminal** (the `Ctrl+\`` shortcut works on US/UK keyboards, but on Nordic / dead-key layouts the backtick is a dead key — use the menu instead, or rebind *Toggle Integrated Terminal* in Keyboard Shortcuts to something like `Ctrl+J`)
-> 3. From that terminal, run `bash <project>/.claude/foundry/tools/install-copilot-mcp.sh`
->
-> The integrated terminal sets up `PATH` so `code` is available there even though it isn't in your standalone WSL shell.
+> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. On WSL: open VS Code with your WSL workspace attached, open a terminal inside VS Code, and run `<project>/.claude/foundry/tools/install-copilot-mcp.sh` from there. The integrated terminal sets up `PATH` so `code` is available even though it isn't in your standalone WSL shell.
 
 ### After install (REQUIRED — the extension is disabled by default)
 
@@ -531,17 +525,17 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 
    The extension is installed machine-wide but **idle by default** — it only starts the HTTP bridge in workspaces where you explicitly opt in via this setting. This prevents it from running in unrelated VS Code windows.
 
-2. **Restart Claude Code** (MCP server processes are spawned at startup)
+2. **Make the setting take effect.** The extension reads `autoStart` once at activation, so changing it at runtime doesn't notify the running instance. Pick one:
+   - Run `Developer: Reload Window` from the VS Code command palette (re-activates the extension), **or**
+   - Run `Copilot MCP: Start Server` from the command palette (starts the server immediately, no reload).
 
-3. **Open the target workspace in VS Code** — the extension now auto-starts (because of step 1) and writes `.vscode/copilot-mcp.json`
+   You do **not** need to restart all of VS Code.
 
-4. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models
+3. **Restart Claude Code** (MCP server processes are spawned at startup — this is a one-time step after the very first install, not after every toggle).
 
-5. Add to the project's `.gitignore`:
-   ```
-   .vscode/copilot-mcp.json
-   .vscode/copilot-mcp-sessions/
-   ```
+4. **Open the target workspace in VS Code** if it isn't already open. The extension writes `.vscode/copilot-mcp.json` with the connection info.
+
+5. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models.
 
 6. First LM request triggers a one-time VS Code "Allow" popup granting the extension LM API access — click Allow. It persists for the VS Code session.
 
@@ -594,7 +588,6 @@ Restart Claude Code after any update that reinstalled the extension so the MCP s
 | Port collision / `EADDRINUSE` | Someone set `copilot-mcp.port` to a fixed value. Set it back to `0` in VS Code settings (auto-assign). |
 | Extension not built after update | Check prereqs with `command -v code node npm`. Run `bash tools/install-copilot-mcp.sh` manually once the missing tool is installed. |
 
-Full troubleshooting table, tribal knowledge (VS Code LM API gotchas, Node fetch redirects, IPv6 SSRF, etc.), and the "deliberately-not-fixed" list are in [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](vscode-copilot-mcp/FOUNDRY-INTEGRATION.md).
 
 ### Testing
 

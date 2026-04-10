@@ -125,7 +125,7 @@ Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5
 | [copilot-multi](copilot-multi/) | Fan-out to multiple models | `/copilot-multi [models:list] <task>` |
 | [copilot-job](copilot-job/) | Background job management | `/copilot-job [start\|status\|list] <args>` |
 
-Requires VS Code + GitHub Copilot subscription. Extension auto-rebuilds on `/update-foundry` when prereqs (`code`, `node`, `npm`) are present. See the top-level [README — Copilot MCP section](../README.md#copilot-mcp-opt-in) for usage examples and troubleshooting, and [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](../vscode-copilot-mcp/FOUNDRY-INTEGRATION.md) for the full tribal knowledge.
+Requires VS Code + GitHub Copilot subscription. Extension auto-rebuilds on `/update-foundry` when prereqs (`code`, `node`, `npm`) are present. See the top-level [README — Copilot MCP section](../README.md#copilot-mcp-opt-in) for usage examples and troubleshooting.
 
 ### Project Management
 
