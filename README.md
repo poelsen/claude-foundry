@@ -511,7 +511,13 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 - **`code` shell command on PATH** — this is the *external* `code` executable used by `code --install-extension <vsix>`, NOT the integrated terminal panel inside VS Code. Install via VS Code: `Ctrl+Shift+P` → `Shell Command: Install 'code' command in PATH`, then restart your shell.
 - `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
 
-> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. If you're on WSL: open VS Code with your WSL workspace attached, open a terminal panel inside VS Code (`Ctrl+\``), and run `bash <project>/.claude/foundry/tools/install-copilot-mcp.sh` from *that* terminal. The integrated terminal sets up `PATH` so `code` is available.
+> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. If you're on WSL:
+>
+> 1. Open VS Code with your WSL workspace attached
+> 2. Open the integrated terminal via the menu: **View → Terminal** (the `Ctrl+\`` shortcut works on US/UK keyboards, but on Nordic / dead-key layouts the backtick is a dead key — use the menu instead, or rebind *Toggle Integrated Terminal* in Keyboard Shortcuts to something like `Ctrl+J`)
+> 3. From that terminal, run `bash <project>/.claude/foundry/tools/install-copilot-mcp.sh`
+>
+> The integrated terminal sets up `PATH` so `code` is available there even though it isn't in your standalone WSL shell.
 
 ### After install (REQUIRED — the extension is disabled by default)
 

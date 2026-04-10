@@ -58,9 +58,11 @@ if (( ${#missing[@]} > 0 )); then
         echo "" >&2
         echo "  WSL note: 'code' is typically NOT available in a plain WSL shell." >&2
         echo "  The VS Code Server CLI only works from inside an integrated VS Code" >&2
-        echo "  terminal. Open VS Code with your WSL workspace attached, open a" >&2
-        echo "  terminal panel inside VS Code (Ctrl+\`), then re-run this script from" >&2
-        echo "  that terminal — 'code' will be on PATH there." >&2
+        echo "  terminal. Open VS Code with your WSL workspace attached, then open" >&2
+        echo "  a terminal panel via the menu: View → Terminal (the Ctrl+\` shortcut" >&2
+        echo "  works on US/UK layouts but not on Nordic/dead-key layouts; use the" >&2
+        echo "  menu or rebind 'Toggle Integrated Terminal' in Keyboard Shortcuts)." >&2
+        echo "  Re-run this script from that terminal — 'code' will be on PATH there." >&2
     fi
     exit 1
 fi
