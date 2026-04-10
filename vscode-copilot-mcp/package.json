@@ -2,7 +2,7 @@
   "name": "vscode-copilot-mcp",
   "displayName": "Copilot MCP",
   "description": "Exposes VS Code Copilot LM API as a local HTTP server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "poelsen",
   "private": true,
   "engines": {
