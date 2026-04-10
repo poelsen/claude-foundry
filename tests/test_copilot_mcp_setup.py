@@ -77,27 +77,76 @@ class TestPlaceholderSubstitution:
 
 
 class TestWriteMcpServersSubstitution:
-    """Verify write_mcp_servers substitutes placeholders when writing .claude.json."""
+    """Verify write_mcp_servers writes to .mcp.json with placeholders substituted."""
 
     def test_copilot_mcp_written_with_absolute_path(self, tmp_path: Path):
         setup_py.write_mcp_servers(tmp_path, ["copilot-mcp"])
-        claude_json = tmp_path / ".claude.json"
-        assert claude_json.exists()
-        data = json.loads(claude_json.read_text(encoding="utf-8"))
+        # Must write to .mcp.json (Claude Code's project-scoped MCP file),
+        # NOT .claude.json (which Claude Code does not read for MCP).
+        mcp_json = tmp_path / ".mcp.json"
+        assert mcp_json.exists()
+        data = json.loads(mcp_json.read_text(encoding="utf-8"))
         entry = data["mcpServers"]["copilot-mcp"]
         assert entry["command"] == "node"
         # Placeholder must be gone, replaced by absolute REPO_ROOT path
         assert not any("{FOUNDRY_ROOT}" in a for a in entry["args"])
         assert any(str(setup_py.REPO_ROOT) in a for a in entry["args"])
-        # Description field stripped (not valid in .claude.json)
+        # Description field stripped (not valid in .mcp.json)
         assert "description" not in entry
+
+    def test_does_not_write_to_dot_claude_json(self, tmp_path: Path):
+        """Regression test: foundry must NOT write MCP servers to .claude.json.
+        That was the original bug — Claude Code reads project MCP from .mcp.json."""
+        setup_py.write_mcp_servers(tmp_path, ["copilot-mcp"])
+        legacy = tmp_path / ".claude.json"
+        if legacy.exists():
+            data = json.loads(legacy.read_text(encoding="utf-8"))
+            assert "mcpServers" not in data, (
+                ".claude.json must NOT contain mcpServers — they belong in .mcp.json"
+            )
 
     def test_other_mcp_servers_unaffected(self, tmp_path: Path):
         """Non-copilot servers should pass through untouched."""
         setup_py.write_mcp_servers(tmp_path, ["memory"])
-        data = json.loads((tmp_path / ".claude.json").read_text(encoding="utf-8"))
+        data = json.loads((tmp_path / ".mcp.json").read_text(encoding="utf-8"))
         assert "memory" in data["mcpServers"]
         assert data["mcpServers"]["memory"]["command"] == "npx"
+
+    def test_migrates_from_legacy_dot_claude_json(self, tmp_path: Path):
+        """If a previous foundry version wrote MCP servers to .claude.json,
+        the next run should migrate them into .mcp.json and clean up."""
+        # Arrange: simulate the legacy state
+        legacy = tmp_path / ".claude.json"
+        legacy.write_text(json.dumps({
+            "mcpServers": {
+                "old-server": {"command": "old", "args": ["one"]}
+            },
+            "someOtherSetting": "kept"
+        }), encoding="utf-8")
+        # Act
+        setup_py.write_mcp_servers(tmp_path, ["copilot-mcp"])
+        # Assert: .mcp.json has both the legacy entry and the new selection
+        mcp_data = json.loads((tmp_path / ".mcp.json").read_text(encoding="utf-8"))
+        assert "old-server" in mcp_data["mcpServers"]
+        assert "copilot-mcp" in mcp_data["mcpServers"]
+        # Legacy file: mcpServers stripped, other fields preserved
+        legacy_data = json.loads(legacy.read_text(encoding="utf-8"))
+        assert "mcpServers" not in legacy_data
+        assert legacy_data.get("someOtherSetting") == "kept"
+
+    def test_migrates_and_removes_legacy_when_only_mcp_servers(self, tmp_path: Path):
+        """If .claude.json contained ONLY mcpServers, the file is deleted entirely."""
+        legacy = tmp_path / ".claude.json"
+        legacy.write_text(json.dumps({
+            "mcpServers": {"old-server": {"command": "old"}}
+        }), encoding="utf-8")
+        setup_py.write_mcp_servers(tmp_path, ["copilot-mcp"])
+        assert not legacy.exists(), (
+            ".claude.json should be removed when it had nothing but mcpServers"
+        )
+        mcp_data = json.loads((tmp_path / ".mcp.json").read_text(encoding="utf-8"))
+        assert "old-server" in mcp_data["mcpServers"]
+        assert "copilot-mcp" in mcp_data["mcpServers"]
 
 
 class TestCopilotSkillRegistration:

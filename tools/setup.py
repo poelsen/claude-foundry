@@ -1117,23 +1117,62 @@ def _maybe_install_copilot_extension(interactive: bool) -> None:
 
 
 def write_mcp_servers(project: Path, servers: list[str]) -> None:
+    """Deep-merge selected MCP servers into <project>/.mcp.json.
+
+    Claude Code reads project-scoped MCP servers from <project>/.mcp.json
+    (no leading '.claude.' prefix) — the same file `claude mcp add --scope
+    project` writes to. We previously wrote to <project>/.claude.json, which
+    Claude Code doesn't read for project-scoped MCP, so the registered
+    servers were silently invisible to every Claude Code session.
+
+    Migration: if a stale <project>/.claude.json exists with an mcpServers
+    field that we wrote earlier, fold its entries into the new .mcp.json
+    so users don't lose their selections on re-run, then strip the
+    mcpServers key from .claude.json (leaving any unrelated fields alone).
+    """
     if not servers or not MCP_SERVERS_FILE.exists():
         return
     all_servers = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
     selected = {k: v for k, v in all_servers.items() if k in servers}
-    # Remove description fields (not valid in .claude.json) and substitute placeholders
+    # Remove description fields (not valid in mcp.json) and substitute placeholders
     for srv in selected.values():
         srv.pop("description", None)
     selected = _substitute_placeholders(selected)
-    claude_json = project / ".claude.json"
-    data = {}
-    if claude_json.exists():
+
+    mcp_json = project / ".mcp.json"
+    data: dict = {}
+    if mcp_json.exists():
         try:
-            data = json.loads(claude_json.read_text(encoding='utf-8'))
+            data = json.loads(mcp_json.read_text(encoding='utf-8'))
         except json.JSONDecodeError:
-            pass
+            data = {}
+
+    # Migration from the old, broken location: salvage anything we'd
+    # written to <project>/.claude.json on a previous foundry version.
+    legacy = project / ".claude.json"
+    legacy_changed = False
+    if legacy.exists():
+        try:
+            legacy_data = json.loads(legacy.read_text(encoding='utf-8'))
+        except json.JSONDecodeError:
+            legacy_data = {}
+        if isinstance(legacy_data, dict) and "mcpServers" in legacy_data:
+            data.setdefault("mcpServers", {}).update(legacy_data["mcpServers"])
+            legacy_data.pop("mcpServers", None)
+            legacy_changed = True
+            if legacy_data:
+                # Other fields exist — rewrite the legacy file without mcpServers
+                legacy.write_text(json.dumps(legacy_data, indent=2) + "\n",
+                                  encoding='utf-8')
+            else:
+                # Legacy file was only mcpServers — remove it entirely
+                legacy.unlink()
+
     data.setdefault("mcpServers", {}).update(selected)
-    claude_json.write_text(json.dumps(data, indent=2) + "\n", encoding='utf-8')
+    mcp_json.write_text(json.dumps(data, indent=2) + "\n", encoding='utf-8')
+
+    if legacy_changed:
+        print(f"  Migrated MCP servers from .claude.json → .mcp.json")
 
 
 # ── Commands ────────────────────────────────────────────────────────────
