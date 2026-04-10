@@ -318,6 +318,13 @@ class Validator:
                 if not path.exists():
                     self.error(f"Tarball missing: {item}")
 
+            # Pre-built .vsix must be present in release tarballs so
+            # /update-foundry can install the extension without rebuilding
+            vsix_candidates = list((root / "vscode-copilot-mcp").glob("vscode-copilot-mcp-*.vsix"))
+            if not vsix_candidates:
+                self.error("Tarball missing: vscode-copilot-mcp/vscode-copilot-mcp-*.vsix "
+                           "(release workflow must pre-build the extension)")
+
             # VERSION in tarball must be valid CalVer
             ver_file = root / "VERSION"
             if ver_file.exists():

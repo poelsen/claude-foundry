@@ -1,5 +1,7 @@
 # Copilot MCP — claude-foundry Integration Guide
 
+> **For end-user install, usage, and runtime requirements**, see the [Copilot MCP section in the top-level `README.md`](../README.md#copilot-mcp-opt-in). This document focuses on architecture, tribal knowledge, security posture, and the "deliberately-not-fixed" list for maintainers.
+
 ## What It Does
 
 Routes Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge. Saves Claude tokens by offloading work to your existing Copilot subscription. Supports multiple VS Code windows with parallel Claude Code sessions.
@@ -220,7 +222,7 @@ Tool results are truncated at 15K chars to prevent context overflow.
 | Setting | Default | Description |
 |---|---|---|
 | `copilot-mcp.port` | 0 (auto) | HTTP server port. 0 = OS picks free port. |
-| `copilot-mcp.autoStart` | true | Start server on VS Code launch |
+| `copilot-mcp.autoStart` | **false** | Start server on VS Code launch. **Disabled by default** — users opt in per workspace by adding `{ "copilot-mcp.autoStart": true }` to `.vscode/settings.json`. This prevents the bridge from running in every VS Code window regardless of whether the user needs it there. |
 | `copilot-mcp.allowUnsafeCommands` | false | Bypass the destructive command blocklist |
 
 ## Security Posture

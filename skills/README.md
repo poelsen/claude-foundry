@@ -108,7 +108,10 @@ Real-world validation comes from usage by software engineers who report that the
 
 ### Copilot MCP (Opt-in)
 
-Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge — saves Anthropic API tokens by using your existing Copilot subscription. **Disabled by default.** Enable by selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init`, which pulls in these skills and runs `tools/install-copilot-mcp.sh` to build the VS Code extension.
+Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge — saves Anthropic API tokens by using your existing Copilot subscription. **Disabled by default.** Enable by selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init`, which pulls in these skills and installs the VS Code extension (pre-built .vsix from the release tarball, or rebuilt from source as a fallback).
+
+> **⚠ Runtime requirements — every time you use a `/copilot-*` command:**
+> VS Code must be running **with the project folder open as a workspace**, Claude Code must be launched from within that workspace tree, and the workspace's `.vscode/settings.json` must contain `{ "copilot-mcp.autoStart": true }` — the extension is installed machine-wide but **idle by default** and only starts in workspaces you explicitly opt in.
 
 | Skill | Purpose | Command |
 |-------|---------|---------|
