@@ -89,8 +89,14 @@ jobs:
           mkdir -p dist
           tar czf "dist/claude-foundry-${version}.tar.gz" \
             --transform "s,^,claude-foundry-${version}/," \
+            --exclude='vscode-copilot-mcp/node_modules' \
+            --exclude='vscode-copilot-mcp/mcp/node_modules' \
+            --exclude='vscode-copilot-mcp/out' \
+            --exclude='vscode-copilot-mcp/*.vsix' \
+            --exclude='vscode-copilot-mcp/.vscode-test' \
             VERSION rules/ rule-library/ agents/ commands/ skills/ \
-            hooks/ mcp-configs/ tools/setup.py
+            hooks/ mcp-configs/ vscode-copilot-mcp/ \
+            tools/setup.py tools/install-copilot-mcp.sh
 
       - name: Validate tarball
         run: |

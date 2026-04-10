@@ -155,6 +155,16 @@ SKILLS = [
     "update-foundry", "learn", "learn-recall", "snapshot-list",
     "private-list", "private-remove",
     "prj-new", "prj-list", "prj-pause", "prj-resume", "prj-done", "prj-delete",
+    "copilot-list-models", "copilot-ask", "copilot-review", "copilot-audit",
+    "copilot-agent", "copilot-multi", "copilot-job",
+]
+
+# Skills that are only deployed when the copilot-mcp MCP server is selected.
+# Deploying them without the MCP server + VS Code extension gives the user
+# dead slash-commands, so they're gated on the MCP opt-in.
+COPILOT_SKILLS = [
+    "copilot-list-models", "copilot-ask", "copilot-review", "copilot-audit",
+    "copilot-agent", "copilot-multi", "copilot-job",
 ]
 
 LSP_PLUGINS = {
@@ -983,14 +993,57 @@ def copy_hooks(project: Path, hooks: list[str]) -> None:
                 dest.chmod(dest.stat().st_mode | 0o111)
 
 
+def _substitute_placeholders(value):
+    """Recursively replace {FOUNDRY_ROOT} with the absolute foundry repo path."""
+    if isinstance(value, str):
+        return value.replace("{FOUNDRY_ROOT}", str(REPO_ROOT))
+    if isinstance(value, list):
+        return [_substitute_placeholders(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _substitute_placeholders(v) for k, v in value.items()}
+    return value
+
+
+def _maybe_install_copilot_extension(interactive: bool) -> None:
+    """Run tools/install-copilot-mcp.sh when copilot-mcp was selected.
+
+    Silently skips if prereqs missing so setup.py init never fails for an
+    opt-in component. In interactive mode, asks for confirmation first;
+    non-interactive runs print a reminder and skip the build.
+    """
+    script = REPO_ROOT / "tools" / "install-copilot-mcp.sh"
+    if not script.is_file():
+        return
+
+    if not interactive:
+        print("\n  Copilot MCP selected — run this to build & install the VS Code extension:")
+        print(f"    bash {script}")
+        return
+
+    print("\n  Copilot MCP selected. The VS Code extension must be built and installed.")
+    print("  This runs: npm install + tsc + vsce package + code --install-extension")
+    if not confirm("  Build and install the extension now?", default=True):
+        print(f"  Skipped. Run manually later: bash {script}")
+        return
+
+    try:
+        subprocess.run(["bash", str(script)], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"\n  Extension install failed (exit {e.returncode}).")
+        print(f"  Fix the issue and re-run manually: bash {script}")
+    except FileNotFoundError:
+        print(f"\n  bash not found on PATH. Run manually: bash {script}")
+
+
 def write_mcp_servers(project: Path, servers: list[str]) -> None:
     if not servers or not MCP_SERVERS_FILE.exists():
         return
     all_servers = json.loads(MCP_SERVERS_FILE.read_text(encoding='utf-8'))["mcpServers"]
     selected = {k: v for k, v in all_servers.items() if k in servers}
-    # Remove description fields (not valid in .claude.json)
+    # Remove description fields (not valid in .claude.json) and substitute placeholders
     for srv in selected.values():
         srv.pop("description", None)
+    selected = _substitute_placeholders(selected)
     claude_json = project / ".claude.json"
     data = {}
     if claude_json.exists():
@@ -1416,6 +1469,15 @@ def cmd_init(
     mcp_servers = ([mcp_names[i] for i in sorted(saved_steps.get("mcp", set()))]
                    if mcp_available else [])
 
+    # Copilot-* skills are gated on the copilot-mcp MCP server being selected.
+    # Selecting the MCP pulls in the skills; deselecting drops them.
+    if "copilot-mcp" in mcp_servers:
+        for skill in COPILOT_SKILLS:
+            if skill not in selected_skills:
+                selected_skills.append(skill)
+    else:
+        selected_skills = [s for s in selected_skills if s not in COPILOT_SKILLS]
+
     # ── Pre-check CLAUDE.md for non-interactive mode ──
     claude_md = project / "CLAUDE.md"
     force_merge = False
@@ -1479,6 +1541,10 @@ def cmd_init(
     # MCP servers
     if mcp_servers:
         write_mcp_servers(project, mcp_servers)
+
+    # Copilot MCP: offer to build & install the VS Code extension
+    if "copilot-mcp" in mcp_servers:
+        _maybe_install_copilot_extension(interactive)
 
     # ── Private Sources ──
     private_sources: list[dict] = []

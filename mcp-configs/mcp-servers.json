@@ -22,11 +22,17 @@
       "command": "npx",
       "args": ["-y", "@railway/mcp-server"],
       "description": "Railway deployments"
+    },
+    "copilot-mcp": {
+      "command": "node",
+      "args": ["{FOUNDRY_ROOT}/vscode-copilot-mcp/mcp/server.js"],
+      "description": "Route tasks to VS Code Copilot models (requires VS Code extension — run tools/install-copilot-mcp.sh)"
     }
   },
   "_comments": {
     "usage": "Copy the servers you need to your ~/.claude.json mcpServers section",
     "env_vars": "Replace YOUR_*_HERE placeholders with actual values",
+    "placeholders": "{FOUNDRY_ROOT} is substituted by setup.py at deploy time with the absolute path to the claude-foundry repo",
     "adding_mcps": "Search npmjs.com for mcp-server or visit github.com/modelcontextprotocol/servers"
   }
 }

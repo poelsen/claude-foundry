@@ -18,3 +18,42 @@ jobs:
 
       - name: Validate repo integrity
         run: python3 tools/validate.py
+
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python dev dependencies
+        run: uv venv && uv pip install -e '.[dev]'
+
+      - name: Run pytest
+        run: uv run pytest -q
+
+  vscode-copilot-mcp-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install extension devDependencies
+        working-directory: vscode-copilot-mcp
+        run: npm install --no-audit --no-fund
+
+      - name: Run extension test suite (58 unit tests)
+        working-directory: vscode-copilot-mcp
+        run: npm test

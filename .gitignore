@@ -17,3 +17,10 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# vscode-copilot-mcp build artifacts
+vscode-copilot-mcp/node_modules/
+vscode-copilot-mcp/out/
+vscode-copilot-mcp/mcp/node_modules/
+vscode-copilot-mcp/*.vsix
+vscode-copilot-mcp/.vscode-test/
