@@ -23,6 +23,45 @@ import subprocess
 import sys
 from pathlib import Path
 
+
+def _ensure_utf8_stdio() -> None:
+    """Reconfigure stdout/stderr to UTF-8 so print() emoji never crash on Windows.
+
+    Fixes issue #26: setup.py uses Unicode characters (✓, ✗, ⚠, em dashes,
+    etc.) in print() output. On Windows with a default cp1252 console
+    encoding, writing those characters raises UnicodeEncodeError and
+    crashes the whole install. Reconfiguring the TextIOWrapper to UTF-8
+    with ``errors='replace'`` is a strictly additive fix: it has no effect
+    where stdout is already UTF-8 (Linux/macOS/WSL/Windows Terminal), and
+    it turns crashes into replacement characters on legacy cp1252 consoles.
+
+    This runs unconditionally at module import time. It's safe because:
+      1. ``reconfigure()`` is a no-op if encoding is already UTF-8
+      2. Any failure (e.g. stdout is piped to a process that can't be
+         reconfigured, or stdout was replaced before import) is swallowed
+         — the worst case is a legacy cp1252 crash at first emoji, which
+         is the pre-fix baseline
+      3. ``errors='replace'`` means worst-case a unicode char becomes "?"
+         instead of raising
+    """
+    for stream in (sys.stdout, sys.stderr):
+        enc = getattr(stream, "encoding", None)
+        if enc is None or enc.lower() == "utf-8":
+            continue
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue  # not a TextIOWrapper (e.g. replaced by a test harness)
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            # OSError: underlying buffer not seekable or closed
+            # ValueError: invalid encoding name (shouldn't happen with "utf-8")
+            pass
+
+
+_ensure_utf8_stdio()
+
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -830,28 +869,65 @@ def generate_claude_md(
 """
 
 
-def copy_rules(project: Path, base: list[str], modular: dict[str, list[str]]) -> None:
+def copy_rules(
+    project: Path,
+    base: list[str],
+    modular: dict[str, list[str]],
+    private_prefixes: list[str] | None = None,
+) -> None:
+    """Deploy selected rules to .claude/rules/ and remove stale ones.
+
+    Fixes issue #25: when a template migration renames or consolidates
+    rule files (e.g. gui.md + python-qt.md + gui-threading.md →
+    desktop-gui-qt.md), the old files used to linger in .claude/rules/
+    because the previous implementation only wrote new files and never
+    removed files that fell out of the selection. The result was Claude
+    loading duplicate/conflicting instructions.
+
+    After deploying the current selection, we now iterate the rules dir
+    and remove any .md file that is (a) not in the current selection
+    and (b) not prefixed with a private source prefix. Private-prefixed
+    files are preserved so private config sources aren't clobbered by
+    foundry updates.
+    """
+    private_prefixes = private_prefixes or []
     rules_dir = project / ".claude" / "rules"
     rules_dir.mkdir(parents=True, exist_ok=True)
+
+    # Track every filename we deploy in this run. Anything in the rules
+    # dir NOT in this set (and not private-prefixed) gets cleaned up
+    # below as a stale file from a previous selection.
+    deployed: set[str] = set()
 
     # Base rules
     for rule in base:
         src = REPO_ROOT / "rules" / rule
         if src.exists():
             shutil.copy2(src, rules_dir / rule)
+            deployed.add(rule)
 
-    # Modular rules (flatten into same dir with category prefix)
+    # Modular rules (flatten into same dir; prefix with category only
+    # on name collision with a base rule we just copied).
     for category, rules in modular.items():
         for rule in rules:
             src = REPO_ROOT / "rule-library" / category / rule
-            if src.exists():
-                dest_name = f"{category}-{rule}" if rule in base else rule
-                # Avoid name collisions with base rules
-                if (rules_dir / rule).exists() and rule in base:
-                    dest_name = f"{category}-{rule}"
-                else:
-                    dest_name = rule
-                shutil.copy2(src, rules_dir / dest_name)
+            if not src.exists():
+                continue
+            collision = rule in base and (rules_dir / rule).exists()
+            dest_name = f"{category}-{rule}" if collision else rule
+            shutil.copy2(src, rules_dir / dest_name)
+            deployed.add(dest_name)
+
+    # Cleanup pass: remove any .md rule file that isn't in the current
+    # deployment and isn't owned by a private source prefix.
+    for existing in rules_dir.iterdir():
+        if not existing.is_file() or existing.suffix != ".md":
+            continue
+        if existing.name in deployed:
+            continue
+        if any(existing.name.startswith(f"{p}-") for p in private_prefixes):
+            continue
+        existing.unlink()
 
 
 def copy_agents(
@@ -1658,7 +1734,7 @@ def cmd_init(
     (claude_dir / "VERSION").write_text(version + "\n", encoding='utf-8')
 
     # Rules
-    copy_rules(project, selected_base, selected_modular)
+    copy_rules(project, selected_base, selected_modular, private_prefixes)
 
     # Agents
     if selected_agents:
