@@ -46,7 +46,19 @@ async function checkAlive(port) {
   }
 }
 
-async function mcpRequest(path, options = {}) {
+// Per-endpoint timeout budgets (ms). The /agent loop can run for hours on
+// large tasks (e.g. megamind-financial doing a 30-iteration deep analysis),
+// so a blanket 5-minute timeout here was killing long-running jobs mid-flight
+// — the extension's client-disconnect handling would then cancel the
+// in-flight vscode.lm.sendRequest and the user would lose all accumulated
+// progress. /chat gets a generous budget too because Opus 4.6 + tool calls
+// can be slow. Everything else stays on a short default as a safety net
+// against hung connections.
+const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;         // 5 min — fast ops
+const CHAT_TIMEOUT_MS = 15 * 60 * 1000;           // 15 min — single LM call, Opus-friendly
+const AGENT_TIMEOUT_MS = 2 * 60 * 60 * 1000;      // 2 h — autonomous agent loop
+
+async function mcpRequest(path, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const { port, token } = getConnection();
   const baseUrl = `http://127.0.0.1:${port}`;
 
@@ -62,7 +74,7 @@ async function mcpRequest(path, options = {}) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const headers = {
       ...options.headers,
@@ -112,7 +124,7 @@ server.tool(
         family: model || "claude-sonnet-4.6",
         vendor: "copilot",
       }),
-    });
+    }, CHAT_TIMEOUT_MS);
 
     return {
       content: [{ type: "text", text: result.content }],
@@ -140,7 +152,7 @@ server.tool(
         sessionId,
         maxIterations,
       }),
-    });
+    }, AGENT_TIMEOUT_MS);
 
     const summary = [
       result.result,
