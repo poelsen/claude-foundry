@@ -266,7 +266,16 @@ class Validator:
             else:
                 source_cmds = {f.name for f in (self.root / "commands").glob("*.md")}
                 deployed_cmds = {f.name for f in commands_dir.glob("*.md")}
-                missing_cmds = source_cmds - deployed_cmds
+                # Commands tied to opt-in skills (e.g. copilot-*) aren't expected to
+                # deploy in the default non-interactive smoke run.
+                gated_skills = set(getattr(setup_module, "COPILOT_SKILLS", []))
+                gated_cmds = {
+                    f"{s}.md" for s in gated_skills
+                } | {
+                    f.name for f in (self.root / "commands").glob("*.md")
+                    if any(f.stem.startswith(f"{s}-") for s in gated_skills)
+                }
+                missing_cmds = (source_cmds - deployed_cmds) - gated_cmds
                 if missing_cmds:
                     self.error(f"Smoke: commands not deployed: {', '.join(sorted(missing_cmds))}")
 
@@ -299,7 +308,11 @@ class Validator:
 
             # Check expected contents
             expected = ["VERSION", "rules", "rule-library", "agents", "commands",
-                        "skills", "hooks", "mcp-configs", "tools/setup.py"]
+                        "skills", "hooks", "mcp-configs", "tools/setup.py",
+                        "tools/install-copilot-mcp.sh",
+                        "vscode-copilot-mcp/package.json",
+                        "vscode-copilot-mcp/FOUNDRY-INTEGRATION.md",
+                        "vscode-copilot-mcp/mcp/server.js"]
             for item in expected:
                 path = root / item
                 if not path.exists():

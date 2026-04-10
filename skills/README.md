@@ -106,6 +106,22 @@ Real-world validation comes from usage by software engineers who report that the
 |-------|---------|-------------|
 | [clickhouse-io](clickhouse-io/) | ClickHouse analytics patterns | Data engineering |
 
+### Copilot MCP (Opt-in)
+
+Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge — saves Anthropic API tokens by using your existing Copilot subscription. **Disabled by default.** Enable by selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init`, which pulls in these skills and runs `tools/install-copilot-mcp.sh` to build the VS Code extension.
+
+| Skill | Purpose | Command |
+|-------|---------|---------|
+| [copilot-list-models](copilot-list-models/) | List available Copilot models | `/copilot-list-models` |
+| [copilot-ask](copilot-ask/) | One-shot prompt to any model | `/copilot-ask <model> <prompt>` |
+| [copilot-review](copilot-review/) | Code review via Copilot | `/copilot-review [model] [target]` |
+| [copilot-audit](copilot-audit/) | Adversarial audit | `/copilot-audit [skill] [model] [target]` |
+| [copilot-agent](copilot-agent/) | Autonomous agent loop | `/copilot-agent [model] [session:name] <task>` |
+| [copilot-multi](copilot-multi/) | Fan-out to multiple models | `/copilot-multi [models:list] <task>` |
+| [copilot-job](copilot-job/) | Background job management | `/copilot-job [start\|status\|list] <args>` |
+
+Requires VS Code + GitHub Copilot subscription. See [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](../vscode-copilot-mcp/FOUNDRY-INTEGRATION.md) for install, tribal knowledge, and troubleshooting.
+
 ### Project Management
 
 Named project contexts let you work on multiple parallel initiatives without losing state. Each project lives in `.claude/prjs/<name>.md` with goals, status, decisions, and key files.

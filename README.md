@@ -164,6 +164,7 @@ Everything is copied into `<project>/.claude/`:
 | **Skills** | `skills/` | Domain knowledge modules (GUI threading patterns, ClickHouse, learned patterns) |
 | **Hooks** | `hooks/library/` | Shell scripts that run before/after Claude Code tool calls (formatters, type checkers) |
 | **Plugins** | configured in `settings.json` | LSP servers and workflow plugins (feature-dev, PR review toolkit) |
+| **Copilot MCP** (opt-in) | `vscode-copilot-mcp/` | VS Code extension + MCP bridge that routes tasks to Copilot models. Disabled by default. See [Copilot MCP](#copilot-mcp-opt-in). |
 
 ## Rules
 
@@ -430,6 +431,54 @@ python3 tools/run_benchmark.py --skill megamind-financial --runs 2
 # Compare against saved baseline
 python3 tools/run_benchmark.py --runs 5 --save results/new.json --compare results/old.json
 ```
+
+## Copilot MCP (opt-in)
+
+Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5.4, Gemini 3.1, Grok, etc.) via an MCP bridge. Saves Anthropic API tokens by using your existing GitHub Copilot subscription. **Disabled by default** — selecting `copilot-mcp` in the MCP-servers toggle during `setup.py init` enables the whole thing: 7 slash-command skills, MCP server registration, and building the VS Code extension.
+
+### Components
+
+- **VS Code extension** — HTTP server inside VS Code that proxies to the `vscode.lm` API (forces `vendor: copilot`)
+- **MCP bridge** — Node.js stdio server that forwards Claude Code tool calls to the extension's HTTP endpoint
+- **7 slash-command skills**: `/copilot-list-models`, `/copilot-ask`, `/copilot-review`, `/copilot-audit`, `/copilot-agent`, `/copilot-multi`, `/copilot-job`
+
+### Install
+
+During `setup.py init`, toggle `copilot-mcp` in the MCP-servers menu. Setup.py will:
+1. Write the `copilot-mcp` entry to `.claude.json` with an absolute path to `<foundry>/vscode-copilot-mcp/mcp/server.js`
+2. Auto-select all 7 `copilot-*` skills
+3. Run `tools/install-copilot-mcp.sh` to build + install the VS Code extension (prompts before running in interactive mode)
+
+The install script performs: `npm install`, `tsc`, `vsce package`, `code --install-extension`, and prints post-install steps.
+
+### Requirements
+
+- VS Code with GitHub Copilot Chat (paid subscription with model access)
+- Node.js >= 20
+- `code` CLI on PATH (install via VS Code: `Shell Command: Install 'code' command in PATH`)
+- `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
+
+### After install
+
+1. Restart Claude Code (MCP server processes are spawned at startup)
+2. Open the target workspace in VS Code — the extension auto-starts and writes `.vscode/copilot-mcp.json`
+3. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models
+4. Add to the project's `.gitignore`: `.vscode/copilot-mcp.json`, `.vscode/copilot-mcp-sessions/`
+
+Full documentation, tribal knowledge (VS Code LM API gotchas, Node fetch redirects, IPv6 SSRF, etc.) and the "deliberately-not-fixed" list are in [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](vscode-copilot-mcp/FOUNDRY-INTEGRATION.md).
+
+### Testing
+
+The extension ships with 58 unit tests (`src/pure.test.ts`) using Node's built-in test runner:
+
+```bash
+cd vscode-copilot-mcp
+npm install
+npm test                # 58 tests, ~60ms
+npm run test:coverage   # 100% line coverage on pure.ts
+```
+
+The extension tests run as a dedicated GitHub Actions job (`vscode-copilot-mcp-tests` in `.github/workflows/pr-check.yml`) on every PR — independent from the Python pytest job so a TS failure gives a clear, separately-labeled signal in the PR UI.
 
 ## Project Management
 
