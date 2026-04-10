@@ -508,8 +508,10 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 
 - VS Code with GitHub Copilot Chat (paid subscription with model access)
 - Node.js >= 20
-- `code` CLI on PATH (install via VS Code: `Shell Command: Install 'code' command in PATH`)
+- **`code` shell command on PATH** — this is the *external* `code` executable used by `code --install-extension <vsix>`, NOT the integrated terminal panel inside VS Code. Install via VS Code: `Ctrl+Shift+P` → `Shell Command: Install 'code' command in PATH`, then restart your shell.
 - `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
+
+> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. If you're on WSL: open VS Code with your WSL workspace attached, open a terminal panel inside VS Code (`Ctrl+\``), and run `bash <project>/.claude/foundry/tools/install-copilot-mcp.sh` from *that* terminal. The integrated terminal sets up `PATH` so `code` is available.
 
 ### After install (REQUIRED — the extension is disabled by default)
 
