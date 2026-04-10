@@ -159,6 +159,19 @@ SKILLS = [
     "copilot-agent", "copilot-multi", "copilot-job",
 ]
 
+# Skill groups — presented in the skill selection menu as a single toggle.
+# Toggling a group selects/deselects all its member skills together. Member
+# skill names are still what gets stored in the manifest, so the format is
+# backward-compatible with older installs.
+SKILL_GROUPS: dict[str, list[str]] = {
+    "Megamind Reasoning": [
+        "megamind-deep", "megamind-creative", "megamind-adversarial", "megamind-financial",
+    ],
+    "Project Management": [
+        "prj-new", "prj-list", "prj-pause", "prj-resume", "prj-done", "prj-delete",
+    ],
+}
+
 # Skills that are only deployed when the copilot-mcp MCP server is selected.
 # Deploying them without the MCP server + VS Code extension gives the user
 # dead slash-commands, so they're gated on the MCP opt-in.
@@ -166,6 +179,11 @@ COPILOT_SKILLS = [
     "copilot-list-models", "copilot-ask", "copilot-review", "copilot-audit",
     "copilot-agent", "copilot-multi", "copilot-job",
 ]
+
+# Skills that are never shown in the interactive skill menu. Copilot skills
+# are gated entirely on the copilot-mcp MCP-server selection, so exposing
+# them as individual toggles would let users accidentally break the set.
+HIDDEN_SKILLS: set[str] = set(COPILOT_SKILLS)
 
 LSP_PLUGINS = {
     "python.md": ("pyright-lsp", "pyright-langserver"),
@@ -1017,38 +1035,68 @@ def _copilot_prereqs_missing() -> list[str]:
 def _maybe_install_copilot_extension(interactive: bool) -> None:
     """Run tools/install-copilot-mcp.sh when copilot-mcp was selected.
 
-    Interactive mode: prompts for confirmation before building.
-    Non-interactive mode (e.g. /update-foundry): auto-runs the script when
-    all prerequisites are present, so the installed VS Code extension stays
-    in sync with the foundry source on updates. Prints manual instructions
-    and skips gracefully if any prerequisite is missing.
+    Behaviour:
+      1. Prereqs are checked BEFORE any prompt or auto-run. If anything is
+         missing, skip cleanly with a clear error pointing at the absolute
+         path of the install script — never prompt the user about an install
+         that would definitely fail.
+      2. The message adapts to whether a pre-built .vsix is present
+         (release tarball case, ~2s install) or the script will fall back
+         to building from source (bare git clone case, ~30s install).
+      3. Interactive mode: confirms before running.
+         Non-interactive mode (e.g. /update-foundry): auto-runs so updates
+         keep the installed extension in sync without manual steps.
     """
-    script = REPO_ROOT / "tools" / "install-copilot-mcp.sh"
+    script = (REPO_ROOT / "tools" / "install-copilot-mcp.sh").resolve()
     if not script.is_file():
         return
 
+    # Step 1 — prereqs first. No point asking the user about an install that
+    # will fail; this also prevents the confusing "yes → ERROR: missing code"
+    # flow users hit before this change.
+    missing = _copilot_prereqs_missing()
+    if missing:
+        print("\n  Copilot MCP selected — skipping extension install "
+              f"(missing prereqs: {', '.join(missing)}).")
+        print(f"  Install the missing tools, then run manually:")
+        print(f"    bash {script}")
+        if "code" in missing:
+            print("")
+            print("  'code' CLI install help:")
+            print("    - Open VS Code → Ctrl+Shift+P → 'Shell Command: Install code command in PATH'")
+            print("    - Then restart your shell")
+        return
+
+    # Step 2 — detect pre-built .vsix for accurate messaging
+    prebuilt_dir = REPO_ROOT / "vscode-copilot-mcp"
+    prebuilt = any(prebuilt_dir.glob("vscode-copilot-mcp-*.vsix"))
+
+    # Step 3 — interactive confirm / non-interactive notice
     if interactive:
-        print("\n  Copilot MCP selected. The VS Code extension must be built and installed.")
-        print("  This runs: npm install + tsc + vsce package + code --install-extension")
-        if not confirm("  Build and install the extension now?", default=True):
-            print(f"  Skipped. Run manually later: bash {script}")
+        print("\n  Copilot MCP selected. The VS Code extension will be installed.")
+        if prebuilt:
+            print("  Pre-built .vsix found — fast install path.")
+            print("  This runs: code --install-extension + npm install (MCP bridge deps)")
+        else:
+            print("  No pre-built .vsix found — building from source.")
+            print("  This runs: npm install + tsc + vsce package + code --install-extension")
+        if not confirm("  Install the extension now?", default=True):
+            print(f"  Skipped. Run manually later:")
+            print(f"    bash {script}")
             return
     else:
-        missing = _copilot_prereqs_missing()
-        if missing:
-            print("\n  Copilot MCP selected — skipping extension build (missing prereqs: "
-                  f"{', '.join(missing)}).")
-            print(f"  Install the missing tools and run: bash {script}")
-            return
-        print("\n  Copilot MCP selected — rebuilding VS Code extension to match foundry source")
+        action = "installing pre-built extension" if prebuilt else "rebuilding from source"
+        print(f"\n  Copilot MCP selected — {action} to match foundry source")
 
     try:
         subprocess.run(["bash", str(script)], check=True)
     except subprocess.CalledProcessError as e:
         print(f"\n  Extension install failed (exit {e.returncode}).")
-        print(f"  Fix the issue and re-run manually: bash {script}")
+        print(f"  Fix the issue and re-run manually:")
+        print(f"    bash {script}")
     except FileNotFoundError:
-        print(f"\n  bash not found on PATH. Run manually: bash {script}")
+        print(f"\n  bash not found on PATH. Run manually:")
+        print(f"    bash {script}")
 
 
 def write_mcp_servers(project: Path, servers: list[str]) -> None:
@@ -1307,25 +1355,64 @@ def cmd_init(
                         auto = _manifest_indices(SKILLS, "skills")
                     else:
                         auto = set()
-                    # Always include core skills
+                    # Detection-based auto-selects (platform-specific)
                     for i, skill in enumerate(SKILLS):
                         if skill == "gui-threading" and "desktop-gui-qt.md" in sfd:
                             auto.add(i)
                         if skill == "python-qt-gui" and "desktop-gui-qt.md" in sfd:
                             auto.add(i)
-                        if (
-                            skill.startswith("megamind-")
-                            or skill.startswith("private-")
-                            or skill.startswith("prj-")
-                            or skill in (
-                                "update-foundry", "learn", "learn-recall", "snapshot-list",
-                            )
-                        ):
+                    # Default-on individual skills (the small always-useful set)
+                    always_on = ("update-foundry", "learn", "learn-recall", "snapshot-list",
+                                 "private-list", "private-remove")
+                    for i, skill in enumerate(SKILLS):
+                        if skill in always_on:
                             auto.add(i)
+                    # Default-on groups (megamind + prj)
+                    default_groups = ("Megamind Reasoning", "Project Management")
+                    for group_name in default_groups:
+                        for skill in SKILL_GROUPS[group_name]:
+                            if skill in SKILLS:
+                                auto.add(SKILLS.index(skill))
+
+                    # Build the visible menu: groups first, then ungrouped
+                    # skills; HIDDEN_SKILLS (copilot-*) never appear.
+                    grouped_members = {s for members in SKILL_GROUPS.values() for s in members}
+                    ungrouped = [s for s in SKILLS
+                                 if s not in grouped_members and s not in HIDDEN_SKILLS]
+
+                    visible_items: list[str] = []
+                    visible_to_skills: list[list[str]] = []
+                    for group_name, members in SKILL_GROUPS.items():
+                        visible_items.append(f"{group_name} ({len(members)} skills)")
+                        visible_to_skills.append(list(members))
+                    for skill in ungrouped:
+                        visible_items.append(skill)
+                        visible_to_skills.append([skill])
+
+                    # Initial visible selection: a group is "on" when ANY of its
+                    # members are in auto — tolerates legacy manifests where
+                    # users may have had partial group selections.
+                    auto_visible: set[int] = set()
+                    for vi, skills in enumerate(visible_to_skills):
+                        if any(SKILLS.index(s) in auto for s in skills):
+                            auto_visible.add(vi)
+
                     if interactive:
-                        saved_steps["skills"] = toggle_menu("Skills", SKILLS, auto)
+                        chosen_visible = toggle_menu("Skills", visible_items, auto_visible)
                     else:
-                        saved_steps["skills"] = auto
+                        chosen_visible = auto_visible
+
+                    # Project visible-menu decisions back onto SKILLS indices.
+                    # Hidden skills (copilot-*) are left alone — they're
+                    # managed by the copilot-mcp MCP gating pass, not here.
+                    final = set(auto)
+                    for vi, skills in enumerate(visible_to_skills):
+                        idxs = {SKILLS.index(s) for s in skills}
+                        if vi in chosen_visible:
+                            final |= idxs
+                        else:
+                            final -= idxs
+                    saved_steps["skills"] = final
 
                 elif name == "learned":
                     if "learned" in saved_steps:
@@ -1694,7 +1781,71 @@ def cmd_init(
         total_private = sum(sum(len(s.get(k, [])) for k in ["rules", "commands", "skills", "agents", "hooks"]) for s in private_sources)
         prefixes = ", ".join(s["prefix"] for s in private_sources)
         print(f"  Private sources: {len(private_sources)} ({prefixes}, {total_private} files)")
+
+    # ── Per-project foundry self-copy ────────────────────────────────
+    # Pin a copy of the foundry source tree to <project>/.claude/foundry/
+    # so manual re-runs of setup.py always match this project's version,
+    # and the user doesn't need the original bootstrap tarball anymore.
+    # Skip when we're already running from inside the target (e.g. the
+    # update-foundry.sh flow staged the tree before invoking us).
+    _self_copy_foundry_source(project)
+
     return True
+
+
+def _self_copy_foundry_source(project: Path) -> None:
+    """Copy REPO_ROOT tree to <project>/.claude/foundry/.
+
+    Idempotent and safe to call at the end of every ``setup.py init`` run.
+    Skips when REPO_ROOT is already inside the target (avoids copying a
+    directory onto itself). Uses an atomic swap via a staging directory so
+    a crash mid-copy doesn't leave the foundry cache in a broken state.
+    """
+    target = (project / ".claude" / "foundry").resolve()
+
+    # Skip if we're already running from inside the target — this is the
+    # common case when /update-foundry has already moved us into place.
+    try:
+        REPO_ROOT.relative_to(target)
+        # REPO_ROOT is target or a subdirectory of it → nothing to do
+        return
+    except ValueError:
+        pass  # REPO_ROOT is elsewhere → proceed
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staging = target.parent / ".foundry.new"
+    if staging.exists():
+        shutil.rmtree(staging, ignore_errors=True)
+
+    # Copy REPO_ROOT tree, excluding build artifacts and caches
+    def _ignore(src: str, names: list[str]) -> list[str]:
+        skip = {
+            ".git", "__pycache__", ".pytest_cache", ".venv", "venv",
+            "node_modules", "out", ".vscode-test", "dist", "build",
+            ".coverage", "results",
+        }
+        return [n for n in names if n in skip]
+
+    shutil.copytree(REPO_ROOT, staging, ignore=_ignore, symlinks=False)
+
+    # Atomic swap: move target aside, promote staging, wipe old
+    backup = target.parent / ".foundry.old"
+    if backup.exists():
+        shutil.rmtree(backup, ignore_errors=True)
+    if target.exists():
+        target.rename(backup)
+    try:
+        staging.rename(target)
+    except OSError:
+        # Rollback if promotion fails
+        if backup.exists() and not target.exists():
+            backup.rename(target)
+        raise
+    if backup.exists():
+        shutil.rmtree(backup, ignore_errors=True)
+
+    print(f"  Foundry source cached at: {target}")
+    print(f"    Manual re-init: python3 {target}/tools/setup.py init {project}")
 
 
 def cmd_update_all(force: bool = False) -> None:

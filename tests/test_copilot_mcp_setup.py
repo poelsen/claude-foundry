@@ -349,7 +349,10 @@ class TestMaybeInstallCopilotExtension:
         assert calls[0][0] == "bash"
         assert "install-copilot-mcp.sh" in calls[0][1]
         out = capsys.readouterr().out
-        assert "rebuilding" in out.lower() or "rebuild" in out.lower()
+        # Message should indicate an install action (either pre-built or rebuild)
+        assert any(word in out.lower() for word in ("installing", "rebuilding", "install")), (
+            f"expected install/rebuild message in output:\n{out}"
+        )
 
     def test_noninteractive_skips_when_prereqs_missing(self, monkeypatch, capsys):
         """Non-interactive with missing prereqs must not invoke subprocess.run."""

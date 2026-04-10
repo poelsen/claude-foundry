@@ -49,17 +49,39 @@ From any configured project, run the `/update-foundry` slash command inside a Cl
 /update-foundry-interactive    # Full interactive menu to add/change selections
 ```
 
-`/update-foundry` checks the GitHub releases API, downloads the latest tarball, and re-runs `setup.py init` non-interactively using your saved selections from the manifest. Works the same regardless of how you bootstrapped.
+`/update-foundry` checks the GitHub releases API, downloads the latest tarball, extracts it to **`<project>/.claude/foundry/`**, and runs that extracted setup.py non-interactively using the saved manifest. Works the same regardless of how you bootstrapped.
 
-You can also update manually:
+### Where foundry lives after install
+
+Every project gets its own pinned copy of the foundry source tree at:
+
+```
+<project>/.claude/foundry/
+├── tools/setup.py                    # this project's setup.py (pinned)
+├── tools/install-copilot-mcp.sh
+├── rules/ rule-library/ agents/ commands/ skills/ hooks/
+├── mcp-configs/
+└── vscode-copilot-mcp/               # extension source + pre-built .vsix
+```
+
+**Why per-project?** Different projects can be on different foundry versions, and `setup.py` is always matched to the rest of the tree on disk. No user-level cache, no symlinks — one self-contained copy per project. You can delete the original bootstrap tarball immediately after the first `setup.py init`; everything you need is under `.claude/foundry/` from that point on.
+
+The tree is refreshed atomically on every `/update-foundry` (staged under `.claude/.foundry.new/`, swapped into place only after a successful setup run; rolled back on failure).
+
+### Manual re-init
+
+To re-run setup.py manually (e.g. to toggle new skill groups, register a private source, or reconfigure):
 
 ```bash
-# If you cloned the repo
-cd claude-foundry && git pull
-python3 tools/setup.py init /path/to/your/project
+python3 <project>/.claude/foundry/tools/setup.py init <project>
+```
 
-# Batch update all known projects
-python3 tools/setup.py update-all
+The post-init summary prints this exact command so you can copy-paste it from your terminal.
+
+For batch updates across all known projects:
+
+```bash
+python3 <project>/.claude/foundry/tools/setup.py update-all
 ```
 
 ## CLAUDE.md Convention
@@ -247,6 +269,21 @@ Hooks are shell scripts that run automatically before or after Claude Code tool 
 | `tsc-check.sh` | After editing `.ts`/`.tsx` files | TypeScript |
 | `cargo-check.sh` | After editing `.rs` files | Rust |
 
+
+## Skill Selection (groups, hidden skills, gating)
+
+The skill menu in `setup.py init` presents related skills as **groups**, not individual toggles. Selecting a group toggles all its members together:
+
+| Group | Members |
+|-------|---------|
+| **Megamind Reasoning** | `megamind-deep`, `megamind-creative`, `megamind-adversarial`, `megamind-financial` |
+| **Project Management** | `prj-new`, `prj-list`, `prj-pause`, `prj-resume`, `prj-done`, `prj-delete` |
+
+Both groups are **auto-selected by default**. Individual non-grouped skills (`clickhouse-io`, `gui-threading`, `learn`, `update-foundry`, `snapshot-list`, `private-list`, `private-remove`, etc.) continue to appear as individual entries.
+
+**Hidden skills (gated on MCP selection):** the 7 `copilot-*` skills do NOT appear in the skill selection menu. They're installed automatically when (and only when) you toggle `copilot-mcp` ON in the **MCP servers** menu — because a slash command like `/copilot-ask` is useless without the extension + bridge, so it never makes sense to select them individually. Deselecting `copilot-mcp` in the MCP menu strips all 7 in one step.
+
+The manifest still stores individual skill names (not group names), so existing projects keep working without migration.
 
 ## Learned Skills
 
