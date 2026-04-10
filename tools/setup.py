@@ -1004,27 +1004,43 @@ def _substitute_placeholders(value):
     return value
 
 
+def _copilot_prereqs_missing() -> list[str]:
+    """Return the list of missing prerequisites for install-copilot-mcp.sh.
+
+    An empty list means all prereqs are present. Used to decide whether
+    to auto-run the install script during non-interactive updates.
+    """
+    required = ["code", "node", "npm", "bash", "curl", "python3", "awk", "mktemp"]
+    return [cmd for cmd in required if shutil.which(cmd) is None]
+
+
 def _maybe_install_copilot_extension(interactive: bool) -> None:
     """Run tools/install-copilot-mcp.sh when copilot-mcp was selected.
 
-    Silently skips if prereqs missing so setup.py init never fails for an
-    opt-in component. In interactive mode, asks for confirmation first;
-    non-interactive runs print a reminder and skip the build.
+    Interactive mode: prompts for confirmation before building.
+    Non-interactive mode (e.g. /update-foundry): auto-runs the script when
+    all prerequisites are present, so the installed VS Code extension stays
+    in sync with the foundry source on updates. Prints manual instructions
+    and skips gracefully if any prerequisite is missing.
     """
     script = REPO_ROOT / "tools" / "install-copilot-mcp.sh"
     if not script.is_file():
         return
 
-    if not interactive:
-        print("\n  Copilot MCP selected — run this to build & install the VS Code extension:")
-        print(f"    bash {script}")
-        return
-
-    print("\n  Copilot MCP selected. The VS Code extension must be built and installed.")
-    print("  This runs: npm install + tsc + vsce package + code --install-extension")
-    if not confirm("  Build and install the extension now?", default=True):
-        print(f"  Skipped. Run manually later: bash {script}")
-        return
+    if interactive:
+        print("\n  Copilot MCP selected. The VS Code extension must be built and installed.")
+        print("  This runs: npm install + tsc + vsce package + code --install-extension")
+        if not confirm("  Build and install the extension now?", default=True):
+            print(f"  Skipped. Run manually later: bash {script}")
+            return
+    else:
+        missing = _copilot_prereqs_missing()
+        if missing:
+            print("\n  Copilot MCP selected — skipping extension build (missing prereqs: "
+                  f"{', '.join(missing)}).")
+            print(f"  Install the missing tools and run: bash {script}")
+            return
+        print("\n  Copilot MCP selected — rebuilding VS Code extension to match foundry source")
 
     try:
         subprocess.run(["bash", str(script)], check=True)

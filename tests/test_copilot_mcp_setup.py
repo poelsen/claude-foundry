@@ -216,3 +216,89 @@ class TestCopilotSkillGating:
             selected_skills = [s for s in selected_skills if s not in setup_py.COPILOT_SKILLS]
         for preserved in ["megamind-deep", "learn", "prj-new"]:
             assert preserved in selected_skills
+
+
+class TestCopilotPrereqCheck:
+    """Verify _copilot_prereqs_missing() reports missing prerequisites."""
+
+    def test_returns_list(self):
+        result = setup_py._copilot_prereqs_missing()
+        assert isinstance(result, list)
+
+    def test_reports_missing_when_path_empty(self, monkeypatch):
+        """With an empty PATH, every prereq should be flagged as missing."""
+        monkeypatch.setenv("PATH", "")
+        missing = setup_py._copilot_prereqs_missing()
+        # At minimum, these tools must be reported missing with empty PATH
+        for cmd in ["code", "node", "npm", "bash"]:
+            assert cmd in missing
+
+    def test_reports_nothing_when_all_present(self, monkeypatch, tmp_path):
+        """With a fake PATH containing stub binaries, nothing should be missing."""
+        for cmd in ["code", "node", "npm", "bash", "curl", "python3", "awk", "mktemp"]:
+            stub = tmp_path / cmd
+            stub.write_text("#!/bin/sh\nexit 0\n")
+            stub.chmod(0o755)
+        monkeypatch.setenv("PATH", str(tmp_path))
+        assert setup_py._copilot_prereqs_missing() == []
+
+
+class TestMaybeInstallCopilotExtension:
+    """Verify _maybe_install_copilot_extension behaviour on update paths."""
+
+    def test_noninteractive_auto_runs_when_prereqs_met(self, monkeypatch, capsys):
+        """Non-interactive (e.g. /update-foundry) with all prereqs present
+        should actually invoke the install script so the extension stays in sync."""
+        calls = []
+
+        def fake_run(cmd, check=True):
+            calls.append(cmd)
+
+            class R:
+                returncode = 0
+            return R()
+
+        monkeypatch.setattr(setup_py, "_copilot_prereqs_missing", lambda: [])
+        monkeypatch.setattr(setup_py.subprocess, "run", fake_run)
+
+        setup_py._maybe_install_copilot_extension(interactive=False)
+
+        assert len(calls) == 1, "install script should run exactly once"
+        assert calls[0][0] == "bash"
+        assert "install-copilot-mcp.sh" in calls[0][1]
+        out = capsys.readouterr().out
+        assert "rebuilding" in out.lower() or "rebuild" in out.lower()
+
+    def test_noninteractive_skips_when_prereqs_missing(self, monkeypatch, capsys):
+        """Non-interactive with missing prereqs must not invoke subprocess.run."""
+        calls = []
+        monkeypatch.setattr(setup_py, "_copilot_prereqs_missing", lambda: ["code", "node"])
+        monkeypatch.setattr(
+            setup_py.subprocess, "run",
+            lambda *a, **kw: calls.append(a) or (_ for _ in ()).throw(
+                AssertionError("subprocess.run should not be called when prereqs missing")),
+        )
+
+        setup_py._maybe_install_copilot_extension(interactive=False)
+
+        assert calls == []
+        out = capsys.readouterr().out
+        assert "missing prereqs" in out.lower()
+        assert "code" in out and "node" in out
+
+    def test_noninteractive_handles_script_failure(self, monkeypatch, capsys):
+        """If the install script fails, print an error and return cleanly
+        (do not raise — update must continue)."""
+        monkeypatch.setattr(setup_py, "_copilot_prereqs_missing", lambda: [])
+
+        def fake_run(cmd, check=True):
+            raise setup_py.subprocess.CalledProcessError(2, cmd)
+
+        monkeypatch.setattr(setup_py.subprocess, "run", fake_run)
+
+        # Should not raise
+        setup_py._maybe_install_copilot_extension(interactive=False)
+
+        out = capsys.readouterr().out
+        assert "install failed" in out.lower()
+        assert "exit 2" in out.lower()
