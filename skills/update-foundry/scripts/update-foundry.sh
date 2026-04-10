@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # update-foundry.sh — Deterministic update script for claude-foundry configuration.
 # Usage: update-foundry.sh [--check] [--interactive] [project_dir]
+#
+# Per-project foundry cache model: the extracted release tree is persisted
+# under <project>/.claude/foundry/ so manual re-runs of setup.py always
+# match this project's version. No user-level cache, no symlinks — one
+# self-contained copy per project.
 set -euo pipefail
 
 CHECK_ONLY=false
@@ -16,7 +21,7 @@ for arg in "$@"; do
     esac
 done
 
-PROJECT_DIR="${ARGS[0]:-$PWD}"
+PROJECT_DIR="$(cd "${ARGS[0]:-$PWD}" && pwd)"
 MANIFEST="$PROJECT_DIR/.claude/setup-manifest.json"
 
 # ── Read manifest ──────────────────────────────────────────────────────
@@ -38,11 +43,14 @@ RELEASE_JSON=$(curl -sL "$API_URL")
 
 LATEST_VERSION=$(echo "$RELEASE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
 RELEASE_URL=$(echo "$RELEASE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['html_url'])")
+# Find the tarball asset specifically (not the .vsix or other attachments)
 ASSET_URL=$(echo "$RELEASE_JSON" | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
-assets = d.get('assets', [])
-print(assets[0]['browser_download_url'] if assets else '')
+for a in d.get('assets', []):
+    if a['name'].endswith('.tar.gz') and 'latest' not in a['name']:
+        print(a['browser_download_url'])
+        break
 ")
 
 echo "Latest version: $LATEST_VERSION"
@@ -61,26 +69,46 @@ if [[ "$CHECK_ONLY" == true ]]; then
     exit 0
 fi
 
-# ── Download and extract ───────────────────────────────────────────────
+# ── Download and extract to per-project cache ─────────────────────────
 if [[ -z "$ASSET_URL" ]]; then
     echo "Error: No download asset found in release."
     exit 1
 fi
 
-TMPDIR=$(mktemp -d)
-trap 'rm -rf "$TMPDIR"' EXIT
+CLAUDE_DIR="$PROJECT_DIR/.claude"
+FOUNDRY_DIR="$CLAUDE_DIR/foundry"
+FOUNDRY_NEW="$CLAUDE_DIR/.foundry.new"
+FOUNDRY_OLD="$CLAUDE_DIR/.foundry.old"
+
+mkdir -p "$CLAUDE_DIR"
+
+# Clean up any leftover staging/backup from a previous failed run
+rm -rf "$FOUNDRY_NEW" "$FOUNDRY_OLD"
+
+# Download tarball to a temp location inside .claude/ so it shares the
+# same filesystem as the final destination (rename is atomic on the same FS).
+TMP_TARBALL="$CLAUDE_DIR/.foundry-release.tar.gz"
+trap 'rm -f "$TMP_TARBALL"; rm -rf "$FOUNDRY_NEW"' EXIT
 
 echo ""
 echo "Downloading $ASSET_URL ..."
-curl -sL "$ASSET_URL" -o "$TMPDIR/release.tar.gz"
-tar -xzf "$TMPDIR/release.tar.gz" -C "$TMPDIR"
+curl -sL "$ASSET_URL" -o "$TMP_TARBALL"
 
-# Find extracted directory
-EXTRACTED=$(find "$TMPDIR" -maxdepth 1 -type d -name "claude-foundry-*" | head -1)
-if [[ -z "$EXTRACTED" ]]; then
-    echo "Error: Could not find extracted release directory."
+echo "Extracting to $FOUNDRY_NEW ..."
+mkdir -p "$FOUNDRY_NEW"
+tar -xzf "$TMP_TARBALL" -C "$FOUNDRY_NEW" --strip-components=1
+
+# Sanity check: setup.py must exist in the extracted tree
+if [[ ! -f "$FOUNDRY_NEW/tools/setup.py" ]]; then
+    echo "Error: extracted tarball missing tools/setup.py"
     exit 1
 fi
+
+# ── Atomic swap: promote .foundry.new → foundry ───────────────────────
+if [[ -d "$FOUNDRY_DIR" ]]; then
+    mv "$FOUNDRY_DIR" "$FOUNDRY_OLD"
+fi
+mv "$FOUNDRY_NEW" "$FOUNDRY_DIR"
 
 # ── Find Python ────────────────────────────────────────────────────────
 PYTHON=""
@@ -96,21 +124,36 @@ if [[ -z "$PYTHON" ]] && command -v uv &>/dev/null; then
     PYTHON="uv run python3"
 fi
 if [[ -z "$PYTHON" ]]; then
+    # Roll back — we can't even run setup
+    rm -rf "$FOUNDRY_DIR"
+    if [[ -d "$FOUNDRY_OLD" ]]; then
+        mv "$FOUNDRY_OLD" "$FOUNDRY_DIR"
+    fi
     echo "Error: No Python 3 interpreter found."
     exit 1
 fi
 
 # ── Snapshot old state ─────────────────────────────────────────────────
-CLAUDE_DIR="$PROJECT_DIR/.claude"
 OLD_COMMANDS=$(ls "$CLAUDE_DIR/commands/" 2>/dev/null | sort || true)
 OLD_RULES=$(ls "$CLAUDE_DIR/rules/" 2>/dev/null | sort || true)
 OLD_AGENTS=$(ls "$CLAUDE_DIR/agents/" 2>/dev/null | sort || true)
 OLD_SKILLS=$(ls "$CLAUDE_DIR/skills/" 2>/dev/null | sort || true)
 
-# ── Run setup ──────────────────────────────────────────────────────────
+# ── Run setup from the per-project foundry cache ───────────────────────
 echo "Applying update..."
 echo ""
-$PYTHON "$EXTRACTED/tools/setup.py" init "$PROJECT_DIR" $INTERACTIVE_FLAG
+if ! $PYTHON "$FOUNDRY_DIR/tools/setup.py" init "$PROJECT_DIR" $INTERACTIVE_FLAG; then
+    echo ""
+    echo "ERROR: setup.py init failed — rolling back to previous version"
+    rm -rf "$FOUNDRY_DIR"
+    if [[ -d "$FOUNDRY_OLD" ]]; then
+        mv "$FOUNDRY_OLD" "$FOUNDRY_DIR"
+    fi
+    exit 1
+fi
+
+# Success — wipe backup
+rm -rf "$FOUNDRY_OLD"
 
 # ── Report changes ─────────────────────────────────────────────────────
 NEW_COMMANDS=$(ls "$CLAUDE_DIR/commands/" 2>/dev/null | sort || true)
@@ -122,6 +165,9 @@ echo ""
 echo "═══════════════════════════════════════════"
 echo "Update complete: $CURRENT_VERSION → $LATEST_VERSION"
 echo "═══════════════════════════════════════════"
+echo "  Foundry source pinned at: $FOUNDRY_DIR"
+echo "  Manual re-init:           $PYTHON $FOUNDRY_DIR/tools/setup.py init $PROJECT_DIR"
+echo ""
 
 CHANGES=false
 if [[ "$OLD_COMMANDS" != "$NEW_COMMANDS" ]]; then

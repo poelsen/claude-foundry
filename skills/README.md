@@ -2,6 +2,8 @@
 
 Skills are reusable knowledge modules that provide domain-specific patterns, best practices, and implementation guidance.
 
+> **Skill groups in `setup.py init`:** Megamind Reasoning (4 skills) and Project Management (6 skills) are toggled as groups, not individually. The 7 `copilot-*` skills are hidden from the menu and gated on the `copilot-mcp` MCP server selection — selecting the MCP auto-installs all 7, deselecting strips them. See the top-level [README — Skill Selection](../README.md#skill-selection-groups-hidden-skills-gating) section for details.
+
 ## Available Skills
 
 ### GUI Development
