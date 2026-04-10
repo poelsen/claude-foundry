@@ -61,7 +61,7 @@ class Validator:
 
     def check_json_files(self) -> None:
         self.check("JSON validity")
-        for rel in ["hooks/hooks.json", "mcp-configs/mcp-servers.json"]:
+        for rel in ["mcp-configs/mcp-servers.json"]:
             path = self.root / rel
             if not path.exists():
                 self.error(f"Missing JSON file: {rel}")

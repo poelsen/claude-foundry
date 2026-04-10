@@ -379,8 +379,7 @@ claude-foundry/
 ├── skills/                   # Domain skills
 │   └── learned/              # Patterns extracted via /learn
 ├── hooks/
-│   ├── hooks.json            # Reference hooks (manual install)
-│   └── library/              # Hook scripts (deployed by setup.py)
+│   └── library/              # Per-language hook scripts (deployed by setup.py)
 ├── mcp-configs/              # MCP server configurations
 └── tools/setup.py            # Setup and deployment tool
 ```
