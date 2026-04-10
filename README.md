@@ -444,12 +444,17 @@ Route Claude Code tasks to VS Code Copilot models (Claude Opus/Sonnet 4.6, GPT-5
 
 ### Install
 
-During `setup.py init`, toggle `copilot-mcp` in the MCP-servers menu. Setup.py will:
-1. Write the `copilot-mcp` entry to `.claude.json` with an absolute path to `<foundry>/vscode-copilot-mcp/mcp/server.js`
-2. Auto-select all 7 `copilot-*` skills
-3. Run `tools/install-copilot-mcp.sh` to build + install the VS Code extension (prompts before running in interactive mode)
+During `setup.py init`, toggle `copilot-mcp` in the MCP-servers menu. That single decision does everything:
 
-The install script performs: `npm install`, `tsc`, `vsce package`, `code --install-extension`, and prints post-install steps.
+1. Writes the `copilot-mcp` entry to `.claude.json` with an absolute path to `<foundry>/vscode-copilot-mcp/mcp/server.js`
+2. Auto-selects all 7 `copilot-*` skills for deployment to `.claude/skills/`
+3. Runs [`tools/install-copilot-mcp.sh`](tools/install-copilot-mcp.sh) to build and install the VS Code extension:
+   - Interactive mode: prompts before building
+   - Non-interactive mode (e.g. `/update-foundry`): auto-runs if all prereqs are present, skips gracefully with a clear notice if not
+
+The install script performs: `npm install` → `tsc` → `vsce package` → `code --install-extension --force`. Idempotent — re-running is safe and picks up source changes.
+
+To **disable** Copilot MCP on a project that previously had it enabled, run `setup.py init` interactively and toggle `copilot-mcp` OFF in the MCP-servers menu. Setup.py will strip the copilot-* skills and remove the MCP entry from `.claude.json`.
 
 ### Requirements
 
@@ -464,8 +469,53 @@ The install script performs: `npm install`, `tsc`, `vsce package`, `code --insta
 2. Open the target workspace in VS Code — the extension auto-starts and writes `.vscode/copilot-mcp.json`
 3. From Claude Code in that workspace: `/copilot-list-models` — should return ~20 models
 4. Add to the project's `.gitignore`: `.vscode/copilot-mcp.json`, `.vscode/copilot-mcp-sessions/`
+5. First request will trigger a one-time VS Code "Allow" popup granting the extension LM API access — click Allow
 
-Full documentation, tribal knowledge (VS Code LM API gotchas, Node fetch redirects, IPv6 SSRF, etc.) and the "deliberately-not-fixed" list are in [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](vscode-copilot-mcp/FOUNDRY-INTEGRATION.md).
+### Usage
+
+All seven commands are available inside Claude Code once the extension is running. Claude Code must be launched from the same workspace tree that VS Code has open (the MCP bridge discovers the extension via `.vscode/copilot-mcp.json` by walking up from the cwd).
+
+| Command | Purpose | Example |
+|---------|---------|---------|
+| `/copilot-list-models` | List available Copilot models with capabilities | `/copilot-list-models` |
+| `/copilot-ask <model> <prompt>` | One-shot stateless question to any model | `/copilot-ask gpt-5.4 Explain tail call optimization` |
+| `/copilot-review [model] [target]` | Code review on a file or diff | `/copilot-review claude-sonnet-4.6 src/auth.py` |
+| `/copilot-audit [skill] [model] [target]` | Adversarial audit using a chosen skill | `/copilot-audit security gpt-5.4 src/api/` |
+| `/copilot-agent [model] [session:name] <task>` | Autonomous agent loop with workspace tools | `/copilot-agent claude-opus-4.6 "Add retry logic to the HTTP client and run tests"` |
+| `/copilot-multi [models:list] <task>` | Fan-out a task to multiple models in parallel | `/copilot-multi claude-opus-4.6,gpt-5.4,gemini-3.1 "Review this design doc"` |
+| `/copilot-job [start\|status\|list] <args>` | Manage long-running background jobs | `/copilot-job start opus "Refactor the billing module"` |
+
+**Model names** are whatever `/copilot-list-models` returns for your subscription. Typical options: `claude-opus-4.6`, `claude-sonnet-4.6`, `gpt-5.4`, `gpt-4.1`, `gemini-3.1`, `grok-code-fast-1`.
+
+**When to use the agent vs. job modes:**
+- Sync `copilot-agent`: tasks under ~5 minutes. Blocks until done.
+- Background `copilot-job`: long tasks (refactors, audits). MCP tool call returns immediately; a bash watcher polls for completion and notifies Claude Code. Don't have the model poll `copilot-job status` in a loop — use the watcher.
+
+**When to use `copilot-multi`:** when you want independent perspectives on the same question. Opus tends to find architectural/subtle issues; GPT-5.4 tends to find operational issues; Grok is fast and blunt. Feeding all three reports back to Opus for meta-analysis is an effective pattern.
+
+### Updating
+
+When you run `/update-foundry` in Claude Code (or `setup.py init` non-interactively), the updater:
+
+1. Downloads the latest foundry tarball (which now includes `vscode-copilot-mcp/`)
+2. Redeploys skills and re-writes `.claude.json`
+3. **Auto-rebuilds the VS Code extension** if `copilot-mcp` is in your manifest AND all prereqs (`code`, `node`, `npm`, etc.) are present on PATH. This keeps the installed extension in sync with the foundry source without a manual step.
+
+If a prereq is missing (e.g. running updates from a headless CI machine with no VS Code), the updater prints a skip message and the manual command to run later — the update itself still succeeds.
+
+Restart Claude Code after any update that rebuilt the extension so the MCP server picks up the new bridge.
+
+### Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `/copilot-list-models` says "extension not reachable" | Is VS Code open on the same workspace tree Claude Code is running from? The bridge walks up from cwd looking for `.vscode/copilot-mcp.json`. |
+| 401 Unauthorized | Stale token from extension restart — restart Claude Code so the MCP bridge re-reads the token. |
+| Empty response from a model | Should not happen; extension forces `vendor: 'copilot'`. If it does, check the VS Code output channel for `[copilot-mcp]`. |
+| Port collision / `EADDRINUSE` | Someone set `copilot-mcp.port` to a fixed value. Set it back to `0` in VS Code settings (auto-assign). |
+| Extension not built after update | Check prereqs with `command -v code node npm`. Run `bash tools/install-copilot-mcp.sh` manually once the missing tool is installed. |
+
+Full troubleshooting table, tribal knowledge (VS Code LM API gotchas, Node fetch redirects, IPv6 SSRF, etc.), and the "deliberately-not-fixed" list are in [`vscode-copilot-mcp/FOUNDRY-INTEGRATION.md`](vscode-copilot-mcp/FOUNDRY-INTEGRATION.md).
 
 ### Testing
 
