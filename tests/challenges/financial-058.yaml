@@ -1,0 +1,80 @@
+id: financial-058
+name: "Data Review — ETF Scoring Pipeline Entity-Level Confusion"
+category: financial_data_review
+skill: megamind-financial
+prompt: |
+  A stock screener is being extended to score ETFs alongside individual stocks.
+  Review this scoring function that applies the existing quality gates to ETFs:
+
+  ```python
+  def score_instrument(ticker: str, data: dict) -> dict:
+      """Score any instrument (stock or ETF) using Thorleif quality+value framework."""
+      scores = {}
+
+      # Value metrics
+      if data.get('pe'):
+          if data['pe'] < 12: scores['pe_score'] = 'EXCELLENT'
+          elif data['pe'] < 15: scores['pe_score'] = 'ATTRACTIVE'
+          elif data['pe'] < 25: scores['pe_score'] = 'FAIR'
+          else: scores['pe_score'] = 'EXPENSIVE'
+
+      # Quality gates
+      roe = data.get('roe', 0)
+      if roe < 15:
+          scores['quality_gate'] = 'FAIL'
+          scores['quality_note'] = f'ROE {roe}% below 15% threshold'
+
+      payout = data.get('payout_ratio', 0)
+      if payout > 100:
+          scores['payout_gate'] = 'FAIL'
+          scores['payout_note'] = 'Unsustainable payout ratio >100%'
+
+      # ETF-specific: use fund TER as cost penalty
+      if data.get('is_etf'):
+          ter = data.get('ter', 0)
+          if ter > 0.5:
+              scores['cost_penalty'] = 'HIGH_COST'
+
+      return scores
+
+  def get_etf_data(ticker: str) -> dict:
+      """Fetch ETF data — uses holdings-weighted averages for fundamental metrics."""
+      raw = fetch_from_source(ticker)
+      return {
+          'pe': raw.get('weighted_avg_pe'),      # Holdings-weighted average P/E
+          'roe': raw.get('weighted_avg_roe'),     # Holdings-weighted average ROE
+          'payout_ratio': raw.get('weighted_avg_payout'),
+          'price': raw['price'],
+          'nav': raw.get('nav'),
+          'ter': raw.get('expense_ratio'),
+          'yield': raw.get('distribution_yield'),
+          'is_etf': True,
+      }
+  ```
+
+  The screener currently covers ~1200 individual stocks. The extension would
+  add ~150 ETFs. P/E thresholds: 12/15/25. ROE gate: 15%. Payout gate: 100%.
+
+  Produce a full Section F review.
+rubric:
+  required_elements:
+    entity_level_mismatch: "Identifies that applying single-stock quality gates (ROE > 15%, payout > 100%) to fund-level weighted-average metrics is a category error — these gates were designed for individual companies, not portfolio aggregates"
+    fund_wrapper_level: "References the fund/wrapper entity level — an ETF is a container, not a company. Its 'ROE' is a derived aggregate with completely different semantics than a company's ROE"
+    weighted_avg_pe_problem: "Explains that a holdings-weighted average P/E is not the same as a stock's P/E — a fund with half growth stocks (P/E 40) and half value stocks (P/E 10) has weighted P/E ~25, which scores FAIR, but this hides the actual composition"
+    roe_gate_nonsensical: "Explains why the ROE quality gate is nonsensical for ETFs — a broad market ETF will always have a weighted ROE near market average (~12-15%), so it would systematically fail the gate regardless of fund quality"
+    payout_gate_nonsensical: "Explains why payout >100% gate doesn't apply to ETFs — an ETF's distribution can exceed its income (return of capital) without being 'unsustainable' in the way it is for a company"
+    nav_vs_price: "Notes that get_etf_data fetches both price and NAV but score_instrument only uses price — the NAV/price premium/discount is a fund-specific metric that should be evaluated"
+    f0_setup: "Starts with explicit review setup (threshold inventory, entity scope mapping) identifying that the system now handles two entity types with different scoring semantics"
+    uses_finding_template: "Uses the F4 mandatory finding template"
+  anti_patterns:
+    approves_weighted_averages: "Approves the use of weighted-average fundamentals for ETF scoring without questioning whether the quality gates apply"
+    only_flags_ter: "Only focuses on the TER cost penalty as the ETF-specific issue, missing the fundamental entity-level problems"
+    treats_etf_as_stock: "Reviews the ETF code path as if ETFs were just stocks with an extra TER field"
+    no_entity_hierarchy: "Doesn't reference the F1 entity hierarchy or distinguish fund-level from company-level metrics"
+    advisory_drift: "Starts recommending specific ETFs or discussing ETF investment strategy"
+  depth_elements:
+    separate_scoring_framework: "Does it recommend a separate scoring framework for ETFs (tracking error, TER, premium/discount, asset class exposure) rather than adapting the stock framework?"
+    blast_radius_split: "Does it clearly split blast radius — the 1200 existing stocks are unaffected, only the 150 new ETFs are impacted?"
+    systematic_bias: "Does it identify that the entity-level error produces a systematic bias (ETFs will always score poorly on quality gates) rather than random errors?"
+    concrete_etf_example: "Does it provide a concrete example with a specific ETF (e.g., S&P 500 ETF with ~15% weighted ROE barely failing the 15% gate) showing the absurdity?"
+  passing_score: 6

@@ -1,0 +1,68 @@
+id: financial-054
+name: "Data Review — Share-Class Entity Collapse in Ticker Matching"
+category: financial_data_review
+skill: megamind-financial
+prompt: |
+  Review this Python function from a stock screener's ticker-matching module.
+  The system scores ~1200 stocks using data from multiple sources. When a
+  data source returns a slightly different ticker than expected (e.g., "BRK-A"
+  when we queried "BRK-B"), this function decides whether the data is usable:
+
+  ```python
+  def is_ticker_match(expected: str, received: str, threshold: float = 0.05) -> bool:
+      """Check if received ticker is close enough to expected.
+      Handles share-class aliases (A/B/C shares of same company)."""
+      if expected == received:
+          return True
+
+      # Strip share-class suffixes for comparison
+      def normalize(t: str) -> str:
+          for suffix in ['-A', '-B', '-C', '-D', '-R', '.A', '.B', '-PFD']:
+              if t.endswith(suffix):
+                  return t[:-len(suffix)]
+          return t
+
+      if normalize(expected) == normalize(received):
+          return True  # Same company, different share class — data is usable
+
+      return False
+
+  def get_valuation_metrics(ticker: str) -> dict:
+      """Fetch P/E, P/B, dividend yield, market cap for scoring."""
+      data = fetch_from_source(ticker)
+      if data and is_ticker_match(ticker, data['returned_ticker']):
+          return {
+              'pe': data['price'] / data['eps'],
+              'pb': data['price'] / data['book_value_per_share'],
+              'yield': data['dividend_per_share'] / data['price'],
+              'market_cap': data['price'] * data['shares_outstanding'],
+          }
+      return None
+  ```
+
+  The scoring pipeline uses P/E thresholds at 12/15/25 and P/B thresholds
+  that vary by sector (banks: 0.8/1.5/2.0, tech: 4.0/8.0/12.0).
+  ROE quality gate at 15%. Drift alarm triggers at 5% ticker mismatch rate.
+
+  Produce a full Section F review of this code.
+rubric:
+  required_elements:
+    entity_boundary_violation: "Identifies that stripping share-class suffixes and treating the data as 'usable' is an entity-boundary violation — BRK-A and BRK-B have different prices, P/E, P/B, yield, and market cap"
+    instrument_vs_company: "Explicitly distinguishes instrument-level metrics (price, P/E, P/B, yield, market cap) from company-level metrics (EPS, revenue, net income) and explains which are shared and which are not"
+    concrete_example: "Provides a concrete example showing the magnitude of error — e.g., BRK-A at ~$600k vs BRK-B at ~$400 producing wildly different P/E ratios from the same EPS"
+    severity_with_threshold: "Classifies severity relative to the stated P/E thresholds (12/15/25) — an error of this magnitude (potentially 1000x) is CRITICAL because it obliterates all classification boundaries"
+    does_not_recommend_suffix_stripping: "Does NOT recommend keeping the suffix-stripping approach with minor fixes — the entire normalize() function is the bug"
+    threshold_inventory: "References the stated thresholds (P/E 12/15/25, P/B by sector, ROE 15%, drift alarm 5%) in its analysis"
+    uses_finding_template: "Structures findings using the F4 mandatory template format with entity level, error magnitude, nearest boundary, boundary ratio, etc."
+  anti_patterns:
+    approves_normalization: "Approves the suffix-stripping approach as correct or recommends only minor improvements to it"
+    cosmetic_framing: "Frames the share-class aliasing as a 'cosmetic' or 'low-severity' issue"
+    misses_entity_hierarchy: "Doesn't reference the instrument/company entity-level distinction"
+    no_threshold_context: "Reports error magnitude without anchoring to the P/E/P/B classification thresholds"
+    advisory_mode_drift: "Drifts into advising on whether the stocks are good investments rather than reviewing the code"
+  depth_elements:
+    f0_setup_visible: "Does the review start with explicit F0 setup (threshold inventory, entity scope mapping) before diving into findings?"
+    multiple_findings_grouped: "Does it identify that EPS sharing is correct (company-level) while price/P/E/P/B/yield/market_cap sharing is wrong (instrument-level), rather than treating the whole function as one undifferentiated bug?"
+    drift_alarm_distinction: "Does it correctly distinguish the 5% drift alarm threshold from the entity-boundary bug — the alarm threshold is irrelevant to this finding because the error is not statistical drift, it's a category error?"
+    fix_specificity: "Does it recommend a specific fix (reject mismatched share classes, or map to correct instrument before computing metrics) rather than vague 'consider improving'?"
+  passing_score: 6

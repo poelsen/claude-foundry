@@ -1,0 +1,69 @@
+id: financial-055
+name: "Data Review — FX Error Severity Without Threshold Anchoring"
+category: financial_data_review
+skill: megamind-financial
+prompt: |
+  Review this code from a stock screener's earnings quality module.
+  It computes a total-accruals ratio to detect aggressive accounting.
+  The ratio compares balance sheet changes year-over-year, normalized
+  to a common currency (USD).
+
+  ```python
+  def total_accruals_ratio(financials: list[dict], fx_rates: dict) -> dict:
+      """Compute total accruals ratio per year.
+      Classification: |ratio| < 0.05 = GOOD, 0.05-0.10 = INVESTIGATE,
+                       0.10-0.15 = WARNING, > 0.15 = RED FLAG"""
+      results = {}
+      for i in range(1, len(financials)):
+          curr = financials[i]
+          prev = financials[i-1]
+
+          # Normalize to USD using each year's average FX rate
+          curr_ta = (curr['total_assets'] - curr['cash']) * fx_rates[curr['year']]
+          prev_ta = (prev['total_assets'] - prev['cash']) * fx_rates[prev['year']]
+
+          # Year-over-year accrual
+          accrual = curr_ta - prev_ta
+          avg_ta = (curr_ta + prev_ta) / 2
+          ratio = accrual / avg_ta if avg_ta != 0 else 0
+
+          results[curr['year']] = {
+              'ratio': ratio,
+              'classification': classify(abs(ratio))
+          }
+      return results
+
+  def classify(ratio: float) -> str:
+      if ratio < 0.05: return 'GOOD'
+      if ratio < 0.10: return 'INVESTIGATE'
+      if ratio < 0.15: return 'WARNING'
+      return 'RED_FLAG'
+  ```
+
+  The screener covers ~200 stocks across 15 countries. FX rates are
+  year-end averages from an external API. The typical year-over-year
+  FX drift for major currency pairs (EUR/USD, GBP/USD, CHF/USD) is
+  2-5%. For volatile pairs (JPY/USD, BRL/USD) it can be 8-15%.
+
+  Produce a full Section F review.
+rubric:
+  required_elements:
+    fx_drift_artifact: "Identifies that using per-year FX rates introduces FX drift into the accrual ratio — the year-over-year change includes real accruals AND currency movement"
+    quantifies_error: "Estimates the error magnitude: for major pairs (2-5% FX drift), the artifact is roughly 2-5% of the ratio; for volatile pairs (8-15%), the artifact can be 8-15%"
+    threshold_anchoring: "Anchors the error to the classification thresholds (0.05/0.10/0.15) — a 2-5% artifact on major pairs is significant relative to the 0.05 GOOD/INVESTIGATE boundary"
+    major_vs_volatile_split: "Distinguishes impact on major-currency stocks (moderate, may flip GOOD→INVESTIGATE) from volatile-currency stocks (severe, can flip GOOD→WARNING or beyond)"
+    severity_calibrated: "Does NOT classify this as uniformly CRITICAL or HIGH — the severity depends on the currency pair, so it should be MEDIUM for major pairs and CRITICAL for volatile pairs, or use a similar split"
+    not_overstated: "Does not overstate the finding by ignoring that for USD-denominated stocks (no FX conversion), the error is zero"
+    uses_finding_template: "Uses the F4 mandatory finding template"
+  anti_patterns:
+    no_threshold_context: "Reports 'FX drift introduces error' without computing the error relative to the 0.05/0.10/0.15 classification thresholds"
+    uniform_severity: "Assigns a single severity without distinguishing by currency pair volatility"
+    reports_as_critical_without_qualification: "Classifies as CRITICAL across the board when it's only CRITICAL for volatile pairs"
+    misses_usd_stocks: "Doesn't note that USD-denominated stocks are unaffected (fx_rate = 1.0 every year)"
+    advisory_drift: "Starts discussing whether accrual ratios are good indicators rather than reviewing the code"
+  depth_elements:
+    f0_threshold_inventory: "Does the review start with an explicit threshold inventory listing 0.05/0.10/0.15 and the FX drift ranges?"
+    fix_options_compared: "Does it compare fix options (single-rate normalization vs compute-in-native-currency) with trade-offs, rather than just recommending one?"
+    blast_radius_quantified: "Does it estimate what fraction of the ~200 stocks are affected (USD stocks: 0%, major-currency: moderate, volatile-currency: severe)?"
+    cumulative_check: "Does it check whether this FX artifact compounds with other errors in the pipeline?"
+  passing_score: 6

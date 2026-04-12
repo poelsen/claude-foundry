@@ -1,0 +1,60 @@
+id: financial-056
+name: "Data Review — Root-Cause Grouping and Corollary Deduplication"
+category: financial_data_review
+skill: megamind-financial
+prompt: |
+  A colleague reviewed a stock screener's currency handling and filed these
+  five findings. You're doing a second-pass review of the findings themselves.
+  Are they correctly structured, deduplicated, and prioritized?
+
+  ```
+  FINDING 1 (CRITICAL): latest_currency() returns scalar but
+  multi_source.consensus_currency_by_year returns per-year dict.
+  earnings_quality collapses the dict to scalar via latest_currency(),
+  losing per-year granularity. For Toyota (2015-2017 JPY, 2018-2024 USD),
+  JPY years are converted using the 2024 USD rate → ~150x magnitude error.
+
+  FINDING 2 (HIGH): If latest_currency() returns None for the max year
+  but prior years have known currencies, the whole time series is
+  discarded. This silently drops stocks that have partial currency data.
+
+  FINDING 3 (CRITICAL): FX cache stores rates as USD→foreign but
+  the consumer looks up foreign→USD. Without inverse fallback, ~100% of
+  non-US historical rate lookups silently fall back to current spot rate.
+  Toyota 2015: native accrual -0.0342, as-shipped -0.0163.
+
+  FINDING 4 (HIGH): The FX rate API sometimes returns inverted pairs
+  for certain currencies (notably CHF and SEK). No validation on
+  returned pair direction.
+
+  FINDING 5 (MEDIUM): Per-year FX rates introduce a 2.23% dimensional
+  error on accrual ratios due to year-over-year rate drift. For CHF→USD
+  with ~4% annual drift, this can flip GOOD→INVESTIGATE classifications.
+  ```
+
+  The accrual classification thresholds are 0.05 / 0.10 / 0.15.
+  The screener covers ~200 stocks across 15 countries.
+
+  Review the findings list for: correct root-cause grouping, severity
+  calibration, corollary identification, and threshold anchoring.
+rubric:
+  required_elements:
+    finding2_is_corollary_of_1: "Identifies that Finding 2 (latest_currency() returns None) is a corollary of Finding 1 (scalar currency collapse) — fixing the per-year currency handling automatically resolves the None-for-max-year edge case"
+    groups_1_and_2: "Groups Findings 1 and 2 under a single root cause, not as separate findings"
+    finding3_is_independent: "Correctly identifies Finding 3 (FX cache direction) as independent — it's a different root cause (cache lookup direction vs scalar collapse)"
+    finding4_related_to_3: "Recognizes that Finding 4 (inverted API pairs) is related to but distinct from Finding 3 — both involve FX direction, but Finding 4 is an ingestion-time validation issue while Finding 3 is a cache-lookup-time issue"
+    finding5_threshold_anchoring: "Evaluates Finding 5's severity: 2.23% error vs 0.05 threshold → boundary ratio 44.6% → HIGH might be defensible, but MEDIUM is also reasonable since it doesn't currently flip results for most currency pairs"
+    finding5_not_critical: "Confirms that Finding 5 is NOT critical — the 2.23% error on a ratio with 0.05 nearest boundary doesn't currently flip classifications for major pairs"
+    corollary_verification: "Notes that Finding 2, even if grouped under Finding 1, needs its own test case to verify it's resolved by the root-cause fix"
+  anti_patterns:
+    treats_all_as_independent: "Treats all five findings as independent without identifying the Finding 1/2 root-cause relationship"
+    merges_3_and_4: "Incorrectly merges Findings 3 and 4 as the same finding — they have different root causes and different fix locations"
+    accepts_all_severities: "Accepts the original severity classifications without questioning any of them"
+    no_threshold_reference: "Evaluates findings without referencing the 0.05/0.10/0.15 thresholds"
+    adds_advisory_opinion: "Starts opining on whether accrual ratios are the right metric rather than reviewing the finding structure"
+  depth_elements:
+    cumulative_assessment: "Does it check whether Findings 1+3+5 could compound on the same instrument (e.g., a JPY stock hit by all three errors)?"
+    finding5_estimation_quality: "Does it question whether '2.23%' is a measured or estimated error, and whether the precision is justified for a code-review estimate?"
+    rewrite_proposed: "Does it propose a rewritten finding list with correct grouping and adjusted severities?"
+    meta_review_discipline: "Does it demonstrate the F4 discipline (root-cause grouping, threshold anchoring, corollary tagging) while reviewing someone else's attempt at the same?"
+  passing_score: 6
