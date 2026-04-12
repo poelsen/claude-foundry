@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -70,6 +71,9 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
     if not claude_bin:
         raise RuntimeError("claude CLI not found in PATH")
 
+    # Strip ANTHROPIC_API_KEY so the CLI uses OAuth, not a potentially stale key
+    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+
     result = subprocess.run(
         [
             claude_bin,
@@ -84,6 +88,7 @@ def _claude_cli(prompt: str, model: str = "opus") -> str:
         capture_output=True,
         text=True,
         timeout=1200,
+        env=env,
     )
 
     if result.returncode != 0:

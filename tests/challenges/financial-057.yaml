@@ -1,0 +1,65 @@
+id: financial-057
+name: "Data Review — Monitoring Parameter Misclassification"
+category: financial_data_review
+skill: megamind-financial
+prompt: |
+  Review this monitoring/validation code from a stock screener. It checks
+  whether curated ticker-to-URL mappings are still valid by sampling and
+  verifying against the live site.
+
+  ```python
+  CURATED_SLUGS = load_curated_map()  # 1098 ticker→URL entries
+  SAMPLE_SIZE = 20
+  DRIFT_ALARM = 0.05  # Alert if >5% of sample has changed
+
+  def validate_curated_slugs() -> dict:
+      """Run periodic validation of curated slug mappings.
+      Samples SAMPLE_SIZE entries and checks if URLs still resolve."""
+      sample = random.sample(list(CURATED_SLUGS.items()), SAMPLE_SIZE)
+      mismatches = 0
+
+      for ticker, expected_url in sample:
+          actual_url = resolve_current_url(ticker)
+          if actual_url != expected_url:
+              mismatches += 1
+              log.warning(f"Slug drift: {ticker} expected {expected_url}, got {actual_url}")
+
+      drift_rate = mismatches / SAMPLE_SIZE
+      return {
+          'sample_size': SAMPLE_SIZE,
+          'mismatches': mismatches,
+          'drift_rate': drift_rate,
+          'alarm': drift_rate > DRIFT_ALARM,
+          'coverage': SAMPLE_SIZE / len(CURATED_SLUGS),  # 1.8%
+      }
+  ```
+
+  A previous reviewer flagged: "Sample size 20 of 1098 = 1.8% coverage.
+  At a genuine 5% drift rate, one run catches drift with probability
+  1-0.95^20 = 64%. This means 36% of the time, real drift goes undetected.
+  Recommend increasing sample size to 50 for 92% detection power."
+
+  Is the previous reviewer's analysis correct? Produce a Section F review
+  of both the code and the previous reviewer's recommendation.
+rubric:
+  required_elements:
+    alarm_is_not_base_rate: "Identifies that DRIFT_ALARM=0.05 is a watchdog threshold ('something catastrophic happened to the data source'), NOT the expected base rate of URL changes"
+    expected_rate_is_low: "States that the expected base rate of URL renames is very low — perhaps 1-5 per year across 1098 entries, so <0.5% at any given time, not 5%"
+    statistical_analysis_misframed: "Explains that the previous reviewer's statistical analysis treats the alarm threshold as if it were the expected drift rate, which misframes the entire power analysis"
+    parameter_classification: "Classifies DRIFT_ALARM as an alarm threshold (F5), SAMPLE_SIZE as a sampling parameter, and 1098 as a design constant — and evaluates each according to its type"
+    correct_question: "Reframes the right question: 'At the expected base rate (<0.5%), does sampling 20 per run across daily/weekly runs catch a single URL rename within an acceptable time window?'"
+    right_detection_math: "Computes or estimates: if 1 URL out of 1098 renames (base rate 0.09%), probability of catching it in one sample of 20 = 20/1098 = 1.8%. Over N runs the probability accumulates — after ~38 runs (e.g., 38 days if daily), detection probability reaches ~50%"
+    proportional_response: "Does not recommend dramatically increasing sample size — the monitoring is a background watchdog, not a real-time integrity gate. The correct response depends on how often the validation runs and what the acceptable detection latency is"
+    uses_finding_template: "Uses the F4 mandatory finding template"
+  anti_patterns:
+    agrees_with_reviewer: "Agrees with the previous reviewer's 64%/36% analysis and the recommendation to increase to 50"
+    treats_5pct_as_expected: "Treats the 5% DRIFT_ALARM as the expected drift rate without questioning this assumption"
+    ignores_run_frequency: "Evaluates detection probability for a single run without considering that the validation runs repeatedly"
+    recommends_100pct_coverage: "Recommends checking all 1098 entries every run without considering the cost/latency trade-off"
+    no_parameter_classification: "Doesn't classify the different numeric constants (alarm threshold vs sampling parameter vs design constant)"
+  depth_elements:
+    f5_taxonomy_explicit: "Does it explicitly reference the F5 parameter taxonomy and classify each constant?"
+    multi_run_detection: "Does it model detection probability over multiple runs, not just a single run?"
+    cost_benefit: "Does it consider the cost of URL resolution (API calls, rate limits) as a factor in sample size choice?"
+    reframes_previous_review: "Does it produce a corrected version of the previous reviewer's finding with proper threshold anchoring?"
+  passing_score: 6
