@@ -44,7 +44,7 @@ class TestLoadChallenge:
 
     def test_load_all_challenges(self):
         challenges = load_challenges(CHALLENGES_DIR)
-        assert len(challenges) == 104
+        assert len(challenges) == 109
         ids = {c.id for c in challenges}
         assert "arch-001" in ids
         assert "creative-001" in ids

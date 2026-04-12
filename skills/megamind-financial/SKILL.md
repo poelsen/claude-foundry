@@ -1,6 +1,6 @@
 ---
 name: megamind-financial
-description: Financial analysis — investment valuation (Thorleif Jackson), tax planning, mortgage/loan, pension/retirement, insurance, financial data system review. Routes by problem type. Country-aware (DK, DE, general).
+description: Financial analysis — valuation (Thorleif Jackson), tax, mortgage, pension, insurance, data system review. Routes by problem type. Country-aware (DK, DE, general).
 model: opus
 ---
 
@@ -296,216 +296,119 @@ Most countries use a variant of:
 
 ## Section F: Financial Data System Review
 
-This section applies when reviewing, auditing, or debugging **code and systems that process financial data** — screeners, scoring pipelines, FX normalization, ticker mapping, data ingestion, portfolio analytics engines, etc. The analytical mode here is fundamentally different from Sections A-E: you are not answering a financial question, you are evaluating whether a system handles financial data correctly. You need domain expertise (which Sections A-E provide) plus data engineering rigor (which this section provides).
+Applies when reviewing **code and systems that process financial data** — screeners, scoring pipelines, FX normalization, ticker mapping, data ingestion, portfolio analytics. You are evaluating whether a system handles financial data correctly, not answering a financial question.
 
-**Mode check:** If the user is asking "should I buy X?" → Section A. If the user is asking "does this code correctly compute X?" → Section F. If both, decompose: use Section A knowledge for domain correctness, Section F discipline for review methodology.
+**Mode check:** "Should I buy X?" → Section A. "Does this code correctly compute X?" → Section F. Both → use A-E knowledge for domain correctness, F discipline for review methodology.
 
-**Section F never operates alone.** This section provides review *methodology* — how to structure findings, classify errors, and reason about data integrity. The domain *knowledge* required to judge correctness comes from the other sections.
-
-Apply the domain knowledge as your **correctness oracle** and Section F as your **review discipline**. A finding that violates F3 (no threshold context) is incomplete regardless of how good the domain analysis is. A finding that violates domain rules (wrong tax rate, wrong P/E threshold) is wrong regardless of how well-structured the review is. Both layers are mandatory.
+**Section F never operates alone.** It provides review *methodology*. The domain *knowledge* comes from A-E. Both layers are mandatory: a finding without threshold context (F3) is incomplete; a finding with wrong domain rules is wrong.
 
 ### F0. Review Setup (mandatory before any code review)
 
-Before reading a single line of code, complete these three steps. Write the results down explicitly — they form your reference sheet for the entire review.
+Before reading code, complete these steps and write results down explicitly:
 
-**Step 1: Identify domain sections.** What kind of financial system is this?
+**Step 1: Identify domain sections.** Stock screener → A2-A4. FX pipeline → A2-A3. Tax calculator → B1-B3. Mortgage engine → C1-C3. Pension tool → D1-D3. Portfolio analytics → A2-A5, B1.
 
-| System under review | Domain sections to reference | Extract from them |
-|---------------------|------------------------------|-------------------|
-| Stock screener / scoring engine | A2 (sanity checks), A3 (thresholds, quality gates), A4 (P/E channel) | Classification boundaries, valid metric ranges, sector adjustments |
-| FX / currency pipeline | A2 (data quality), A3 (which metrics are currency-dependent) | Which ratios are dimensionless vs currency-denominated, expected magnitudes |
-| Tax calculator | B1-B3 (jurisdiction rules, rates, structures) | Correct rates, bracket boundaries, legal constraints |
-| Mortgage / loan engine | C1-C3 (loan types, comparison framework, metrics) | ÅOP/APR formulas, amortization math, LTV thresholds |
-| Pension / retirement tool | D1-D3 (pillar framework, optimization, country rules) | Contribution limits, PAL-skat rates, withdrawal rules |
-| Portfolio analytics | A2-A5 (valuation frameworks), B1 (tax drag) | Metric definitions, valid ranges, cross-metric consistency rules |
+**Step 2: Build threshold inventory.** From the domain sections, list every decision boundary. Then from the code's config/constants, add any code-defined thresholds. Format: `THRESHOLD INVENTORY — From domain: P/E 12/15/25, ROE gate 15% ... From code: accrual 0.05/0.10/0.15, drift_alarm 5% ...` Every finding must reference a threshold from this inventory.
 
-**Step 2: Build your threshold inventory.** Read the domain sections identified above and list every decision boundary — the specific numbers where a classification, alert, or recommendation changes. Then read the system's configuration/constants and add any code-defined thresholds not covered by the domain sections.
+**Step 3: Map entity scope.** List entity types the system handles (stocks, share classes, ADRs, ETFs, etc.) and which F1 hierarchy levels are present. Flag types not covered by F1 — model their boundaries before proceeding.
 
-Format:
-```
-THRESHOLD INVENTORY
-From domain (Section A3): P/E buckets 12 / 15 / 25, ROE gate 15%, payout gate 100%, ...
-From code: accrual_ratio thresholds 0.05 / 0.10 / 0.15, drift_alarm 5%, ...
-```
-
-Every finding you produce in this review must reference a threshold from this inventory. If a finding involves a threshold not on this list, add it first.
-
-**Step 3: Map entity scope.** What financial entities does this system handle? List the entity types (single stocks, share classes, ADRs, ETFs, bonds, derivatives) and note which levels of the F1 hierarchy are present. Flag any entity types not covered by F1 — these need explicit boundary modeling before the review proceeds.
-
-**For complex systems (>500 lines, multiple modules):** use a multi-pass approach:
-- **Pass 1 — Entity and data flow map**: trace what data enters the system, at which entity level, and how it flows through transformations. Don't evaluate correctness yet.
-- **Pass 2 — Unit and boundary analysis**: for each transformation, verify units are consistent (F2) and entity boundaries are preserved (F1).
-- **Pass 3 — Findings**: now produce findings using the F4 template, referencing the threshold inventory from Step 2.
-
-Each pass is short enough to maintain full attention on its specific concern.
+**For complex systems (>500 lines):** use multi-pass — Pass 1: entity/data flow map. Pass 2: unit/boundary analysis (F1+F2). Pass 3: findings (F4 template).
 
 ### F1. Financial Entity Hierarchy
 
-Financial data has a strict entity hierarchy. Every piece of data belongs to exactly one level. Crossing levels without explicit conversion is a data integrity bug.
+Every data point belongs to exactly one level. Crossing levels without explicit conversion is a data integrity bug.
 
-| Level | What it represents | Examples | Key metrics at this level |
-|-------|-------------------|----------|--------------------------|
-| **Issuer** | The legal parent entity | Alphabet Inc., Berkshire Hathaway Inc. | Credit rating, total debt, corporate actions |
-| **Company** | Operating business (often = issuer) | Google LLC under Alphabet | Revenue, EPS, net income, ROE, ROIC |
-| **Fund / Wrapper** | A container holding other instruments | VUSA (S&P 500 UCITS ETF), Berkshire as holding co. | NAV, tracking error, TER, holdings-weighted metrics, domicile tax treatment |
-| **Listing** | A specific exchange presence | GOOGL on NASDAQ, 7203.T on TSE | Trading hours, exchange rules, index membership |
-| **Instrument** | A specific tradeable security | BRK-A, BRK-B, NVO (ADR), NOVO-B.CO | Price, P/E, P/B, yield, market cap, volume, bid-ask |
+| Level | Examples | Key metrics |
+|-------|----------|-------------|
+| **Issuer** | Alphabet Inc. | Credit rating, total debt |
+| **Company** | Google LLC | Revenue, EPS, net income, ROE |
+| **Fund/Wrapper** | VUSA ETF, holding co. | NAV, tracking error, TER, domicile tax treatment |
+| **Listing** | GOOGL on NASDAQ | Trading hours, index membership |
+| **Instrument** | BRK-A, BRK-B, NVO (ADR) | Price, P/E, P/B, yield, market cap |
 
-**Fund / Wrapper rules:**
-- A fund's aggregate metrics (weighted-average P/E, total yield) are **derived** from its holdings, not from the fund entity itself. Applying single-stock quality gates (ROE > 15%, payout ratio checks) to fund-level aggregates is a category error.
-- Fund domicile determines withholding tax treatment: an Ireland-domiciled UCITS ETF holding US stocks has different dividend tax drag than a US-domiciled ETF. This is a fund-level property, not derivable from the underlying holdings.
-- ETFs and their underlying holdings are separate instruments with separate prices. An ETF's market price can diverge from its NAV (premium/discount). Using NAV where price is needed (or vice versa) is an entity-level error.
-
-**Unmodeled instrument types:** If you encounter an instrument type not in this hierarchy (derivatives, convertible bonds, structured products, SPACs mid-transition), **stop and model it before proceeding**. State which levels it maps to, which it doesn't, and where its entity boundaries are ambiguous. An unmodeled instrument type is a review blocker, not something to quietly treat as a regular stock.
-
-**Critical rules:**
-
-- **Company-level metrics** (EPS, revenue, net income, ROE, book value per share) are shared across instruments of the same company — BUT only when the per-share basis is the same. BRK-A and BRK-B have different EPS because the share count and conversion ratio differ.
-- **Instrument-level metrics** (price, P/E, P/B, dividend yield, market cap) are NEVER interchangeable across instruments. BRK-A at $600k and BRK-B at $400 produce completely different P/E ratios from the same company earnings.
-- **ADRs, dual listings, and share classes** are separate instruments. Using ADR price with primary-listing EPS (or vice versa) silently produces wrong valuation ratios unless the ADR ratio is applied.
-- **Ticker suffixes** (-A, -B, .A, .B, -C, -R, -P, .PFD) indicate different instruments with different prices. Code that strips suffixes to "normalize" tickers is destroying entity boundaries. The only safe operation is mapping multiple instruments to the same *issuer* or *company* — never collapsing their metrics.
-- **Currency denomination** is instrument-level: NVO (NYSE, USD) and NOVO-B.CO (CPH, DKK) have different prices in different currencies for the same company. Mixing them without FX conversion is a unit error.
-
-**Review checklist for entity handling:**
-- [ ] Does the system distinguish instrument-level from company-level data?
-- [ ] When matching tickers, does it preserve instrument identity or collapse it?
-- [ ] When share classes exist, are per-instrument metrics (price, P/E, P/B, yield) kept separate?
-- [ ] When ADRs exist, is the ADR ratio applied before computing cross-metric ratios?
-- [ ] Are currency denominations tracked per-instrument, not assumed from the company's country?
+**Key rules:**
+- **Company-level** (EPS, revenue, ROE) shared across instruments only when per-share basis matches. BRK-A/B have different EPS due to conversion ratio.
+- **Instrument-level** (price, P/E, P/B, yield, market cap) are NEVER interchangeable. BRK-A at $600k vs BRK-B at $400 = completely different ratios.
+- **Share classes, ADRs, dual listings** = separate instruments. Stripping ticker suffixes (-A, -B, .A, .B) to "normalize" destroys entity boundaries.
+- **Currency** is instrument-level: NVO (USD) vs NOVO-B.CO (DKK) — mixing without FX conversion is a unit error.
+- **Funds**: aggregate metrics (weighted-avg P/E) are derived, not intrinsic. Applying single-stock quality gates (ROE > 15%) to fund aggregates is a category error. Fund domicile affects tax treatment independently of holdings. NAV ≠ price.
+- **Unmodeled types** (derivatives, convertibles, SPACs): stop and model boundaries before proceeding. Don't quietly treat as a regular stock.
 
 ### F2. Unit and Dimensional Analysis
 
-Financial data systems move numbers through transformations: currency conversion, ratio computation, normalization, aggregation. Every number has a **unit** (USD, DKK, shares, percent, dimensionless ratio) and a **time basis** (point-in-time, annual, trailing-twelve-months, per-year). Errors happen when units or time bases are silently mixed.
+Every number has a **unit** and a **time basis**. Errors happen when these are silently mixed.
 
-**FX normalization:**
-- Every monetary value has a currency and a date. Converting at the wrong date's rate is a bug.
-- FX caches must handle **direction**: storing USD→JPY but looking up JPY→USD requires explicit inverse logic. A cache miss that silently falls back to spot rate is a data-quality bug (correct-looking but wrong).
-- **Per-year vs single-rate normalization**: When computing year-over-year changes (revenue growth, accrual ratios), using each year's FX rate introduces a rate-drift artifact. The error is `|FX[y] - FX[y-1]| / FX[y]` — compute this and compare against the classification threshold before flagging.
-- Multi-currency time series: if a company reports in JPY for some years and USD for others (restatement, acquisition), each segment needs its own conversion. A scalar `latest_currency()` applied to all years is a magnitude error.
+**FX:** Every monetary value has a currency and date. FX caches must handle **direction** (USD→JPY ≠ JPY→USD). Cache miss falling back to spot rate = silent data-quality bug. Per-year vs single-rate normalization introduces drift artifact of `|FX[y]-FX[y-1]|/FX[y]` — compare against classification threshold. Multi-currency time series (JPY some years, USD others) need per-segment conversion; a scalar `latest_currency()` is a magnitude error.
 
-**Ratio computation:**
-- P/E = Price / EPS. Price is instrument-level, EPS may be company-level. Mixing instruments produces wrong P/E.
-- EV = Market Cap + Debt - Cash. Market cap is instrument-level (price × shares outstanding for that class). Debt and cash are company-level. Using the wrong instrument's market cap silently corrupts EV.
-- Growth rates computed from FX-converted values include FX drift in the "growth." For classification purposes, determine whether the threshold is meant to capture operational growth or total-return-in-target-currency.
-
-**Review checklist for units:**
-- [ ] Does every monetary variable carry its currency and date?
-- [ ] Are FX conversions applied at the correct date's rate?
-- [ ] Does the FX cache handle lookup direction (forward and inverse)?
-- [ ] Are year-over-year computations done in a consistent currency basis?
-- [ ] When a function returns a "currency" for a time series, is it per-year or scalar? Does the consumer handle both?
+**Ratios:** P/E mixes instrument-level price with company-level EPS — wrong instrument = wrong P/E. EV uses instrument-level market cap + company-level debt/cash. Growth rates from FX-converted values include FX drift in the "growth."
 
 ### F3. Decision-Boundary-Relative Error Analysis
 
-Every quantitative finding must be anchored to the nearest **decision boundary** — the threshold where the error would change a classification, trigger an alert, or flip a recommendation.
+Every quantitative finding must be anchored to the nearest **decision boundary**.
 
-**Framework:**
+1. Measure the error (absolute and percentage)
+2. Identify nearest decision boundary from F0 inventory
+3. Compute: `|error| / |distance to boundary|`
+4. Classify:
 
-1. **Measure the error**: absolute magnitude and percentage
-2. **Identify the nearest decision boundary**: the threshold in the system where crossing it changes an output (classification bucket, alert trigger, buy/sell signal, pass/fail gate)
-3. **Compute boundary distance**: `|error| / |distance to nearest boundary|`
-4. **Classify impact**:
+| Ratio | Impact |
+|-------|--------|
+| > 50% | **CRITICAL** — could flip results |
+| 20-50% | **HIGH** — uncomfortably close |
+| 5-20% | **MEDIUM** — safe margin, poor precision |
+| < 5% | **LOW** — well within margin |
 
-| Boundary distance ratio | Impact | Action |
-|------------------------|--------|--------|
-| Error > 50% of boundary distance | **CRITICAL** — could flip results | Fix immediately |
-| Error 20-50% of boundary distance | **HIGH** — uncomfortably close | Fix in current cycle |
-| Error 5-20% of boundary distance | **MEDIUM** — safe margin but poor precision | Fix when convenient |
-| Error < 5% of boundary distance | **LOW** — well within margin | Document, don't prioritize |
+**Anti-pattern**: "2.23% error — HIGH" without stating which threshold. Error magnitude without threshold context is incomplete.
 
-**Example**: A FX normalization error produces 2.23% error on an accrual ratio. The classification thresholds are at 5%, 10%, 15%. Nearest boundary is 5%. Boundary distance ratio = 2.23 / 5.0 = 44.6%. → HIGH: close to flipping, but currently doesn't. If the thresholds were at 2%, 5%, 10%, then 2.23 / 2.0 = 111% → CRITICAL: already flipping results.
+**Estimated vs measured:** During code review, most errors are estimated. State the method and uncertainty. Use upper bound for severity when uncertain.
 
-**Anti-pattern**: Reporting "2.23% dimensional error — HIGH" without stating which threshold it's measured against. An error magnitude without a threshold context is an incomplete finding.
-
-**Estimated vs measured errors:** During code review (as opposed to runtime testing), most errors are *estimated* from code inspection, not *measured* from actual output. State which it is. An estimated error should include the estimation method and its uncertainty — "estimated 2-4% error based on typical CHF/USD annual drift" is honest; "2.23% error" with false precision from a code-inspection estimate is misleading. When the estimate is uncertain, use the upper bound for severity classification.
-
-**Cumulative error budget:** F3's framework classifies each finding individually. But multiple MEDIUM findings on the same instrument can compound. After individual classification, check: do any instruments accumulate errors across multiple findings? If the sum of errors on a single instrument approaches a decision boundary, escalate the aggregate even if no individual finding crosses it. State this as: "Findings #2, #4, #5 each produce ~2% error on the same scoring metric. Individually MEDIUM, but cumulative ~6% exceeds the 5% classification boundary → aggregate severity CRITICAL for instruments affected by all three."
+**Cumulative budget:** Multiple MEDIUM findings on the same instrument can compound. If their sum approaches a decision boundary, escalate the aggregate.
 
 ### F4. Review Output Discipline
 
-When producing a multi-finding review of a financial data system, apply these structural rules:
+**Root-cause grouping:** Group by root cause, not symptom. "If I fix A, does B resolve?" → B is a corollary. Report as test case under A. **Corollaries must still be independently verified after fix ships.**
 
-**Root-cause grouping:**
-Before ranking, group findings by **root cause**, not by symptom. A single underlying bug that manifests in three edge cases is **one finding with three test cases**, not three findings. Counting corollaries as separate findings inflates triage effort and obscures priority.
-
-Test: "If I fix finding A, does finding B automatically resolve?" If yes, B is a corollary of A. Report B as a test case under A, not as a standalone finding. **But corollaries must still be independently verified after the root-cause fix ships.** A corollary that survives the fix is a separate bug that was misclassified — catch it with explicit test cases, not assumptions.
-
-**Severity calibration:**
-- **CRITICAL**: Data corruption that reaches production output AND crosses a decision boundary. The system produces wrong answers that users act on.
-- **HIGH**: Data corruption that reaches production output but doesn't currently cross a decision boundary, OR a logic error that affects a significant subset of instruments/time periods.
-- **MEDIUM**: Precision loss that degrades data quality but doesn't affect classifications. Or: correct logic with fragile assumptions that could break under plausible future data.
-- **LOW**: Code quality issues, minor precision improvements, edge cases affecting <1% of data.
-- **INFO**: Observations, style suggestions, or potential improvements with no current impact.
+**Severity:** CRITICAL = crosses decision boundary. HIGH = reaches output but doesn't cross, or affects large subset. MEDIUM = precision loss, no classification impact. LOW = <1% of data. INFO = style/observation.
 
 **Mandatory finding template:**
 
-Every finding must use this format. The structured fields prevent advisory-mode drift and force threshold anchoring. Do not omit fields — if a field doesn't apply, state why.
-
 ```
-### FINDING-<N>: <short title>
+### FINDING-<N>: <title>
 **Severity**: CRITICAL | HIGH | MEDIUM | LOW | INFO
-**Entity level**: <which F1 level is affected — instrument, company, fund, etc.>
-**What**: <the specific error, with code location (file:line)>
-**Why it matters**: <which outputs are affected and how>
+**Entity level**: <F1 level affected>
+**What**: <error + code location>
 **Error magnitude**: <measured | estimated (method)> — <X>% on <metric>
-**Nearest boundary**: <threshold from F0 inventory> — <Y>%
-**Boundary ratio**: <X/Y = Z>% → <severity justification>
-**Blast radius**: <how many instruments / time periods / users affected>
-**Example**: <specific instrument + time period + expected vs actual value>
-  (label HYPOTHETICAL if not verified against real data)
-**Fix**: <specific, implementable recommendation>
-**Corollaries**: <list any sub-findings that resolve if this is fixed;
-  each needs its own verification test case>
+**Nearest boundary**: <Y>% — **Ratio**: <X/Y>% → <justification>
+**Blast radius**: <instruments / periods affected>
+**Example**: <instrument + period + expected vs actual> (HYPOTHETICAL if unverified)
+**Fix**: <specific recommendation>
+**Corollaries**: <sub-findings + verification test cases>
 ```
 
-**Anti-patterns in review output:**
-- Reporting a symptom and its root cause as separate findings
-- Severity ranking based on error magnitude alone (without threshold context)
-- "Consider improving X" without stating what breaks if you don't
-- Mixing genuine bugs with code-quality suggestions at the same severity level
+**Anti-patterns:** Symptom + root cause as separate findings. Severity from magnitude alone. "Consider improving X" without stating what breaks. Mixing bugs with style suggestions at same severity.
 
 ### F5. System Parameter Taxonomy
 
-Financial data systems contain many numeric constants. They serve different purposes and must be interpreted differently during review:
+Classify every numeric constant before evaluating it:
 
-| Parameter type | What it means | How to review it | Example |
-|---------------|---------------|-----------------|---------|
-| **Classification threshold** | Boundary between output categories | Errors near this boundary are high-severity | P/E buckets at 12, 15, 25; ROE gate at 15% |
-| **Alarm threshold** | "Something is systemically wrong" trigger | NOT the expected rate — it's the panic rate. Don't use it for statistical power analysis | 5% ticker drift = "CMC may have restructured URLs" |
-| **Sampling parameter** | Controls how much data is checked per run | Evaluate against expected base rate, not alarm threshold | "Check 20 of 1098 curated entries per run" |
-| **Tolerance / epsilon** | Acceptable floating-point or rounding margin | Should be at least 10x smaller than the nearest classification threshold | 0.001 tolerance on a ratio with 0.05 thresholds |
-| **Cache TTL / staleness** | How long data is trusted before refresh | Evaluate against how fast the underlying data changes | FX rate cache: hours OK for scoring, not for trading |
-| **Design constant** | Structural choice baked into the system | Question whether the assumption still holds, not whether the number is "optimal" | "15 years of history" for P/E channel |
+| Type | Review approach | Example |
+|------|----------------|---------|
+| **Classification threshold** | Errors near it are high-severity | P/E 12/15/25, ROE gate 15% |
+| **Alarm threshold** | NOT the expected rate — it's the panic rate | 5% drift = "something broke" |
+| **Sampling parameter** | Evaluate vs expected base rate | "Check 20 of 1098 per run" |
+| **Tolerance/epsilon** | Must be 10x smaller than nearest classification threshold | 0.001 on 0.05 boundaries |
+| **Cache TTL** | Evaluate vs data change frequency | FX: hours OK for scoring |
+| **Design constant** | Question if assumption still holds | "15 years of history" |
 
-**The key discipline**: When you encounter a number in code, classify it before evaluating it. A `0.05` that's a classification threshold has completely different review implications than a `0.05` that's a tolerance epsilon, even though they're the same number.
-
-**Anti-pattern**: Treating an alarm threshold as a statistical base rate. If the code says "alert when drift > 5%", that 5% is NOT the expected drift rate. Computing statistical power against it ("sample of 20 catches 5% drift with 64% probability") misframes the design intent. The right question is: "at the expected base rate (probably <0.5%), does the sampling frequency catch real problems within an acceptable time window?"
+**Anti-pattern**: Treating alarm threshold as base rate. "Alert at 5% drift" ≠ "expect 5% drift." The right question: at the actual base rate (<0.5%), does sampling catch problems within acceptable latency?
 
 ### F6. Financial Data Source Quality
 
-When reviewing code that ingests financial data, evaluate each source against these principles — don't assume reliability from brand recognition.
+**Principles:** Primary sources (filings) > paid terminals > free APIs. Free APIs (yfinance) have structural issues: stale data, missing fields as zero/null, wrong share classes, rate limiting.
 
-**Source evaluation principles:**
-1. **Primary vs derived**: Company filings (10-K, annual reports) are primary. Everything else is derived with varying fidelity. Derived sources may compute ratios differently, lag behind filings, or backfill historical data with revised figures.
-2. **Free vs paid reliability gradient**: Free APIs (yfinance, free tiers of financial APIs) are structurally less reliable for fundamentals than paid terminals (Bloomberg, Refinitiv, FactSet). Free sources often have: stale data, missing fields silently returned as zero/null, wrong share-class assignments, rate limiting that causes silent data gaps.
-3. **API failure modes that matter for code review**:
-   - HTTP 200 with stale/cached data (source returns successfully but data is days old)
-   - Missing fields returned as `0` or `null` without distinguishing "zero" from "unavailable"
-   - Share-class mismatches (requesting BRK-B, receiving BRK-A data)
-   - FX pairs returned in unexpected direction (ask for USD/JPY, get JPY/USD)
-   - Rate limiting that silently truncates result sets
-4. **Cross-source sanity checks** catch ingestion errors regardless of source quality:
-   - `price × shares_outstanding ≈ market_cap` (within 5%)
-   - `EV/EBITDA ÷ P/E` in range 0.7-2.0x (outside = likely data error)
-   - `dividend_yield × market_cap ≤ 1.2 × net_income`
-5. **Source-specific quirks** should have explicit handling in code, not silent fallback. If a source is known to return inverted FX pairs or wrong share classes, the code should detect and correct — or reject — not silently accept whatever comes back.
+**API failure modes to check:** HTTP 200 with stale data. Zero vs unavailable not distinguished. Share-class mismatches. Inverted FX pairs. Silent result truncation from rate limits.
 
-**Review checklist for data ingestion:**
-- [ ] Does the code validate source responses beyond HTTP status?
-- [ ] Are "zero" and "unavailable" distinguished for numeric fields?
-- [ ] Is there cross-metric sanity checking after ingestion?
-- [ ] Do source-specific known issues have explicit handling?
-- [ ] What happens when a source is temporarily unavailable — graceful degradation or silent data gaps?
+**Sanity checks:** `price × shares ≈ market_cap` (5%). `EV/EBITDA ÷ P/E` in 0.7-2.0x. `yield × market_cap ≤ 1.2 × net_income`. Source quirks need explicit handling, not silent fallback.
 
 ---
 
