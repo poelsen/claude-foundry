@@ -11,8 +11,26 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 0
 fi
 
+# Find Python — probe by execution, not PATH (Windows MS Store stub is on PATH
+# but errors out). Honor PYTHON env override.
+if [[ -z "${PYTHON:-}" ]]; then
+    for candidate in python3 python "py -3"; do
+        if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+            PYTHON="$candidate"
+            break
+        fi
+    done
+    if [[ -z "${PYTHON:-}" ]] && command -v uv &>/dev/null; then
+        PYTHON="uv run python3"
+    fi
+fi
+if [[ -z "${PYTHON:-}" ]]; then
+    echo "Error: No working Python 3 interpreter found."
+    exit 1
+fi
+
 # Extract private_sources array using python (available everywhere setup.py runs)
-SOURCES=$(python3 -c "
+SOURCES=$($PYTHON -c "
 import json, sys, os
 try:
     m = json.load(open('$MANIFEST'))
