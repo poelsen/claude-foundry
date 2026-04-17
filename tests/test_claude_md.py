@@ -66,7 +66,7 @@ class TestGenerateClaudeFoundryHeader:
 
     def test_includes_python_env_commands(self):
         header = generate_claude_foundry_header(["python.md"], {"python.md"})
-        assert "uv venv" in header
+        assert "uv sync --extra dev" in header
         assert "uv run pytest" in header
 
     def test_includes_rust_env_commands(self):

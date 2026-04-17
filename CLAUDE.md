@@ -20,7 +20,7 @@ Read rules in `.claude/rules/` before making changes:
 ## Foundry Defaults
 
 ```bash
-uv venv && uv pip install -e .[dev]  # Setup
+uv sync --extra dev  # Setup (uses uv.lock)
 uv run pytest  # Tests
 ```
 
