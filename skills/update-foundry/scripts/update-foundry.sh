@@ -45,7 +45,10 @@ else
         fi
     done
     if [[ -z "${PYTHON:-}" ]] && command -v uv &>/dev/null; then
-        PYTHON="uv run python3"
+        # `uv run python` not `python3` — on Windows, uv's managed Python
+        # only provides python.exe, and `python3` falls through to PATH (MS
+        # Store stub). `python` works on all platforms.
+        PYTHON="uv run python"
     fi
 fi
 if [[ -z "${PYTHON:-}" ]]; then

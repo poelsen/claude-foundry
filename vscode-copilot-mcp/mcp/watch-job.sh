@@ -27,7 +27,7 @@ else
     fi
   done
   if [ -z "${PYTHON:-}" ] && command -v uv >/dev/null 2>&1; then
-    PYTHON="uv run python3"
+    PYTHON="uv run python"
   fi
 fi
 if [ -z "${PYTHON:-}" ]; then
