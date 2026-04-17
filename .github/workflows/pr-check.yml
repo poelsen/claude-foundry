@@ -36,7 +36,7 @@ jobs:
         run: pip install uv
 
       - name: Install Python dev dependencies
-        run: uv venv && uv pip install -e '.[dev]'
+        run: uv sync --extra dev
 
       - name: Run pytest
         run: uv run pytest -q
