@@ -1,19 +1,31 @@
 ---
 name: learn
-description: Extract reusable patterns from current session
+description: Capture a reusable cross-project technical pattern after the assistant solves a non-obvious problem — library quirk, framework gotcha, debugging technique, or workaround whose root cause was surprising and would generalize beyond this codebase. Distinct from auto-memory (which handles user preferences, project state, and feedback). TRIGGER when: a bug/issue was just resolved AND the root cause was non-obvious AND the same pattern could bite someone on a different project. SKIP when: fix was trivial, fix was purely config/version change, fix is tied to this specific codebase, or the lesson fits auto-memory's user/feedback/project/reference taxonomy.
 ---
 
 # /learn - Extract Reusable Patterns
 
 **Model:** opus (requires judgment)
 
-Run after solving a non-trivial problem. Follow the 5-step process below.
+## When to Invoke
 
-## What to Extract
+Fire after the assistant has solved a non-obvious technical problem whose lesson would transfer to another project. Good targets:
 
-Good patterns: error resolution (root cause + fix), debugging techniques, workarounds (library quirks, API limitations), project conventions.
+- Library/framework gotchas (e.g. Qt signal-triggered widget deletion causing use-after-free)
+- Debugging techniques that cracked a surprising root cause
+- Workarounds for API limitations or quirky behavior
+- Non-obvious interaction between tools (e.g. tar + Windows drive-letter paths needing `--force-local`)
 
-Skip: trivial fixes, one-time issues, obvious patterns.
+Do **not** invoke for:
+
+- Trivial fixes, typos, or version bumps
+- Codebase-specific conventions (belongs in CLAUDE.md or codemaps)
+- User preferences, project state, or team conventions (belongs in auto-memory)
+- One-off incidents with no generalizable pattern
+
+Rule of thumb: if a developer at a different company on a different project could hit the same issue, it's a `/learn` candidate. Otherwise it's not.
+
+Follow the 5-step process below.
 
 ## 5-Step Process
 
