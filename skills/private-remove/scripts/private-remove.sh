@@ -21,10 +21,16 @@ if [[ ! -f "$MANIFEST" ]]; then
 fi
 
 # Find Python — probe by execution, not PATH (Windows MS Store stub is on PATH
-# but errors out). Honor PYTHON env override.
-if [[ -z "${PYTHON:-}" ]]; then
+# but errors out). Validates user-supplied PYTHON too.
+PROBE='import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)'
+if [[ -n "${PYTHON:-}" ]]; then
+    if ! $PYTHON -c "$PROBE" >/dev/null 2>&1; then
+        echo "Error: PYTHON=$PYTHON is not a working Python 3.11+ interpreter." >&2
+        exit 1
+    fi
+else
     for candidate in python3 python "py -3"; do
-        if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+        if $candidate -c "$PROBE" >/dev/null 2>&1; then
             PYTHON="$candidate"
             break
         fi
@@ -34,7 +40,7 @@ if [[ -z "${PYTHON:-}" ]]; then
     fi
 fi
 if [[ -z "${PYTHON:-}" ]]; then
-    echo "Error: No working Python 3 interpreter found."
+    echo "Error: No working Python 3.11+ interpreter found." >&2
     exit 1
 fi
 
