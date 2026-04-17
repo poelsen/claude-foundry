@@ -104,7 +104,7 @@ git commit -m "feat/fix: [description of skill changes]
 Benchmark results: [before] -> [after] on [which challenges]
 Regression check: [pass/fail]
 
-AI: Claude Opus 4.6"
+AI: Claude Opus 4.7"
 ```
 
 ## Annual DK Tax Data Maintenance
