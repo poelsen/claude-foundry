@@ -1,6 +1,6 @@
 ---
 name: learn
-description: Capture a reusable cross-project technical pattern after the assistant solves a non-obvious problem — library quirk, framework gotcha, debugging technique, or workaround whose root cause was surprising and would generalize beyond this codebase. Distinct from auto-memory (which handles user preferences, project state, and feedback). TRIGGER when: a bug/issue was just resolved AND the root cause was non-obvious AND the same pattern could bite someone on a different project. SKIP when: fix was trivial, fix was purely config/version change, fix is tied to this specific codebase, or the lesson fits auto-memory's user/feedback/project/reference taxonomy.
+description: Capture cross-project technical patterns. TRIGGER: just solved a non-obvious bug whose root cause would generalize (library quirk, framework gotcha, workaround). SKIP: trivial fixes, user preferences.
 ---
 
 # /learn - Extract Reusable Patterns
