@@ -54,6 +54,7 @@ fi
 if [[ -z "${PYTHON:-}" ]]; then
     echo "Error: No working Python 3.11+ interpreter found." >&2
     echo "Install Python 3.11+, or set PYTHON=<path> before running." >&2
+    echo "On Windows: install from python.org (not the Microsoft Store) or run 'uv python install'." >&2
     exit 1
 fi
 
