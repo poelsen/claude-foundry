@@ -25,12 +25,18 @@ PROJECT_DIR="$(cd "${ARGS[0]:-$PWD}" && pwd)"
 MANIFEST="$PROJECT_DIR/.claude/setup-manifest.json"
 
 # ── Find Python (before any use) ──────────────────────────────────────
-# Honor PYTHON env override; otherwise probe candidates by actually executing
-# them (not just checking PATH — the Windows Microsoft Store stub for python/
-# python3 is on PATH but errors out with exit 49 when invoked).
-if [[ -z "${PYTHON:-}" ]]; then
+# Probe candidates by actually executing them — not just checking PATH — because
+# the Windows Microsoft Store stub for python/python3 is on PATH but errors out.
+# Also validates user-supplied PYTHON env override (so PYTHON=bogus fails fast).
+PROBE='import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)'
+if [[ -n "${PYTHON:-}" ]]; then
+    if ! $PYTHON -c "$PROBE" >/dev/null 2>&1; then
+        echo "Error: PYTHON=$PYTHON is not a working Python 3.11+ interpreter." >&2
+        exit 1
+    fi
+else
     for candidate in python3 python "py -3"; do
-        if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+        if $candidate -c "$PROBE" >/dev/null 2>&1; then
             PYTHON="$candidate"
             break
         fi
@@ -40,8 +46,8 @@ if [[ -z "${PYTHON:-}" ]]; then
     fi
 fi
 if [[ -z "${PYTHON:-}" ]]; then
-    echo "Error: No working Python 3 interpreter found."
-    echo "Install Python 3, or set PYTHON=<path> before running."
+    echo "Error: No working Python 3.11+ interpreter found." >&2
+    echo "Install Python 3.11+, or set PYTHON=<path> before running." >&2
     exit 1
 fi
 
