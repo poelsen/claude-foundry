@@ -6,7 +6,7 @@
 - **Virtual env**: `.venv/` | **Lock**: `uv.lock` (commit it)
 
 ```bash
-uv venv && uv pip install -e .[dev]  # Setup
+uv sync --extra dev                   # Setup (uses uv.lock)
 uv run pytest                         # Test
 uv run ruff check src tests           # Lint
 uv run ruff format src tests          # Format

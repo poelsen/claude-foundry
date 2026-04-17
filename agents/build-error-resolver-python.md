@@ -252,7 +252,7 @@ python -m py_compile src/path/to/file.py
 uv pip install <package>
 
 # Reinstall all deps
-uv pip install -e .[dev]
+uv sync --extra dev
 ```
 
 ## Success Metrics

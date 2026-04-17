@@ -109,7 +109,7 @@ Read `docs/` for detailed project documentation (if it exists).
 # above the claude-foundry marker.
 ENVIRONMENT_SNIPPETS = {
     "python.md": {
-        "setup": "uv venv && uv pip install -e .[dev]",
+        "setup": "uv sync --extra dev",
         "test": "uv run pytest",
     },
     "rust.md": {
