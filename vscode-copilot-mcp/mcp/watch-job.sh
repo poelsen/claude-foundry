@@ -11,6 +11,24 @@ if [ -z "$JOBID" ]; then
   exit 1
 fi
 
+# Find Python — probe by execution, not PATH (Windows MS Store stub is on PATH
+# but errors out). Honor PYTHON env override.
+if [ -z "${PYTHON:-}" ]; then
+  for candidate in python3 python "py -3"; do
+    if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+      PYTHON="$candidate"
+      break
+    fi
+  done
+  if [ -z "${PYTHON:-}" ] && command -v uv >/dev/null 2>&1; then
+    PYTHON="uv run python3"
+  fi
+fi
+if [ -z "${PYTHON:-}" ]; then
+  echo "Error: No working Python 3 interpreter found." >&2
+  exit 1
+fi
+
 find_connection_file() {
   # Walk up looking for .vscode/copilot-mcp.json. First match wins.
   # Note: we do NOT stop at .git because the VS Code workspace may be a
@@ -32,7 +50,7 @@ read_connection() {
   file=$(find_connection_file) || return 1
   # Pass file path via env var to avoid shell-to-Python string injection
   # (paths with apostrophes would break the inline code).
-  COPILOT_MCP_CONN_FILE="$file" python3 -c "
+  COPILOT_MCP_CONN_FILE="$file" $PYTHON -c "
 import json, os, sys
 try:
   with open(os.environ['COPILOT_MCP_CONN_FILE']) as f:
@@ -93,10 +111,10 @@ while true; do
   RESP=$(cat "$BODY_FILE")
   rm -f "$BODY_FILE"
 
-  STATUS=$(echo "$RESP" | python3 -c "import sys,json;print(json.load(sys.stdin)['status'])" 2>/dev/null)
+  STATUS=$(echo "$RESP" | $PYTHON -c "import sys,json;print(json.load(sys.stdin)['status'])" 2>/dev/null)
 
   if [ "$STATUS" = "done" ] || [ "$STATUS" = "failed" ] || [ "$STATUS" = "cancelled" ]; then
-    echo "$RESP" | python3 -c "
+    echo "$RESP" | $PYTHON -c "
 import sys,json
 d=json.load(sys.stdin)
 status = d['status']

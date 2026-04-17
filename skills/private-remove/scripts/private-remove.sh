@@ -20,8 +20,26 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 1
 fi
 
+# Find Python — probe by execution, not PATH (Windows MS Store stub is on PATH
+# but errors out). Honor PYTHON env override.
+if [[ -z "${PYTHON:-}" ]]; then
+    for candidate in python3 python "py -3"; do
+        if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+            PYTHON="$candidate"
+            break
+        fi
+    done
+    if [[ -z "${PYTHON:-}" ]] && command -v uv &>/dev/null; then
+        PYTHON="uv run python3"
+    fi
+fi
+if [[ -z "${PYTHON:-}" ]]; then
+    echo "Error: No working Python 3 interpreter found."
+    exit 1
+fi
+
 # Verify prefix exists in manifest
-FOUND=$(python3 -c "
+FOUND=$($PYTHON -c "
 import json, sys
 m = json.load(open('$MANIFEST'))
 sources = m.get('private_sources', [])
@@ -78,7 +96,7 @@ if [[ -d ".claude/hooks/library" ]]; then
 fi
 
 # Update manifest — remove the source entry
-python3 -c "
+$PYTHON -c "
 import json
 m = json.load(open('$MANIFEST'))
 sources = m.get('private_sources', [])

@@ -24,6 +24,27 @@ done
 PROJECT_DIR="$(cd "${ARGS[0]:-$PWD}" && pwd)"
 MANIFEST="$PROJECT_DIR/.claude/setup-manifest.json"
 
+# ── Find Python (before any use) ──────────────────────────────────────
+# Honor PYTHON env override; otherwise probe candidates by actually executing
+# them (not just checking PATH — the Windows Microsoft Store stub for python/
+# python3 is on PATH but errors out with exit 49 when invoked).
+if [[ -z "${PYTHON:-}" ]]; then
+    for candidate in python3 python "py -3"; do
+        if $candidate -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" >/dev/null 2>&1; then
+            PYTHON="$candidate"
+            break
+        fi
+    done
+    if [[ -z "${PYTHON:-}" ]] && command -v uv &>/dev/null; then
+        PYTHON="uv run python3"
+    fi
+fi
+if [[ -z "${PYTHON:-}" ]]; then
+    echo "Error: No working Python 3 interpreter found."
+    echo "Install Python 3, or set PYTHON=<path> before running."
+    exit 1
+fi
+
 # ── Read manifest ──────────────────────────────────────────────────────
 if [[ ! -f "$MANIFEST" ]]; then
     echo "Error: No manifest found at $MANIFEST"
@@ -31,8 +52,8 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 1
 fi
 
-CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['version'])")
-REPO_URL=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['repo_url'])")
+CURRENT_VERSION=$($PYTHON -c "import json; print(json.load(open('$MANIFEST'))['version'])")
+REPO_URL=$($PYTHON -c "import json; print(json.load(open('$MANIFEST'))['repo_url'])")
 
 echo "Current version: $CURRENT_VERSION"
 echo "Repository: $REPO_URL"
@@ -41,10 +62,10 @@ echo "Repository: $REPO_URL"
 API_URL="https://api.github.com/repos/$REPO_URL/releases/latest"
 RELEASE_JSON=$(curl -sL "$API_URL")
 
-LATEST_VERSION=$(echo "$RELEASE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
-RELEASE_URL=$(echo "$RELEASE_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['html_url'])")
+LATEST_VERSION=$(echo "$RELEASE_JSON" | $PYTHON -c "import json,sys; print(json.load(sys.stdin)['tag_name'])")
+RELEASE_URL=$(echo "$RELEASE_JSON" | $PYTHON -c "import json,sys; print(json.load(sys.stdin)['html_url'])")
 # Find the tarball asset specifically (not the .vsix or other attachments)
-ASSET_URL=$(echo "$RELEASE_JSON" | python3 -c "
+ASSET_URL=$(echo "$RELEASE_JSON" | $PYTHON -c "
 import json,sys
 d = json.load(sys.stdin)
 for a in d.get('assets', []):
@@ -109,29 +130,6 @@ if [[ -d "$FOUNDRY_DIR" ]]; then
     mv "$FOUNDRY_DIR" "$FOUNDRY_OLD"
 fi
 mv "$FOUNDRY_NEW" "$FOUNDRY_DIR"
-
-# ── Find Python ────────────────────────────────────────────────────────
-PYTHON=""
-if command -v python3 &>/dev/null; then
-    PYTHON="python3"
-elif command -v python &>/dev/null; then
-    PY_VERSION=$(python --version 2>&1 | grep -oP '\d+' | head -1)
-    if [[ "$PY_VERSION" == "3" ]]; then
-        PYTHON="python"
-    fi
-fi
-if [[ -z "$PYTHON" ]] && command -v uv &>/dev/null; then
-    PYTHON="uv run python3"
-fi
-if [[ -z "$PYTHON" ]]; then
-    # Roll back — we can't even run setup
-    rm -rf "$FOUNDRY_DIR"
-    if [[ -d "$FOUNDRY_OLD" ]]; then
-        mv "$FOUNDRY_OLD" "$FOUNDRY_DIR"
-    fi
-    echo "Error: No Python 3 interpreter found."
-    exit 1
-fi
 
 # ── Snapshot old state ─────────────────────────────────────────────────
 OLD_COMMANDS=$(ls "$CLAUDE_DIR/commands/" 2>/dev/null | sort || true)
