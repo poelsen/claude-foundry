@@ -44,13 +44,16 @@ if [[ -z "${PYTHON:-}" ]]; then
     exit 1
 fi
 
-# Verify prefix exists in manifest
-FOUND=$($PYTHON -c "
-import json, sys
-m = json.load(open('$MANIFEST'))
+# Verify prefix exists in manifest. Pass MANIFEST and PREFIX via env vars to
+# avoid shell-to-Python injection when paths or prefixes contain apostrophes
+# or other Python syntax.
+FOUND=$(MANIFEST_PATH="$MANIFEST" PRIVATE_PREFIX="$PREFIX" $PYTHON -c "
+import json, sys, os
+m = json.load(open(os.environ['MANIFEST_PATH']))
 sources = m.get('private_sources', [])
+target = os.environ['PRIVATE_PREFIX']
 for s in sources:
-    if s.get('prefix') == '$PREFIX':
+    if s.get('prefix') == target:
         print('found')
         sys.exit(0)
 print('not_found')
@@ -101,15 +104,17 @@ if [[ -d ".claude/hooks/library" ]]; then
     done
 fi
 
-# Update manifest — remove the source entry
-$PYTHON -c "
-import json
-m = json.load(open('$MANIFEST'))
+# Update manifest — remove the source entry (env-var passing, as above)
+MANIFEST_PATH="$MANIFEST" PRIVATE_PREFIX="$PREFIX" $PYTHON -c "
+import json, os
+path = os.environ['MANIFEST_PATH']
+target = os.environ['PRIVATE_PREFIX']
+m = json.load(open(path))
 sources = m.get('private_sources', [])
-m['private_sources'] = [s for s in sources if s.get('prefix') != '$PREFIX']
+m['private_sources'] = [s for s in sources if s.get('prefix') != target]
 if not m['private_sources']:
     del m['private_sources']
-with open('$MANIFEST', 'w') as f:
+with open(path, 'w') as f:
     json.dump(m, f, indent=2)
     f.write('\n')
 "

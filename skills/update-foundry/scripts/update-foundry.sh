@@ -64,8 +64,8 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 1
 fi
 
-CURRENT_VERSION=$($PYTHON -c "import json; print(json.load(open('$MANIFEST'))['version'])")
-REPO_URL=$($PYTHON -c "import json; print(json.load(open('$MANIFEST'))['repo_url'])")
+CURRENT_VERSION=$(MANIFEST_PATH="$MANIFEST" $PYTHON -c "import json, os; print(json.load(open(os.environ['MANIFEST_PATH']))['version'])")
+REPO_URL=$(MANIFEST_PATH="$MANIFEST" $PYTHON -c "import json, os; print(json.load(open(os.environ['MANIFEST_PATH']))['repo_url'])")
 
 echo "Current version: $CURRENT_VERSION"
 echo "Repository: $REPO_URL"

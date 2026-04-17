@@ -36,10 +36,12 @@ if [[ -z "${PYTHON:-}" ]]; then
 fi
 
 # Extract private_sources array using python (available everywhere setup.py runs)
-SOURCES=$($PYTHON -c "
+# Pass MANIFEST via env var to avoid shell-to-Python injection on paths with
+# apostrophes or other Python syntax.
+SOURCES=$(MANIFEST_PATH="$MANIFEST" $PYTHON -c "
 import json, sys, os
 try:
-    m = json.load(open('$MANIFEST'))
+    m = json.load(open(os.environ['MANIFEST_PATH']))
 except (json.JSONDecodeError, FileNotFoundError):
     sys.exit(0)
 sources = m.get('private_sources', [])
