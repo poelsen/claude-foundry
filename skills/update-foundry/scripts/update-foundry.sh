@@ -21,7 +21,10 @@ for arg in "$@"; do
     esac
 done
 
-PROJECT_DIR="$(cd "${ARGS[0]:-$PWD}" && pwd)"
+# pwd -W returns Windows-style paths under MSYS/git-bash so Python (Windows
+# native) can open them; plain pwd returns MSYS paths like /d/... which break.
+# On Linux/macOS pwd -W fails, and we fall back to pwd.
+PROJECT_DIR="$(cd "${ARGS[0]:-$PWD}" && { pwd -W 2>/dev/null || pwd; })"
 MANIFEST="$PROJECT_DIR/.claude/setup-manifest.json"
 
 # ── Find Python (before any use) ──────────────────────────────────────
