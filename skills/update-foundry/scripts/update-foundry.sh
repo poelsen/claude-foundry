@@ -129,7 +129,14 @@ curl -sL "$ASSET_URL" -o "$TMP_TARBALL"
 
 echo "Extracting to $FOUNDRY_NEW ..."
 mkdir -p "$FOUNDRY_NEW"
-tar -xzf "$TMP_TARBALL" -C "$FOUNDRY_NEW" --strip-components=1
+# GNU tar interprets "D:/foo" as a remote host (rsync-style host:path). Pass
+# --force-local when tar supports it. BSD tar (macOS) lacks the flag but also
+# never sees drive-letter paths, so feature-detect and add conditionally.
+TAR_FLAGS=""
+if tar --help 2>&1 | grep -q -- --force-local; then
+    TAR_FLAGS="--force-local"
+fi
+tar $TAR_FLAGS -xzf "$TMP_TARBALL" -C "$FOUNDRY_NEW" --strip-components=1
 
 # Sanity check: setup.py must exist in the extracted tree
 if [[ ! -f "$FOUNDRY_NEW/tools/setup.py" ]]; then
