@@ -9,23 +9,17 @@ description: Capture cross-project technical patterns. TRIGGER: just solved a no
 
 ## When to Invoke
 
-Fire after the assistant has solved a non-obvious technical problem whose lesson would transfer to another project. Good targets:
+The frontmatter `description` gates invocation; this section guides extraction quality once the skill fires.
 
-- Library/framework gotchas (e.g. Qt signal-triggered widget deletion causing use-after-free)
-- Debugging techniques that cracked a surprising root cause
-- Workarounds for API limitations or quirky behavior
-- Non-obvious interaction between tools (e.g. tar + Windows drive-letter paths needing `--force-local`)
+Grounded examples from this repo:
+- Qt signal-triggered widget deletion → use-after-free (`qt-defer-widget-rebuild.md`)
+- `tar --force-local` for Windows drive-letter paths (commit `41fc268`)
 
-Do **not** invoke for:
+Where rejected content should go instead:
+- Codebase-specific conventions → `CLAUDE.md` or codemaps
+- User preferences, project state, team conventions → auto-memory
 
-- Trivial fixes, typos, or version bumps
-- Codebase-specific conventions (belongs in CLAUDE.md or codemaps)
-- User preferences, project state, or team conventions (belongs in auto-memory)
-- One-off incidents with no generalizable pattern
-
-Rule of thumb: if a developer at a different company on a different project could hit the same issue, it's a `/learn` candidate. Otherwise it's not.
-
-Follow the 5-step process below.
+Rule of thumb: if a developer at a different company on a different project could hit the same issue, it's a `/learn` candidate.
 
 ## 5-Step Process
 
