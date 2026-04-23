@@ -225,6 +225,28 @@ COPILOT_SKILLS = [
 # them as individual toggles would let users accidentally break the set.
 HIDDEN_SKILLS: set[str] = set(COPILOT_SKILLS)
 
+# Optional feature toggles presented in the setup menu. Each tuple is
+# (key, label, description). When an entry is selected, the mapped file
+# globs under FEATURE_PATHS are included in the foundry self-copy; when
+# deselected, they're excluded. Default for every feature is OFF.
+OPTIONAL_FEATURES: list[tuple[str, str, str]] = [
+    ("minimax-delegate",
+     "MiniMax Delegate",
+     "Run a secondary Claude Code CLI against MiniMax (tools/delegate/)"),
+]
+
+# Relative paths under REPO_ROOT to skip in the foundry self-copy when
+# the matching feature key is NOT selected.
+FEATURE_PATHS: dict[str, list[str]] = {
+    "minimax-delegate": ["tools/delegate"],
+}
+
+# Skills that should be auto-added to the selection when a feature is
+# turned on. Still user-visible; they can uncheck if they really want.
+FEATURE_SUGGESTED_SKILLS: dict[str, list[str]] = {
+    "minimax-delegate": ["minimax-multimodal"],
+}
+
 LSP_PLUGINS = {
     "python.md": ("pyright-lsp", "pyright-langserver"),
     "react-app.md": ("typescript-lsp", "typescript-language-server"),
@@ -1353,7 +1375,7 @@ def cmd_init(
 
     # ── Selection phase (step-based with back/quit for interactive) ──
     STEPS = (["base"] + modular_categories +
-             ["hooks", "agents", "skills", "learned", "plugins", "mcp"])
+             ["hooks", "agents", "skills", "learned", "plugins", "mcp", "features"])
     if interactive and not cli_private_sources:
         STEPS.append("private")
     saved_steps: dict[str, set[int]] = {}
@@ -1588,6 +1610,35 @@ def cmd_init(
                     else:
                         saved_steps["mcp"] = auto
 
+                elif name == "features":
+                    # Opt-in tooling (default OFF). Each feature excludes a
+                    # chunk of tools/ from the foundry self-copy unless the
+                    # user deliberately checks it here.
+                    feat_labels = [f"{label} — {desc}"
+                                   for _, label, desc in OPTIONAL_FEATURES]
+                    if "features" in saved_steps:
+                        auto = saved_steps["features"]
+                    elif manifest:
+                        sel = set(manifest.get("features", []))
+                        auto = {i for i, (k, _, _) in enumerate(OPTIONAL_FEATURES)
+                                if k in sel}
+                    else:
+                        auto = set()
+                    if interactive:
+                        saved_steps["features"] = toggle_menu(
+                            "Optional Features", feat_labels, auto)
+                    else:
+                        saved_steps["features"] = auto
+                    # Auto-suggest associated skills when a feature is ON.
+                    # (User can still uncheck them after.)
+                    sel_keys = {OPTIONAL_FEATURES[i][0]
+                                for i in saved_steps["features"]}
+                    if "skills" in saved_steps:
+                        for key in sel_keys:
+                            for skill in FEATURE_SUGGESTED_SKILLS.get(key, []):
+                                if skill in SKILLS:
+                                    saved_steps["skills"].add(SKILLS.index(skill))
+
                 elif name == "private":
                     # Interactive-only: collect private sources (deployment deferred)
                     while True:
@@ -1689,6 +1740,8 @@ def cmd_init(
     selected_plugins = sorted(saved_plugin_names) if saved_plugin_names else []
     mcp_servers = ([mcp_names[i] for i in sorted(saved_steps.get("mcp", set()))]
                    if mcp_available else [])
+    selected_features = [OPTIONAL_FEATURES[i][0]
+                         for i in sorted(saved_steps.get("features", set()))]
 
     # Copilot-* skills are gated on the copilot-mcp MCP server being selected.
     # Selecting the MCP pulls in the skills; deselecting drops them.
@@ -1818,6 +1871,7 @@ def cmd_init(
         "learned_categories": selected_learned,
         "plugins": selected_plugins,
         "mcp_servers": mcp_servers,
+        "features": selected_features,
     }
     if private_sources:
         manifest_data["private_sources"] = private_sources
@@ -1906,19 +1960,26 @@ def cmd_init(
     # and the user doesn't need the original bootstrap tarball anymore.
     # Skip when we're already running from inside the target (e.g. the
     # update-foundry.sh flow staged the tree before invoking us).
-    _self_copy_foundry_source(project)
+    _self_copy_foundry_source(project, selected_features)
 
     return True
 
 
-def _self_copy_foundry_source(project: Path) -> None:
+def _self_copy_foundry_source(project: Path, selected_features: list[str] | None = None) -> None:
     """Copy REPO_ROOT tree to <project>/.claude/foundry/.
 
     Idempotent and safe to call at the end of every ``setup.py init`` run.
     Skips when REPO_ROOT is already inside the target (avoids copying a
     directory onto itself). Uses an atomic swap via a staging directory so
     a crash mid-copy doesn't leave the foundry cache in a broken state.
+
+    Args:
+        project: Target project directory.
+        selected_features: Keys from OPTIONAL_FEATURES the user opted into.
+            Paths mapped in FEATURE_PATHS for features NOT in this list are
+            excluded from the self-copy.
     """
+    selected_features = selected_features or []
     target = (project / ".claude" / "foundry").resolve()
 
     # Skip when source and target overlap — either direction would cause
@@ -1937,13 +1998,22 @@ def _self_copy_foundry_source(project: Path) -> None:
     except ValueError:
         pass
 
+    # Compute absolute paths to exclude based on deselected features.
+    excluded_abs: set[str] = set()
+    for key, paths in FEATURE_PATHS.items():
+        if key in selected_features:
+            continue
+        for rel in paths:
+            excluded_abs.add(str((REPO_ROOT / rel).resolve()))
+
     target.parent.mkdir(parents=True, exist_ok=True)
     staging = target.parent / ".foundry.new"
     if staging.exists():
         shutil.rmtree(staging, ignore_errors=True)
 
-    # Copy REPO_ROOT tree, excluding build artifacts, caches, and any
-    # foundry-cache dirs (belt-and-braces against self-recursion).
+    # Copy REPO_ROOT tree, excluding build artifacts, caches, the
+    # foundry-cache dirs (belt-and-braces against self-recursion), and
+    # optional-feature paths the user didn't opt into.
     def _ignore(src: str, names: list[str]) -> list[str]:
         skip = {
             ".git", "__pycache__", ".pytest_cache", ".venv", "venv",
@@ -1951,7 +2021,13 @@ def _self_copy_foundry_source(project: Path) -> None:
             ".coverage", "results",
             ".foundry.new", ".foundry.old", "foundry",
         }
-        return [n for n in names if n in skip]
+        result = [n for n in names if n in skip]
+        # Also skip feature-gated subdirectories at their exact src path.
+        src_abs = str(Path(src).resolve())
+        for n in names:
+            if str((Path(src_abs) / n).resolve()) in excluded_abs:
+                result.append(n)
+        return result
 
     shutil.copytree(REPO_ROOT, staging, ignore=_ignore, symlinks=False)
 
