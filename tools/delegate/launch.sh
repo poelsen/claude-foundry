@@ -30,7 +30,7 @@ done
 model="${model:-$DEFAULT_MODEL}"
 
 load_env
-ensure_proxy
+require_env MINIMAX_API_KEY
 ensure_worktree "$job"
 
 wt_path="$(worktree_path "$job")"

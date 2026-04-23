@@ -2,8 +2,8 @@
 # tools/delegate/lib.sh
 #
 # Shared helpers for the foundry-delegate scripts. Source from entry
-# scripts (run.sh, launch.sh, activate.sh, proxy.sh, worktree.sh).
-# Do not run this file directly.
+# scripts (run.sh, launch.sh, activate.sh, worktree.sh). Do not run
+# this file directly.
 
 # Don't `set -e` here — callers decide. Do enable nounset + pipefail
 # for the functions so shadowed vars and broken pipelines fail loudly.
@@ -18,26 +18,21 @@ DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # REPO_ROOT is the git repo of the INVOKING cwd (target project), not of
 # the script's location. This lets one deployed copy of these scripts —
 # e.g. $TARGET/.claude/foundry/tools/delegate/ — operate on any project
-# the user cd-s into before invocation. Using the script's parent would
-# incorrectly resolve to the foundry cache root.
+# the user cd-s into before invocation.
 REPO_ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" \
     || die "not inside a git repository (cwd=$PWD) — cd into the target project first"
 REPO_NAME="$(basename "$REPO_ROOT")"
 FOUNDRY_STATE_DIR="$REPO_ROOT/.foundry"
 DELEGATE_LOG="$FOUNDRY_STATE_DIR/delegate-log.jsonl"
 
-# Proxy: claude-code-router (ccr). Translates Anthropic /v1/messages →
-# OpenAI /v1/chat/completions and forwards to the configured backend
-# (MiniMax, etc.). ccr owns its own daemon + PID file at
-# ~/.claude-code-router/.claude-code-router.pid and listens on :3456 by
-# default — we just check health + start/stop it via the `ccr` CLI.
-PROXY_HOST="127.0.0.1"
-PROXY_PORT="${FOUNDRY_DELEGATE_PROXY_PORT:-3456}"
-PROXY_URL="http://${PROXY_HOST}:${PROXY_PORT}"
-CCR_CONFIG_DIR="${CCR_CONFIG_DIR:-$HOME/.claude-code-router}"
-CCR_CONFIG_FILE="$CCR_CONFIG_DIR/config.json"
+# Backend endpoints. MiniMax hosts official Anthropic- and OpenAI-
+# compatible shims, so no local proxy (ccr / LiteLLM) is needed — we
+# just point Claude Code (and opencode/aider/curl) straight at them.
+# Override via env if you ever want to route somewhere else.
+MINIMAX_ANTHROPIC_BASE="${FOUNDRY_DELEGATE_ANTHROPIC_BASE:-https://api.minimax.io/anthropic}"
+MINIMAX_OPENAI_BASE="${FOUNDRY_DELEGATE_OPENAI_BASE:-https://api.minimax.io/v1}"
 
-DEFAULT_MODEL="${FOUNDRY_DELEGATE_DEFAULT_MODEL:-MiniMax-M2}"
+DEFAULT_MODEL="${FOUNDRY_DELEGATE_DEFAULT_MODEL:-MiniMax-M2.7}"
 
 # Load repo-root .env (and tools/delegate/.env if present) into the environment.
 # Safe to call multiple times — `set -a` exports everything sourced.
@@ -82,78 +77,28 @@ ensure_worktree() {
     )
 }
 
-# ── Proxy ─────────────────────────────────────────────────────────────
-
-proxy_alive() {
-    # Use bash's /dev/tcp to test whether anything is listening on the
-    # port. Reliable and doesn't depend on ccr's HTTP behavior. Redirects
-    # are because /dev/tcp writes "cannot connect" to stderr on failure.
-    (exec 3<>"/dev/tcp/$PROXY_HOST/$PROXY_PORT") 2>/dev/null || return 1
-    exec 3<&- 2>/dev/null || true
-    return 0
-}
-
-# Locate the ccr binary. Prefer user-level npm install
-# (~/.npm-global/bin/ccr) or whatever is on PATH.
-_ccr_bin() {
-    if   [[ -x "$HOME/.npm-global/bin/ccr" ]]; then echo "$HOME/.npm-global/bin/ccr"
-    elif command -v ccr >/dev/null 2>&1;         then echo "ccr"
-    else return 1
-    fi
-}
-
-ensure_proxy() {
-    if proxy_alive; then
-        info "proxy up at $PROXY_URL"
-        return 0
-    fi
-
-    local ccr_bin; ccr_bin="$(_ccr_bin)" \
-        || die "ccr not found — run: npm install -g @musistudio/claude-code-router (with npm prefix set to ~/.npm-global)"
-    [[ -f "$CCR_CONFIG_FILE" ]] \
-        || die "ccr config missing: $CCR_CONFIG_FILE (see tools/delegate/README.md)"
-
-    # Load .env so env-var interpolation in ccr's config (e.g.
-    # $MINIMAX_API_KEY) resolves to actual credentials.
-    load_env
-
-    info "starting ccr (config: $CCR_CONFIG_FILE)"
-    # ccr's `start` command runs its HTTP server in the foreground. Background
-    # it and detach so this script can return once the port is reachable.
-    nohup "$ccr_bin" start </dev/null >/dev/null 2>&1 &
-    disown 2>/dev/null || true
-
-    local i
-    for i in $(seq 1 30); do
-        sleep 0.5
-        if proxy_alive; then
-            info "proxy ready at $PROXY_URL"
-            return 0
-        fi
-    done
-    die "ccr failed to become reachable at $PROXY_URL within 15s — see $CCR_CONFIG_DIR/logs/"
-}
-
-stop_proxy() {
-    local ccr_bin; ccr_bin="$(_ccr_bin)" || { info "ccr not on PATH; nothing to stop"; return 0; }
-    "$ccr_bin" stop >/dev/null 2>&1 || true
-    info "ccr stopped"
-}
-
 # ── Env export ────────────────────────────────────────────────────────
 
-# Print shell-exportable env for a delegate session. Exports BOTH the
-# Anthropic family (for Claude Code) and the OpenAI family (for
-# opencode/aider/etc.), pointing both at the same ccr proxy.
+# Print shell-exportable env for a delegate session. Points Claude Code
+# (Anthropic family) and OpenAI-compat tools (opencode/aider/curl) at
+# MiniMax's native compatibility endpoints. MINIMAX_API_KEY must be
+# loaded into the environment before this is called (see load_env).
 export_env_for_shell() {
     local job="${1:?job required}"
     local model="${2:-$DEFAULT_MODEL}"
+    [[ -n "${MINIMAX_API_KEY:-}" ]] \
+        || die "MINIMAX_API_KEY not set — put it in $REPO_ROOT/.env (or $DELEGATE_DIR/.env) and call load_env first"
     cat <<EOF
-export ANTHROPIC_BASE_URL="$PROXY_URL"
-export ANTHROPIC_AUTH_TOKEN="delegate-proxy-no-auth"
+export ANTHROPIC_BASE_URL="$MINIMAX_ANTHROPIC_BASE"
+export ANTHROPIC_AUTH_TOKEN="$MINIMAX_API_KEY"
 export ANTHROPIC_MODEL="$model"
-export OPENAI_BASE_URL="$PROXY_URL/v1"
-export OPENAI_API_KEY="delegate-proxy-no-auth"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$model"
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$model"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$model"
+export API_TIMEOUT_MS="3000000"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"
+export OPENAI_BASE_URL="$MINIMAX_OPENAI_BASE"
+export OPENAI_API_KEY="$MINIMAX_API_KEY"
 export FOUNDRY_DELEGATE_JOB="$job"
 export FOUNDRY_DELEGATE_MODEL="$model"
 EOF
@@ -163,7 +108,7 @@ EOF
 
 # Append a JSON row to the delegate log. Caller passes a JSON object body
 # (no braces, no leading/trailing comma) — ts is added automatically.
-# Example:  log_event '"event":"start","job":"scrape","model":"MiniMax-M2"'
+# Example:  log_event '"event":"start","job":"scrape","model":"MiniMax-M2.7"'
 log_event() {
     local body="${1:-}"
     local ts; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
