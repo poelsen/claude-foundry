@@ -43,6 +43,13 @@ tools/delegate/run.sh \
   --task "Scrape product data from urls.txt, extract name/price/sku as JSON, save to data/products.json"
 ```
 
+### Isolation modes
+
+| Mode            | Worktree | Auto-commit | When to use |
+|-----------------|----------|-------------|-------------|
+| (default)       | yes      | yes         | Real work that may write files; primary keeps working safely. |
+| `--read-only`   | no       | no          | Analysis/review/summary tasks. Runs in primary repo; warns loudly if the secondary writes anything. |
+
 Output is a JSON object on stdout:
 
 ```json
@@ -116,7 +123,8 @@ Listens on `127.0.0.1:3456` by default. Override with `FOUNDRY_DELEGATE_PROXY_PO
 
 - `.env` must never be committed.
 - ccr binds the proxy to `127.0.0.1` by default. If you're on a shared host, set `APIKEY` in ccr's config to require a bearer token.
-- Secondary agents operate only within their worktree — primary repo is untouched until `worktree.sh merge`.
+- **`run.sh` uses `claude --dangerously-skip-permissions`** so the secondary can write files autonomously under `--print` (any prompt would hang the run). It also prepends a brief autonomy preamble to your task so the model doesn't stop mid-run to "ask for confirmation." Blast radius in the default mode is just the worktree; in `--read-only` it's your primary working tree — don't pass a task description the secondary would interpret as "rm -rf /".
+- Secondary agents operate only within their worktree (default) — primary repo is untouched until `worktree.sh merge`.
 
 ## Known gaps (explicit non-goals for v1)
 
