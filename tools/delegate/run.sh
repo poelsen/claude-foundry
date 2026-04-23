@@ -77,16 +77,18 @@ case "$exit_code" in
 esac
 
 # Auto-commit any uncommitted secondary changes onto the delegate branch.
+# Count from the porcelain BEFORE commit (not git diff HEAD~1 — that
+# would leak prior commits from the branch point).
 changed_count=0
 ( cd "$wt_path"
-  if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+  status="$(git status --porcelain 2>/dev/null)"
+  if [[ -n "$status" ]]; then
+      changed_count="$(printf '%s\n' "$status" | wc -l | tr -d ' ')"
       git add -A
       git -c user.name="delegate[$slot]" -c user.email="delegate@foundry.local" \
           commit -q -m "delegate[$slot]: ${task:0:60}" \
           -m "Model: $model" -m "Exit: $exit_reason (${duration}s)" || true
   fi
-  # Count files touched by the commit we just made (or still dirty).
-  changed_count="$(git diff --name-only HEAD~1 2>/dev/null | wc -l | tr -d ' ')"
   echo "$changed_count"
 ) >"${stdout_file}.changed"
 changed_count="$(cat "${stdout_file}.changed" | tail -1)"
