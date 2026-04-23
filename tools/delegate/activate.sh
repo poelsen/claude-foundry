@@ -3,7 +3,7 @@
 #
 # Source this file from an interactive shell to enter a delegate
 # environment. It sets the Anthropic *and* OpenAI env families (pointing
-# both at the local ccr proxy), cds into the worktree, and leaves
+# both at MiniMax's native compatibility endpoints), cds into the worktree, and leaves
 # you in your shell. Run `claude`, `opencode`, `aider`, or anything
 # else that reads those env vars — all go to the delegate model.
 #
@@ -37,7 +37,8 @@ if [[ -z "$_job" ]]; then
 fi
 
 load_env || return 1
-ensure_proxy    || return 1
+[[ -n "${MINIMAX_API_KEY:-}" ]] \
+    || { echo "[delegate] ERROR: MINIMAX_API_KEY not set — add to .env" >&2; return 1; }
 ensure_worktree "$_job" || return 1
 
 _wt_path="$(worktree_path "$_job")"
@@ -51,11 +52,11 @@ log_event "\"event\":\"activate\",\"job\":\"$_job\",\"model\":\"$_model\""
 cat <<BANNER >&2
 
   ┌─ foundry-delegate activated ─────────────────────────────
-  │ job:     $_job
+  │ job:      $_job
   │ model:    $_model
-  │ proxy:    $PROXY_URL
+  │ backend:  $MINIMAX_ANTHROPIC_BASE
   │ cwd:      $_wt_path
-  │ env set:  ANTHROPIC_* + OPENAI_* → proxy
+  │ env set:  ANTHROPIC_* + OPENAI_* → MiniMax
   │
   │ Run: claude    opencode    aider    (anything)
   │ When done: cd back to primary and unset env vars

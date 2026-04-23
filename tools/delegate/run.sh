@@ -14,7 +14,7 @@
 #   --task "DESC"        self-contained task description
 #
 # Optional:
-#   --model M            ccr model name (default: MiniMax-M2)
+#   --model M            model name (default: MiniMax-M2.7)
 #   --timeout S          wall-clock timeout in seconds (default: 600)
 #   --read-only          Skip worktree + auto-commit; run in $REPO_ROOT.
 #                        Meant for analysis/review tasks. Emits a WARNING
@@ -50,7 +50,7 @@ done
 model="${model:-$DEFAULT_MODEL}"
 
 load_env
-ensure_proxy
+require_env MINIMAX_API_KEY
 
 mode="isolated"
 if [[ "$read_only" == "1" ]]; then mode="read-only"; fi
@@ -75,7 +75,7 @@ if [[ "$read_only" == "1" ]]; then
     pre_status="$(cd "$wt_path" && git status --porcelain 2>/dev/null || true)"
 fi
 
-# Autonomy preamble — ccr-driven MiniMax under `claude --print` has no
+# Autonomy preamble — MiniMax under `claude --print` has no
 # interactive user; if the model asks for confirmation ("do you want me
 # to proceed?") the run stalls and completes without the work done.
 # Prepend a firm autonomy note so the model acts instead of asking.
