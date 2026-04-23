@@ -37,7 +37,7 @@ From the primary Claude Code session (or any shell, inside the target project's 
 
 ```bash
 tools/delegate/run.sh \
-  --slot scrape \
+  --job scrape \
   --model MiniMax-M2 \
   --max-usd 1.00 \
   --timeout 600 \
@@ -50,7 +50,7 @@ Output is a JSON object on stdout:
 
 ```json
 {
-  "slot": "scrape",
+  "job": "scrape",
   "model": "MiniMax-M2",
   "exit_reason": "complete",
   "exit_code": 0,
@@ -61,7 +61,7 @@ Output is a JSON object on stdout:
 }
 ```
 
-Secondary's file changes are auto-committed to the `delegate/<slot>` branch in the sibling worktree. Primary can then:
+Secondary's file changes are auto-committed to the `delegate/<job>` branch in the sibling worktree. Primary can then:
 
 ```bash
 tools/delegate/worktree.sh show    scrape    # inspect commits + diffstat
@@ -74,7 +74,7 @@ tools/delegate/worktree.sh discard scrape    # wipe worktree + branch
 ### Option A — takeover launch
 
 ```bash
-tools/delegate/launch.sh --slot scrape --model MiniMax-M2
+tools/delegate/launch.sh --job scrape --model MiniMax-M2
 ```
 
 Preps everything and execs `claude` in the worktree. Your terminal *is* the secondary session. `/quit` or Ctrl+D returns to your primary shell.
@@ -110,8 +110,8 @@ Listens on `127.0.0.1:3456` by default. Override with `FOUNDRY_DELEGATE_PROXY_PO
 
 ## Layout & state
 
-- Worktrees: `../<repo>-delegate-<slot>/` (sibling to this repo — automatically isolated; never touches primary)
-- Branches: `delegate/<slot>` in this repo
+- Worktrees: `../<repo>-delegate-<job>/` (sibling to this repo — automatically isolated; never touches primary)
+- Branches: `delegate/<job>` in this repo
 - ccr config + logs: `~/.claude-code-router/`
 - Event log: `.foundry/delegate-log.jsonl` (gitignored)
 

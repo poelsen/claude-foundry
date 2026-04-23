@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # tools/delegate/worktree.sh
 #
-# Worktree + result lifecycle for delegate slots. Thin wrapper around
+# Worktree + result lifecycle for delegate jobs. Thin wrapper around
 # `git worktree` with conventions for delegate branches.
 #
 # Usage:
-#   worktree.sh create  SLOT        # create or reuse worktree + branch
+#   worktree.sh create  JOB        # create or reuse worktree + branch
 #   worktree.sh list                # list all delegate worktrees
-#   worktree.sh show    SLOT        # show commits + diffstat on the slot branch
-#   worktree.sh path    SLOT        # print absolute path to the slot's worktree
-#   worktree.sh merge   SLOT        # fast-forward or merge slot branch into HEAD
-#   worktree.sh discard SLOT        # remove worktree + delete branch (destructive)
+#   worktree.sh show    JOB        # show commits + diffstat on the job branch
+#   worktree.sh path    JOB        # print absolute path to the job's worktree
+#   worktree.sh merge   JOB        # fast-forward or merge job branch into HEAD
+#   worktree.sh discard JOB        # remove worktree + delete branch (destructive)
 
 set -euo pipefail
 DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,17 +18,17 @@ DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$DELEGATE_DIR/lib.sh"
 
 cmd="${1:-}"
-slot="${2:-}"
+job="${2:-}"
 
-require_slot() {
-    [[ -n "$slot" ]] || die "slot required (usage: worktree.sh $cmd SLOT)"
+require_job() {
+    [[ -n "$job" ]] || die "job required (usage: worktree.sh $cmd JOB)"
 }
 
 case "$cmd" in
     create)
-        require_slot
-        ensure_worktree "$slot"
-        echo "$(worktree_path "$slot")"
+        require_job
+        ensure_worktree "$job"
+        echo "$(worktree_path "$job")"
         ;;
 
     list)
@@ -39,15 +39,15 @@ case "$cmd" in
         ;;
 
     path)
-        require_slot
-        echo "$(worktree_path "$slot")"
+        require_job
+        echo "$(worktree_path "$job")"
         ;;
 
     show)
-        require_slot
-        wt_path="$(worktree_path "$slot")"
-        [[ -d "$wt_path" ]] || die "no worktree for slot '$slot' at $wt_path"
-        branch="$(worktree_branch "$slot")"
+        require_job
+        wt_path="$(worktree_path "$job")"
+        [[ -d "$wt_path" ]] || die "no worktree for job '$job' at $wt_path"
+        branch="$(worktree_branch "$job")"
         info "branch: $branch"
         info "path:   $wt_path"
         echo
@@ -59,8 +59,8 @@ case "$cmd" in
         ;;
 
     merge)
-        require_slot
-        branch="$(worktree_branch "$slot")"
+        require_job
+        branch="$(worktree_branch "$job")"
         ( cd "$REPO_ROOT"
           current="$(git rev-parse --abbrev-ref HEAD)"
           info "merging $branch → $current"
@@ -69,9 +69,9 @@ case "$cmd" in
         ;;
 
     discard)
-        require_slot
-        wt_path="$(worktree_path "$slot")"
-        branch="$(worktree_branch "$slot")"
+        require_job
+        wt_path="$(worktree_path "$job")"
+        branch="$(worktree_branch "$job")"
         if [[ -d "$wt_path" ]]; then
             info "removing worktree: $wt_path"
             ( cd "$REPO_ROOT" && git worktree remove --force "$wt_path" )
