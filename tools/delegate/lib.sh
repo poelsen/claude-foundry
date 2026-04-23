@@ -58,14 +58,14 @@ require_env() {
 
 # ── Worktree ──────────────────────────────────────────────────────────
 
-worktree_path()   { local slot="${1:?slot required}"; printf '%s/%s-delegate-%s' "$(dirname "$REPO_ROOT")" "$REPO_NAME" "$slot"; }
-worktree_branch() { local slot="${1:?slot required}"; printf 'delegate/%s' "$slot"; }
+worktree_path()   { local job="${1:?job required}"; printf '%s/%s-delegate-%s' "$(dirname "$REPO_ROOT")" "$REPO_NAME" "$job"; }
+worktree_branch() { local job="${1:?job required}"; printf 'delegate/%s' "$job"; }
 
 ensure_worktree() {
-    local slot="${1:?slot required}"
+    local job="${1:?job required}"
     local wt_path branch
-    wt_path="$(worktree_path "$slot")"
-    branch="$(worktree_branch "$slot")"
+    wt_path="$(worktree_path "$job")"
+    branch="$(worktree_branch "$job")"
 
     if [[ -d "$wt_path/.git" || -f "$wt_path/.git" ]]; then
         info "worktree exists: $wt_path"
@@ -144,9 +144,9 @@ stop_proxy() {
 
 # Print shell-exportable env for a delegate session. Exports BOTH the
 # Anthropic family (for Claude Code) and the OpenAI family (for
-# opencode/aider/etc.), pointing both at the same LiteLLM proxy.
+# opencode/aider/etc.), pointing both at the same ccr proxy.
 export_env_for_shell() {
-    local slot="${1:?slot required}"
+    local job="${1:?job required}"
     local model="${2:-$DEFAULT_MODEL}"
     cat <<EOF
 export ANTHROPIC_BASE_URL="$PROXY_URL"
@@ -154,7 +154,7 @@ export ANTHROPIC_AUTH_TOKEN="delegate-proxy-no-auth"
 export ANTHROPIC_MODEL="$model"
 export OPENAI_BASE_URL="$PROXY_URL/v1"
 export OPENAI_API_KEY="delegate-proxy-no-auth"
-export FOUNDRY_DELEGATE_SLOT="$slot"
+export FOUNDRY_DELEGATE_JOB="$job"
 export FOUNDRY_DELEGATE_MODEL="$model"
 EOF
 }
@@ -163,7 +163,7 @@ EOF
 
 # Append a JSON row to the delegate log. Caller passes a JSON object body
 # (no braces, no leading/trailing comma) — ts is added automatically.
-# Example:  log_event '"event":"start","slot":"scrape","model":"MiniMax-M2"'
+# Example:  log_event '"event":"start","job":"scrape","model":"MiniMax-M2"'
 log_event() {
     local body="${1:-}"
     local ts; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
