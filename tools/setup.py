@@ -1920,26 +1920,35 @@ def _self_copy_foundry_source(project: Path) -> None:
     """
     target = (project / ".claude" / "foundry").resolve()
 
-    # Skip if we're already running from inside the target — this is the
-    # common case when /update-foundry has already moved us into place.
+    # Skip when source and target overlap — either direction would cause
+    # shutil.copytree to recurse into its own staging dir.
+    # - REPO_ROOT inside target: /update-foundry.sh already staged us there.
+    # - target inside REPO_ROOT: running setup against the foundry repo itself;
+    #   the source already lives at REPO_ROOT so caching it is pointless.
     try:
         REPO_ROOT.relative_to(target)
-        # REPO_ROOT is target or a subdirectory of it → nothing to do
         return
     except ValueError:
-        pass  # REPO_ROOT is elsewhere → proceed
+        pass
+    try:
+        target.relative_to(REPO_ROOT)
+        return
+    except ValueError:
+        pass
 
     target.parent.mkdir(parents=True, exist_ok=True)
     staging = target.parent / ".foundry.new"
     if staging.exists():
         shutil.rmtree(staging, ignore_errors=True)
 
-    # Copy REPO_ROOT tree, excluding build artifacts and caches
+    # Copy REPO_ROOT tree, excluding build artifacts, caches, and any
+    # foundry-cache dirs (belt-and-braces against self-recursion).
     def _ignore(src: str, names: list[str]) -> list[str]:
         skip = {
             ".git", "__pycache__", ".pytest_cache", ".venv", "venv",
             "node_modules", "out", ".vscode-test", "dist", "build",
             ".coverage", "results",
+            ".foundry.new", ".foundry.old", "foundry",
         }
         return [n for n in names if n in skip]
 
