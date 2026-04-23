@@ -100,6 +100,10 @@ When done, close the terminal — or unset the env vars and `cd` back.
 - **`run.sh` uses `claude --dangerously-skip-permissions`** so the secondary can write files autonomously under `--print` (any prompt would hang the run). It also prepends a brief autonomy preamble to your task so the model doesn't stop mid-run to "ask for confirmation." Blast radius in the default mode is just the worktree; in `--read-only` it's your primary working tree — don't pass a task description the secondary would interpret as "rm -rf /".
 - Secondary agents operate only within their worktree (default) — primary repo is untouched until `worktree.sh merge`.
 
+## Adjacent: multimodal generation
+
+MiniMax also hosts video / image / TTS / music / voice-cloning endpoints, all plain REST with the same key. They don't go through this tool — just direct HTTP. See `skills/minimax-multimodal/SKILL.md` (auto-activates when a task asks to generate media) for the endpoint table and a working async-polling pattern.
+
 ## Known gaps
 
 - No async / job-id polling — `run.sh` is sync. Use Bash `run_in_background` if you need async.
