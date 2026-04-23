@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # tools/delegate/proxy.sh
 #
-# LiteLLM proxy lifecycle control (standalone). The start action is
-# auto-invoked from run.sh / launch.sh / activate.sh as well — use this
-# script only when you want manual control.
+# claude-code-router (ccr) proxy lifecycle control (standalone). The
+# start action is auto-invoked from run.sh / launch.sh / activate.sh as
+# well — use this script only when you want manual control.
 #
 # Usage:
 #   proxy.sh start | stop | restart | status | logs
@@ -31,9 +31,7 @@ case "$cmd" in
         ;;
     status)
         if proxy_alive; then
-            pid_msg=""
-            [[ -f "$PROXY_PID_FILE" ]] && pid_msg=" (pid $(cat "$PROXY_PID_FILE"))"
-            printf 'up   %s%s\n' "$PROXY_URL" "$pid_msg"
+            printf 'up   %s\n' "$PROXY_URL"
             exit 0
         else
             printf 'down %s\n' "$PROXY_URL"
@@ -41,8 +39,9 @@ case "$cmd" in
         fi
         ;;
     logs)
-        [[ -f "$PROXY_LOG_FILE" ]] || die "no log file at $PROXY_LOG_FILE"
-        exec tail -f "$PROXY_LOG_FILE"
+        log_dir="$CCR_CONFIG_DIR/logs"
+        [[ -d "$log_dir" ]] || die "no ccr logs dir at $log_dir"
+        exec tail -f "$log_dir"/ccr-*.log "$CCR_CONFIG_DIR/claude-code-router.log" 2>/dev/null
         ;;
     -h|--help)
         sed -n '1,10p' "$0"

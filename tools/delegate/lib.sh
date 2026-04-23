@@ -9,23 +9,35 @@
 # for the functions so shadowed vars and broken pipelines fail loudly.
 set -uo pipefail
 
+# Define error helpers first so REPO_ROOT check below can use die().
+die()  { printf '[delegate] ERROR: %s\n' "$*" >&2; exit 1; }
+info() { printf '[delegate] %s\n'        "$*" >&2; }
+
 DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd -- "$DELEGATE_DIR/../.." && pwd)"
+
+# REPO_ROOT is the git repo of the INVOKING cwd (target project), not of
+# the script's location. This lets one deployed copy of these scripts —
+# e.g. $TARGET/.claude/foundry/tools/delegate/ — operate on any project
+# the user cd-s into before invocation. Using the script's parent would
+# incorrectly resolve to the foundry cache root.
+REPO_ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" \
+    || die "not inside a git repository (cwd=$PWD) — cd into the target project first"
 REPO_NAME="$(basename "$REPO_ROOT")"
 FOUNDRY_STATE_DIR="$REPO_ROOT/.foundry"
 DELEGATE_LOG="$FOUNDRY_STATE_DIR/delegate-log.jsonl"
 
+# Proxy: claude-code-router (ccr). Translates Anthropic /v1/messages →
+# OpenAI /v1/chat/completions and forwards to the configured backend
+# (MiniMax, etc.). ccr owns its own daemon + PID file at
+# ~/.claude-code-router/.claude-code-router.pid and listens on :3456 by
+# default — we just check health + start/stop it via the `ccr` CLI.
 PROXY_HOST="127.0.0.1"
-PROXY_PORT="${FOUNDRY_DELEGATE_PROXY_PORT:-4000}"
+PROXY_PORT="${FOUNDRY_DELEGATE_PROXY_PORT:-3456}"
 PROXY_URL="http://${PROXY_HOST}:${PROXY_PORT}"
-PROXY_BASE_PATH="${XDG_RUNTIME_DIR:-/tmp}"
-PROXY_PID_FILE="${PROXY_BASE_PATH}/foundry-delegate-litellm.pid"
-PROXY_LOG_FILE="${PROXY_BASE_PATH}/foundry-delegate-litellm.log"
+CCR_CONFIG_DIR="${CCR_CONFIG_DIR:-$HOME/.claude-code-router}"
+CCR_CONFIG_FILE="$CCR_CONFIG_DIR/config.json"
 
 DEFAULT_MODEL="${FOUNDRY_DELEGATE_DEFAULT_MODEL:-MiniMax-M2}"
-
-die()  { printf '[delegate] ERROR: %s\n' "$*" >&2; exit 1; }
-info() { printf '[delegate] %s\n'        "$*" >&2; }
 
 # Load repo-root .env (and tools/delegate/.env if present) into the environment.
 # Safe to call multiple times — `set -a` exports everything sourced.
@@ -73,10 +85,21 @@ ensure_worktree() {
 # ── Proxy ─────────────────────────────────────────────────────────────
 
 proxy_alive() {
-    # LiteLLM exposes /health/liveliness; fall back to the root for older builds.
-    curl -fsS -o /dev/null --max-time 2 "$PROXY_URL/health/liveliness" 2>/dev/null && return 0
-    curl -fsS -o /dev/null --max-time 2 "$PROXY_URL/"                  2>/dev/null && return 0
-    return 1
+    # Use bash's /dev/tcp to test whether anything is listening on the
+    # port. Reliable and doesn't depend on ccr's HTTP behavior. Redirects
+    # are because /dev/tcp writes "cannot connect" to stderr on failure.
+    (exec 3<>"/dev/tcp/$PROXY_HOST/$PROXY_PORT") 2>/dev/null || return 1
+    exec 3<&- 2>/dev/null || true
+    return 0
+}
+
+# Locate the ccr binary. Prefer user-level npm install
+# (~/.npm-global/bin/ccr) or whatever is on PATH.
+_ccr_bin() {
+    if   [[ -x "$HOME/.npm-global/bin/ccr" ]]; then echo "$HOME/.npm-global/bin/ccr"
+    elif command -v ccr >/dev/null 2>&1;         then echo "ccr"
+    else return 1
+    fi
 }
 
 ensure_proxy() {
@@ -85,47 +108,36 @@ ensure_proxy() {
         return 0
     fi
 
-    # Kill stale PID if present
-    if [[ -f "$PROXY_PID_FILE" ]]; then
-        local old_pid; old_pid="$(cat "$PROXY_PID_FILE" 2>/dev/null || true)"
-        if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
-            info "stale proxy PID $old_pid — killing"
-            kill "$old_pid" 2>/dev/null || true
-            sleep 1
-        fi
-        rm -f "$PROXY_PID_FILE"
-    fi
+    local ccr_bin; ccr_bin="$(_ccr_bin)" \
+        || die "ccr not found — run: npm install -g @musistudio/claude-code-router (with npm prefix set to ~/.npm-global)"
+    [[ -f "$CCR_CONFIG_FILE" ]] \
+        || die "ccr config missing: $CCR_CONFIG_FILE (see tools/delegate/README.md)"
 
-    command -v litellm >/dev/null 2>&1 || die "litellm not on PATH — run: pip install 'litellm[proxy]'"
-    local config="$DELEGATE_DIR/litellm.yaml"
-    [[ -f "$config" ]] || die "missing config: $config"
+    # Load .env so env-var interpolation in ccr's config (e.g.
+    # $MINIMAX_API_KEY) resolves to actual credentials.
+    load_env
 
-    info "starting litellm proxy on :$PROXY_PORT (log: $PROXY_LOG_FILE)"
-    nohup litellm --config "$config" --port "$PROXY_PORT" >"$PROXY_LOG_FILE" 2>&1 &
-    echo "$!" >"$PROXY_PID_FILE"
+    info "starting ccr (config: $CCR_CONFIG_FILE)"
+    # ccr's `start` command runs its HTTP server in the foreground. Background
+    # it and detach so this script can return once the port is reachable.
+    nohup "$ccr_bin" start </dev/null >/dev/null 2>&1 &
+    disown 2>/dev/null || true
 
     local i
     for i in $(seq 1 30); do
         sleep 0.5
         if proxy_alive; then
-            info "proxy ready (pid $(cat "$PROXY_PID_FILE"))"
+            info "proxy ready at $PROXY_URL"
             return 0
         fi
     done
-    die "proxy failed to start within 15s — see $PROXY_LOG_FILE"
+    die "ccr failed to become reachable at $PROXY_URL within 15s — see $CCR_CONFIG_DIR/logs/"
 }
 
 stop_proxy() {
-    if [[ ! -f "$PROXY_PID_FILE" ]]; then
-        info "no PID file; proxy not managed by us"
-        return 0
-    fi
-    local pid; pid="$(cat "$PROXY_PID_FILE" 2>/dev/null || true)"
-    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
-        info "stopping proxy (pid $pid)"
-        kill "$pid" 2>/dev/null || true
-    fi
-    rm -f "$PROXY_PID_FILE"
+    local ccr_bin; ccr_bin="$(_ccr_bin)" || { info "ccr not on PATH; nothing to stop"; return 0; }
+    "$ccr_bin" stop >/dev/null 2>&1 || true
+    info "ccr stopped"
 }
 
 # ── Env export ────────────────────────────────────────────────────────
