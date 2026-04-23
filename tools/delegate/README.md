@@ -39,12 +39,9 @@ From the primary Claude Code session (or any shell, inside the target project's 
 tools/delegate/run.sh \
   --job scrape \
   --model MiniMax-M2 \
-  --max-usd 1.00 \
   --timeout 600 \
   --task "Scrape product data from urls.txt, extract name/price/sku as JSON, save to data/products.json"
 ```
-
-> **Note on `--max-usd`:** ccr doesn't yet meter per-call cost back to the client, so this cap is a contract, not enforced. Keep the value conservative and monitor MiniMax's dashboard.
 
 Output is a JSON object on stdout:
 
@@ -118,13 +115,11 @@ Listens on `127.0.0.1:3456` by default. Override with `FOUNDRY_DELEGATE_PROXY_PO
 ## Safety notes
 
 - `.env` must never be committed.
-- `run.sh` enforces `--max-usd` as a hard required arg (contract, not server-enforced — see note above).
 - ccr binds the proxy to `127.0.0.1` by default. If you're on a shared host, set `APIKEY` in ccr's config to require a bearer token.
 - Secondary agents operate only within their worktree — primary repo is untouched until `worktree.sh merge`.
 
 ## Known gaps (explicit non-goals for v1)
 
 - No async / job-id polling — `run.sh` is sync. Use Bash `run_in_background` if you need async.
-- No daily cumulative budget cap — only per-task `--max-usd`. Add in a later pass if needed.
-- `--max-usd` is advisory until ccr exposes per-call cost.
+- No cost metering at all — fine for flat-rate providers (MiniMax Coding Plan), not safe for metered ones. Add a `--max-usd` cap if/when needed.
 - MiniMax tool-use quality ≠ Claude. Expect occasional misfires. Scope tasks clearly.

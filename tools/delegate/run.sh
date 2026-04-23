@@ -7,12 +7,11 @@
 # changes on the delegate branch, and emits a JSON summary to stdout.
 #
 # Usage:
-#   run.sh --job NAME --task "DESC" --max-usd N [--model M] [--timeout S]
+#   run.sh --job NAME --task "DESC" [--model M] [--timeout S]
 #
 # Required:
-#   --job NAME          worktree job (persisted; reuse across calls)
+#   --job NAME           worktree job (persisted; reuse across calls)
 #   --task "DESC"        self-contained task description
-#   --max-usd N          per-task budget cap (hard safety — no default)
 #
 # Optional:
 #   --model M            ccr model name (default: MiniMax-M2)
@@ -26,24 +25,21 @@ source "$DELEGATE_DIR/lib.sh"
 job=""
 task=""
 model=""
-max_usd=""
 timeout_s="600"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --job)     job="${2:?}";       shift 2 ;;
-        --task)     task="${2:?}";       shift 2 ;;
-        --model)    model="${2:?}";      shift 2 ;;
-        --max-usd)  max_usd="${2:?}";    shift 2 ;;
-        --timeout)  timeout_s="${2:?}";  shift 2 ;;
-        -h|--help)  sed -n '1,22p' "$0"; exit 0 ;;
+        --job)      job="${2:?}";       shift 2 ;;
+        --task)     task="${2:?}";      shift 2 ;;
+        --model)    model="${2:?}";     shift 2 ;;
+        --timeout)  timeout_s="${2:?}"; shift 2 ;;
+        -h|--help)  sed -n '1,18p' "$0"; exit 0 ;;
         *)          die "unknown arg: $1" ;;
     esac
 done
 
-[[ -n "$job"    ]] || die "--job is required"
-[[ -n "$task"    ]] || die "--task is required"
-[[ -n "$max_usd" ]] || die "--max-usd is required (hard safety cap)"
+[[ -n "$job"  ]] || die "--job is required"
+[[ -n "$task" ]] || die "--task is required"
 model="${model:-$DEFAULT_MODEL}"
 
 load_env
@@ -52,10 +48,9 @@ ensure_worktree "$job"
 
 wt_path="$(worktree_path "$job")"
 eval "$(export_env_for_shell "$job" "$model")"
-export FOUNDRY_DELEGATE_MAX_USD="$max_usd"
 
-info "delegating to $model in $wt_path (budget \$${max_usd}, timeout ${timeout_s}s)"
-log_event "\"event\":\"start\",\"job\":\"$job\",\"model\":\"$model\",\"max_usd\":$max_usd,\"timeout_s\":$timeout_s"
+info "delegating to $model in $wt_path (timeout ${timeout_s}s)"
+log_event "\"event\":\"start\",\"job\":\"$job\",\"model\":\"$model\",\"timeout_s\":$timeout_s"
 
 start_ts="$(date -u +%s)"
 stdout_file="$(mktemp)"
