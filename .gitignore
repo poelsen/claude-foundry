@@ -1,3 +1,8 @@
+# foundry-delegate state
+.env
+.foundry/
+tools/delegate/.env
+
 # Generated per-project files (created by setup.py init on this repo)
 .claude/rules/
 .claude/agents/
