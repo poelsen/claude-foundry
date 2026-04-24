@@ -1,6 +1,6 @@
 ---
 name: minimax-multimodal
-description: MiniMax multimodal generation (video T2V/I2V, image T2I, TTS, music, voice cloning) via plain REST. TRIGGER when task asks to generate video, image, speech/TTS, music, or clone a voice — or specifically mentions MiniMax media APIs. SKIP for text-only chat, code, or analysis tasks.
+description: MiniMax multimodal REST endpoints (video, image, TTS, music, voice cloning). TRIGGER when task asks to generate video, image, speech, music, or clone a voice. SKIP for text/code/analysis-only tasks.
 ---
 
 # MiniMax Multimodal API Reference
