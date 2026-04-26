@@ -238,13 +238,17 @@ OPTIONAL_FEATURES: list[tuple[str, str, str]] = [
 # Relative paths under REPO_ROOT to skip in the foundry self-copy when
 # the matching feature key is NOT selected.
 FEATURE_PATHS: dict[str, list[str]] = {
-    "minimax-delegate": ["tools/delegate"],
+    "minimax-delegate": [
+        "tools/delegate",
+        "commands/delegate.md",
+        "skills/delegate",
+    ],
 }
 
 # Skills that should be auto-added to the selection when a feature is
 # turned on. Still user-visible; they can uncheck if they really want.
 FEATURE_SUGGESTED_SKILLS: dict[str, list[str]] = {
-    "minimax-delegate": ["minimax-multimodal"],
+    "minimax-delegate": ["minimax-multimodal", "delegate"],
 }
 
 LSP_PLUGINS = {
