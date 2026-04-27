@@ -134,7 +134,12 @@ TAR_FLAGS=""
 if tar --help 2>&1 | grep -q -- --force-local; then
     TAR_FLAGS="--force-local"
 fi
-if ! tar $TAR_FLAGS -tzf "$TARBALL_NEW" 2>/dev/null | grep -q '/tools/setup.py$'; then
+# NOTE: do NOT use `grep -q` here. Under `set -o pipefail`, grep -q exits
+# on the first match and closes its stdin — tar then receives SIGPIPE and
+# exits non-zero, which pipefail propagates as a pipeline failure. Use
+# grep -c (counts all matches, reads entire input) into a variable instead.
+setup_count=$(tar $TAR_FLAGS -tzf "$TARBALL_NEW" 2>/dev/null | grep -c '/tools/setup.py$' || true)
+if [[ "$setup_count" -eq 0 ]]; then
     echo "Error: downloaded tarball missing tools/setup.py"
     exit 1
 fi
