@@ -293,6 +293,46 @@ class TestCopilotInstallMessagePath:
         assert "bash /" in out
 
 
+class TestFeatureRequiredSkills:
+    """Verify FEATURE_REQUIRED_SKILLS shape and that minimax-delegate
+    requires the delegate skill (so stale manifests self-heal)."""
+
+    def test_constant_exists(self):
+        assert hasattr(setup_py, "FEATURE_REQUIRED_SKILLS")
+        assert isinstance(setup_py.FEATURE_REQUIRED_SKILLS, dict)
+
+    def test_minimax_delegate_requires_delegate_skill(self):
+        """The whole point of this constant: minimax-delegate is non-functional
+        without the delegate skill (which carries the run.sh/lib.sh scripts)."""
+        required = setup_py.FEATURE_REQUIRED_SKILLS.get("minimax-delegate", [])
+        assert "delegate" in required, (
+            "minimax-delegate must require the delegate skill — without it, "
+            "the deployed feature has no run.sh/lib.sh to invoke"
+        )
+
+    def test_required_skills_exist_in_SKILLS(self):
+        """Every required skill must exist in the SKILLS catalog."""
+        for feature, skills in setup_py.FEATURE_REQUIRED_SKILLS.items():
+            for skill in skills:
+                assert skill in setup_py.SKILLS, (
+                    f"FEATURE_REQUIRED_SKILLS[{feature!r}] references "
+                    f"unknown skill {skill!r}"
+                )
+
+    def test_no_overlap_between_required_and_suggested(self):
+        """A skill should be in REQUIRED or SUGGESTED, not both — the lists
+        have different semantics (required = mandatory, suggested = default)."""
+        for feature in setup_py.FEATURE_REQUIRED_SKILLS:
+            req = set(setup_py.FEATURE_REQUIRED_SKILLS.get(feature, []))
+            sug = set(setup_py.FEATURE_SUGGESTED_SKILLS.get(feature, []))
+            overlap = req & sug
+            assert not overlap, (
+                f"feature {feature!r} has skills in both REQUIRED and "
+                f"SUGGESTED: {overlap}. Pick one — REQUIRED implies mandatory, "
+                f"SUGGESTED implies default-but-removable."
+            )
+
+
 class TestUpdateFoundryScript:
     """Verify update-foundry.sh targets the new <project>/.foundry/ payload layout."""
 
