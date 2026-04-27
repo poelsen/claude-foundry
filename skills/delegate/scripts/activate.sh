@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/delegate/activate.sh
+# .claude/skills/delegate/scripts/activate.sh
 #
 # Source this file from an interactive shell to enter a delegate
 # environment. It sets the Anthropic *and* OpenAI env families (pointing
@@ -8,10 +8,10 @@
 # else that reads those env vars — all go to the delegate model.
 #
 # Usage:
-#   source tools/delegate/activate.sh JOB [MODEL]
+#   source .claude/skills/delegate/scripts/activate.sh JOB [MODEL]
 #
 # Example:
-#   source tools/delegate/activate.sh scrape MiniMax-M2
+#   source .claude/skills/delegate/scripts/activate.sh scrape MiniMax-M2
 #   claude
 #
 # NOTE: must be sourced, not executed. Running directly will exit
@@ -20,7 +20,7 @@
 # Guard: detect if executed rather than sourced.
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "activate.sh: must be sourced, not executed" >&2
-    echo "usage: source tools/delegate/activate.sh JOB [MODEL]" >&2
+    echo "usage: source .claude/skills/delegate/scripts/activate.sh JOB [MODEL]" >&2
     exit 1
 fi
 
@@ -32,7 +32,7 @@ _job="${1:-}"
 _model="${2:-$DEFAULT_MODEL}"
 
 if [[ -z "$_job" ]]; then
-    echo "usage: source tools/delegate/activate.sh JOB [MODEL]" >&2
+    echo "usage: source .claude/skills/delegate/scripts/activate.sh JOB [MODEL]" >&2
     return 1 2>/dev/null || true
 fi
 

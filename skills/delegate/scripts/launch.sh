@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/delegate/launch.sh
+# .claude/skills/delegate/scripts/launch.sh
 #
 # Interactive delegate launch. Sets up worktree + proxy + env, then execs
 # `claude` in the worktree. The current terminal becomes the secondary

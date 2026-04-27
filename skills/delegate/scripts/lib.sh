@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/delegate/lib.sh
+# skills/delegate/scripts/lib.sh (deployed: .claude/skills/delegate/scripts/lib.sh)
 #
 # Shared helpers for the foundry-delegate scripts. Source from entry
 # scripts (run.sh, launch.sh, activate.sh, worktree.sh). Do not run
@@ -16,14 +16,17 @@ info() { printf '[delegate] %s\n'        "$*" >&2; }
 DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # REPO_ROOT is the git repo of the INVOKING cwd (target project), not of
-# the script's location. This lets one deployed copy of these scripts —
-# e.g. $TARGET/.foundry/tools/delegate/ — operate on any project
-# the user cd-s into before invocation.
+# the script's location. This lets the deployed scripts at e.g.
+# $TARGET/.claude/skills/delegate/scripts/ operate on any project the
+# user cd-s into before invocation.
 REPO_ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" \
     || die "not inside a git repository (cwd=$PWD) — cd into the target project first"
 REPO_NAME="$(basename "$REPO_ROOT")"
-FOUNDRY_STATE_DIR="$REPO_ROOT/.foundry"
-DELEGATE_LOG="$FOUNDRY_STATE_DIR/delegate-log.jsonl"
+
+# Runtime state lives under <repo>/.delegate/ — gitignored, separate
+# from foundry's install machinery in <repo>/.foundry/.
+DELEGATE_STATE_DIR="$REPO_ROOT/.delegate"
+DELEGATE_LOG="$DELEGATE_STATE_DIR/log.jsonl"
 
 # Backend endpoints. MiniMax hosts official Anthropic- and OpenAI-
 # compatible shims, so no local proxy (ccr / LiteLLM) is needed — we
@@ -34,7 +37,7 @@ MINIMAX_OPENAI_BASE="${FOUNDRY_DELEGATE_OPENAI_BASE:-https://api.minimax.io/v1}"
 
 DEFAULT_MODEL="${FOUNDRY_DELEGATE_DEFAULT_MODEL:-MiniMax-M2.7}"
 
-# Load repo-root .env (and tools/delegate/.env if present) into the environment.
+# Load repo-root .env (and the script-dir .env if present) into the environment.
 # Safe to call multiple times — `set -a` exports everything sourced.
 load_env() {
     local f
@@ -112,7 +115,7 @@ EOF
 log_event() {
     local body="${1:-}"
     local ts; ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    mkdir -p "$FOUNDRY_STATE_DIR"
+    mkdir -p "$DELEGATE_STATE_DIR"
     if [[ -n "$body" ]]; then
         printf '{"ts":"%s",%s}\n' "$ts" "$body" >>"$DELEGATE_LOG"
     else

@@ -13,7 +13,7 @@ Both modes share the same worktree + env setup in `lib.sh`.
 
 ```bash
 # 1. Provide your MiniMax API key (standard or sk-cp Coding Plan key both work)
-cp tools/delegate/.env.example .env
+cp .claude/skills/delegate/scripts/.env.example .env
 # edit .env — fill in MINIMAX_API_KEY
 ```
 
@@ -26,7 +26,7 @@ The scripts point `ANTHROPIC_BASE_URL` at `https://api.minimax.io/anthropic` and
 From the primary Claude Code session (or any shell, inside the target project's git repo):
 
 ```bash
-tools/delegate/run.sh \
+.claude/skills/delegate/scripts/run.sh \
   --job scrape \
   --timeout 600 \
   --task "Scrape product data from urls.txt, extract name/price/sku as JSON, save to data/products.json"
@@ -58,9 +58,9 @@ Output is a JSON object on stdout:
 Secondary's file changes are auto-committed to the `delegate/<job>` branch in the sibling worktree. Primary can then:
 
 ```bash
-tools/delegate/worktree.sh show    scrape    # inspect commits + diffstat
-tools/delegate/worktree.sh merge   scrape    # merge into current branch
-tools/delegate/worktree.sh discard scrape    # wipe worktree + branch
+.claude/skills/delegate/scripts/worktree.sh show    scrape    # inspect commits + diffstat
+.claude/skills/delegate/scripts/worktree.sh merge   scrape    # merge into current branch
+.claude/skills/delegate/scripts/worktree.sh discard scrape    # wipe worktree + branch
 ```
 
 ## Interactive mode (operator in a terminal)
@@ -68,7 +68,7 @@ tools/delegate/worktree.sh discard scrape    # wipe worktree + branch
 ### Option A — takeover launch
 
 ```bash
-tools/delegate/launch.sh --job scrape --model MiniMax-M2.7
+.claude/skills/delegate/scripts/launch.sh --job scrape --model MiniMax-M2.7
 ```
 
 Preps everything and execs `claude` in the worktree. Your terminal *is* the secondary session. `/quit` or Ctrl+D returns to your primary shell.
@@ -78,7 +78,7 @@ Preps everything and execs `claude` in the worktree. Your terminal *is* the seco
 Open a fresh terminal, then:
 
 ```bash
-source tools/delegate/activate.sh scrape MiniMax-M2.7
+source .claude/skills/delegate/scripts/activate.sh scrape MiniMax-M2.7
 # now cwd is the worktree, env points at MiniMax
 claude                    # drives MiniMax through Claude Code CLI
 opencode run "task"       # or opencode, using OPENAI_BASE_URL
@@ -92,7 +92,7 @@ When done, close the terminal — or unset the env vars and `cd` back.
 
 - Worktrees: `../<repo>-delegate-<job>/` (sibling to this repo — automatically isolated; never touches primary)
 - Branches: `delegate/<job>` in this repo
-- Event log: `.foundry/delegate-log.jsonl` (gitignored)
+- Event log: `.delegate/log.jsonl` (gitignored)
 
 ## Safety notes
 

@@ -278,14 +278,13 @@ HIDDEN_SKILLS: set[str] = set(COPILOT_SKILLS)
 OPTIONAL_FEATURES: list[tuple[str, str, str]] = [
     ("minimax-delegate",
      "MiniMax Delegate",
-     "Run a secondary Claude Code CLI against MiniMax (tools/delegate/)"),
+     "Run a secondary Claude Code CLI against MiniMax (skills/delegate/)"),
 ]
 
 # Relative paths under REPO_ROOT to skip in the foundry self-copy when
 # the matching feature key is NOT selected.
 FEATURE_PATHS: dict[str, list[str]] = {
     "minimax-delegate": [
-        "tools/delegate",
         "commands/delegate.md",
         "skills/delegate",
     ],
@@ -2120,13 +2119,11 @@ def _install_foundry_payload(
     dst_setup = foundry_dir / "setup.py"
     shutil.copy2(src_setup, dst_setup)
 
-    # Feature-gated `tools/*` paths (e.g. tools/delegate/) need a stable,
-    # invokable location since the tarball-mode tempdir is wiped on exit.
-    # Extract them to <project>/.foundry/<path>. Skills/commands deploy
-    # via the standard copy_skills/copy_commands path and don't need this.
-    _install_feature_tool_paths(project, foundry_dir, selected_features)
-
     _ensure_gitignore_entry(project / ".gitignore", ".foundry/")
+    # Delegate runtime state lives at <project>/.delegate/ when the
+    # minimax-delegate feature is enabled — gitignore it too.
+    if "minimax-delegate" in selected_features:
+        _ensure_gitignore_entry(project / ".gitignore", ".delegate/")
 
     # If we were invoked from inside the legacy .claude/foundry/ tree,
     # defer its removal until after Python exits — we can't safely rmtree
@@ -2137,37 +2134,6 @@ def _install_foundry_payload(
 
     print(f"  Foundry payload installed at: {foundry_dir}")
     print(f"    Manual re-init: python3 {dst_setup} init {project}")
-
-
-def _install_feature_tool_paths(
-    project: Path, foundry_dir: Path, selected_features: list[str],
-) -> None:
-    """Extract feature-gated `tools/*` entries into <project>/.foundry/tools/.
-
-    Tools (e.g. tools/delegate/run.sh) are user-invokable scripts that
-    must persist after the tarball-mode tempdir is wiped. Only entries
-    under `tools/` from FEATURE_PATHS are extracted here — skills and
-    commands are deployed by their own copy_* helpers.
-    """
-    for key, paths in FEATURE_PATHS.items():
-        if key not in selected_features:
-            continue
-        for rel in paths:
-            if not rel.startswith("tools/"):
-                continue
-            src = REPO_ROOT / rel
-            if not src.exists():
-                continue
-            dst = foundry_dir / rel
-            if dst.is_dir():
-                shutil.rmtree(dst, ignore_errors=True)
-            elif dst.exists():
-                dst.unlink()
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            if src.is_dir():
-                shutil.copytree(src, dst)
-            else:
-                shutil.copy2(src, dst)
 
 
 def _build_foundry_tarball(
@@ -2230,10 +2196,15 @@ def _build_foundry_tarball(
         raise
 
 
+_GITIGNORE_HEADER = "# claude-foundry payload"
+
+
 def _ensure_gitignore_entry(gitignore: Path, entry: str) -> None:
     """Append `entry` to `gitignore` if not already present.
 
     Matches both `.foundry/` and `.foundry` style entries to avoid duplicates.
+    The `# claude-foundry payload` comment is emitted only on the first
+    foundry entry; subsequent entries append directly to the same block.
     """
     needle = entry.rstrip("/")
     existing = gitignore.read_text(encoding="utf-8") if gitignore.is_file() else ""
@@ -2242,10 +2213,11 @@ def _ensure_gitignore_entry(gitignore: Path, entry: str) -> None:
             return
     if existing and not existing.endswith("\n"):
         existing += "\n"
-    gitignore.write_text(
-        existing + "\n# claude-foundry payload\n" + entry + "\n",
-        encoding="utf-8",
-    )
+    if _GITIGNORE_HEADER in existing:
+        new_content = existing + entry + "\n"
+    else:
+        new_content = existing + "\n" + _GITIGNORE_HEADER + "\n" + entry + "\n"
+    gitignore.write_text(new_content, encoding="utf-8")
 
 
 def cmd_update_all(force: bool = False) -> None:

@@ -31,7 +31,7 @@ Authorization: Bearer $MINIMAX_API_KEY
 Content-Type: application/json
 ```
 
-Already in your env if you've set up `tools/delegate/.env`. Otherwise read from `~/.minimax_apikey` or wherever you keep it.
+Already in your env if you've set up the delegate skill's `.env` (at `<repo>/.env` or `.claude/skills/delegate/scripts/.env`). Otherwise read from `~/.minimax_apikey` or wherever you keep it.
 
 ## Async pattern (video, TTS, music)
 
