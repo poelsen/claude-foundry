@@ -336,3 +336,34 @@ class TestUpdateFoundryScript:
     def test_script_prints_manual_reinit_hint(self):
         content = self.SCRIPT.read_text(encoding="utf-8")
         assert "Manual re-init" in content or "manual re-init" in content.lower()
+
+    def test_no_grep_q_under_pipefail_for_setup_py_check(self):
+        """Regression guard: the tarball sanity check must NOT use `grep -q`
+        in a pipeline under `set -o pipefail`. grep -q exits on first match
+        and closes its stdin, causing tar to receive SIGPIPE and exit
+        non-zero — pipefail then propagates that as a pipeline failure,
+        making the check report a false negative. Use grep -c into a
+        variable (which reads all input) instead."""
+        content = self.SCRIPT.read_text(encoding="utf-8")
+        # Confirm the script enables pipefail (the bug only triggers there)
+        assert "set -euo pipefail" in content or "set -o pipefail" in content
+        # Find the setup-py sanity check region and ensure it doesn't
+        # use grep -q on a tar | grep pipeline.
+        bad_pattern = "tar $TAR_FLAGS -tzf"
+        for i, line in enumerate(content.splitlines()):
+            if bad_pattern in line and "grep -q" in line:
+                raise AssertionError(
+                    f"line {i + 1}: pipeline `tar | grep -q` under pipefail "
+                    f"causes SIGPIPE-induced false negatives. Use `grep -c` "
+                    f"with the result captured in a variable instead.\n"
+                    f"Offending line: {line.strip()}"
+                )
+
+    def test_setup_py_check_uses_grep_c(self):
+        """Positive form of the regression guard above: confirm we capture
+        a count from grep -c rather than relying on grep -q's exit code."""
+        content = self.SCRIPT.read_text(encoding="utf-8")
+        assert "grep -c '/tools/setup.py$'" in content, (
+            "expected grep -c (counts all matches, reads entire stdin) "
+            "for the tarball sanity check"
+        )
