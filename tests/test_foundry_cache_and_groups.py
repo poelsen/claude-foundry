@@ -125,6 +125,15 @@ class TestFoundryPayloadInstall:
         content = (tmp_path / ".gitignore").read_text(encoding="utf-8")
         assert content.count(".foundry/") == 1
 
+    def test_gitignore_header_not_duplicated_across_entries(self, tmp_path: Path):
+        """The `# claude-foundry payload` comment appears only once even when
+        multiple entries (.foundry/, .delegate/, …) are added."""
+        setup_py._install_foundry_payload(
+            tmp_path, selected_features=["minimax-delegate"]
+        )
+        content = (tmp_path / ".gitignore").read_text(encoding="utf-8")
+        assert content.count("# claude-foundry payload") == 1
+
     def test_idempotent(self, tmp_path: Path):
         """Running twice yields the same payload structure."""
         setup_py._install_foundry_payload(tmp_path)
@@ -170,20 +179,29 @@ class TestFoundryPayloadInstall:
         assert not (tmp_path / ".claude" / ".foundry.new").exists()
         assert not (tmp_path / ".claude" / ".foundry.old").exists()
 
-    def test_feature_gated_tools_extracted_when_enabled(self, tmp_path: Path):
-        """Feature-gated `tools/*` paths must persist at .foundry/tools/<path>."""
+    def test_no_tools_subdir_in_foundry(self, tmp_path: Path):
+        """`.foundry/` must contain only the install machinery (setup.py +
+        tarball). User-invokable scripts belong inside .claude/."""
         setup_py._install_foundry_payload(
             tmp_path, selected_features=["minimax-delegate"]
         )
-        delegate_dir = tmp_path / ".foundry" / "tools" / "delegate"
-        assert delegate_dir.is_dir()
-        assert (delegate_dir / "run.sh").is_file()
-        assert (delegate_dir / "lib.sh").is_file()
+        assert not (tmp_path / ".foundry" / "tools").exists(), (
+            ".foundry/ must not contain tools/ — scripts ship via the skill"
+        )
 
-    def test_feature_gated_tools_absent_when_disabled(self, tmp_path: Path):
-        """Without the feature toggle, no tools/* extraction happens."""
+    def test_delegate_gitignore_entry_when_feature_enabled(self, tmp_path: Path):
+        """`.delegate/` must be added to .gitignore when minimax-delegate is on."""
+        setup_py._install_foundry_payload(
+            tmp_path, selected_features=["minimax-delegate"]
+        )
+        gitignore = (tmp_path / ".gitignore").read_text(encoding="utf-8")
+        assert ".delegate/" in gitignore
+
+    def test_delegate_gitignore_absent_when_feature_disabled(self, tmp_path: Path):
+        """Don't pollute .gitignore with .delegate/ if the feature isn't on."""
         setup_py._install_foundry_payload(tmp_path, selected_features=[])
-        assert not (tmp_path / ".foundry" / "tools").exists()
+        gitignore = (tmp_path / ".gitignore").read_text(encoding="utf-8")
+        assert ".delegate/" not in gitignore
 
     def test_skips_when_repo_root_inside_target(self, tmp_path: Path, monkeypatch):
         """Don't write payload if REPO_ROOT is already inside the project."""

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/delegate/worktree.sh
+# .claude/skills/delegate/scripts/worktree.sh
 #
 # Worktree + result lifecycle for delegate jobs. Thin wrapper around
 # `git worktree` with conventions for delegate branches.

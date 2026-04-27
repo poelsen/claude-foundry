@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# tools/delegate/run.sh
+# .claude/skills/delegate/scripts/run.sh
 #
 # Orchestrated (non-interactive) delegate run. Primary Claude invokes this
 # via Bash; the script sets up the worktree + proxy, executes `claude
