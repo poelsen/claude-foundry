@@ -2,10 +2,11 @@
 # update-foundry.sh — Deterministic update script for claude-foundry configuration.
 # Usage: update-foundry.sh [--check] [--interactive] [project_dir]
 #
-# Per-project foundry cache model: the extracted release tree is persisted
-# under <project>/.claude/foundry/ so manual re-runs of setup.py always
-# match this project's version. No user-level cache, no symlinks — one
-# self-contained copy per project.
+# Per-project payload model: the foundry release is shipped as a tarball
+# at <project>/.foundry/foundry.tar.gz with a sibling setup.py extracted
+# from it. setup.py detects the sibling tarball at runtime, extracts to
+# a tempdir, and cleans up on exit — nothing under .claude/ that Claude
+# could traverse and find duplicates of.
 set -euo pipefail
 
 CHECK_ONLY=false
@@ -103,75 +104,78 @@ if [[ "$CHECK_ONLY" == true ]]; then
     exit 0
 fi
 
-# ── Download and extract to per-project cache ─────────────────────────
+# ── Download new tarball into <project>/.foundry/ ─────────────────────
 if [[ -z "$ASSET_URL" ]]; then
     echo "Error: No download asset found in release."
     exit 1
 fi
 
-CLAUDE_DIR="$PROJECT_DIR/.claude"
-FOUNDRY_DIR="$CLAUDE_DIR/foundry"
-FOUNDRY_NEW="$CLAUDE_DIR/.foundry.new"
-FOUNDRY_OLD="$CLAUDE_DIR/.foundry.old"
+FOUNDRY_DIR="$PROJECT_DIR/.foundry"
+TARBALL="$FOUNDRY_DIR/foundry.tar.gz"
+TARBALL_NEW="$FOUNDRY_DIR/foundry.tar.gz.new"
+TARBALL_OLD="$FOUNDRY_DIR/foundry.tar.gz.old"
+SETUP_PY="$FOUNDRY_DIR/setup.py"
+SETUP_PY_OLD="$FOUNDRY_DIR/setup.py.old"
 
-mkdir -p "$CLAUDE_DIR"
+mkdir -p "$FOUNDRY_DIR"
 
-# Clean up any leftover staging/backup from a previous failed run
-rm -rf "$FOUNDRY_NEW" "$FOUNDRY_OLD"
-
-# Download tarball to a temp location inside .claude/ so it shares the
-# same filesystem as the final destination (rename is atomic on the same FS).
-TMP_TARBALL="$CLAUDE_DIR/.foundry-release.tar.gz"
-trap 'rm -f "$TMP_TARBALL"; rm -rf "$FOUNDRY_NEW"' EXIT
+# Clean up leftovers from any prior failed run, and ensure we don't leave
+# the staging files behind on this exit either.
+rm -f "$TARBALL_NEW" "$TARBALL_OLD" "$SETUP_PY_OLD"
+trap 'rm -f "$TARBALL_NEW"' EXIT
 
 echo ""
 echo "Downloading $ASSET_URL ..."
-curl -sL "$ASSET_URL" -o "$TMP_TARBALL"
+curl -sL "$ASSET_URL" -o "$TARBALL_NEW"
 
-echo "Extracting to $FOUNDRY_NEW ..."
-mkdir -p "$FOUNDRY_NEW"
-# GNU tar interprets "D:/foo" as a remote host (rsync-style host:path). Pass
-# --force-local when tar supports it. BSD tar (macOS) lacks the flag but also
-# never sees drive-letter paths, so feature-detect and add conditionally.
+# Sanity: extracted tarball must contain tools/setup.py at the top level
+# (with one wrapper dir, matching GitHub release tarball convention).
 TAR_FLAGS=""
 if tar --help 2>&1 | grep -q -- --force-local; then
     TAR_FLAGS="--force-local"
 fi
-tar $TAR_FLAGS -xzf "$TMP_TARBALL" -C "$FOUNDRY_NEW" --strip-components=1
-
-# Sanity check: setup.py must exist in the extracted tree
-if [[ ! -f "$FOUNDRY_NEW/tools/setup.py" ]]; then
-    echo "Error: extracted tarball missing tools/setup.py"
+if ! tar $TAR_FLAGS -tzf "$TARBALL_NEW" 2>/dev/null | grep -q '/tools/setup.py$'; then
+    echo "Error: downloaded tarball missing tools/setup.py"
     exit 1
 fi
 
-# ── Atomic swap: promote .foundry.new → foundry ───────────────────────
-if [[ -d "$FOUNDRY_DIR" ]]; then
-    mv "$FOUNDRY_DIR" "$FOUNDRY_OLD"
-fi
-mv "$FOUNDRY_NEW" "$FOUNDRY_DIR"
+# ── Atomic swap: tarball + setup.py ────────────────────────────────────
+[[ -f "$TARBALL"  ]] && mv "$TARBALL"  "$TARBALL_OLD"
+[[ -f "$SETUP_PY" ]] && mv "$SETUP_PY" "$SETUP_PY_OLD"
+mv "$TARBALL_NEW" "$TARBALL"
 
-# ── Snapshot old state ─────────────────────────────────────────────────
+# Extract just tools/setup.py from the new tarball alongside it. We use
+# --strip-components=2 to drop both the version-wrapper dir and "tools/".
+tar $TAR_FLAGS -xzf "$TARBALL" -C "$FOUNDRY_DIR" --strip-components=2 \
+    --wildcards '*/tools/setup.py'
+
+if [[ ! -f "$SETUP_PY" ]]; then
+    echo "Error: failed to extract tools/setup.py from tarball — rolling back"
+    [[ -f "$TARBALL_OLD"  ]] && mv "$TARBALL_OLD"  "$TARBALL"
+    [[ -f "$SETUP_PY_OLD" ]] && mv "$SETUP_PY_OLD" "$SETUP_PY"
+    exit 1
+fi
+
+# ── Snapshot old project state ────────────────────────────────────────
+CLAUDE_DIR="$PROJECT_DIR/.claude"
 OLD_COMMANDS=$(ls "$CLAUDE_DIR/commands/" 2>/dev/null | sort || true)
 OLD_RULES=$(ls "$CLAUDE_DIR/rules/" 2>/dev/null | sort || true)
 OLD_AGENTS=$(ls "$CLAUDE_DIR/agents/" 2>/dev/null | sort || true)
 OLD_SKILLS=$(ls "$CLAUDE_DIR/skills/" 2>/dev/null | sort || true)
 
-# ── Run setup from the per-project foundry cache ───────────────────────
+# ── Run the new setup.py against the project ──────────────────────────
 echo "Applying update..."
 echo ""
-if ! $PYTHON "$FOUNDRY_DIR/tools/setup.py" init "$PROJECT_DIR" $INTERACTIVE_FLAG; then
+if ! $PYTHON "$SETUP_PY" init "$PROJECT_DIR" $INTERACTIVE_FLAG; then
     echo ""
     echo "ERROR: setup.py init failed — rolling back to previous version"
-    rm -rf "$FOUNDRY_DIR"
-    if [[ -d "$FOUNDRY_OLD" ]]; then
-        mv "$FOUNDRY_OLD" "$FOUNDRY_DIR"
-    fi
+    [[ -f "$TARBALL_OLD"  ]] && mv "$TARBALL_OLD"  "$TARBALL"
+    [[ -f "$SETUP_PY_OLD" ]] && mv "$SETUP_PY_OLD" "$SETUP_PY"
     exit 1
 fi
 
-# Success — wipe backup
-rm -rf "$FOUNDRY_OLD"
+# Success — wipe backups
+rm -f "$TARBALL_OLD" "$SETUP_PY_OLD"
 
 # ── Report changes ─────────────────────────────────────────────────────
 NEW_COMMANDS=$(ls "$CLAUDE_DIR/commands/" 2>/dev/null | sort || true)
@@ -183,8 +187,8 @@ echo ""
 echo "═══════════════════════════════════════════"
 echo "Update complete: $CURRENT_VERSION → $LATEST_VERSION"
 echo "═══════════════════════════════════════════"
-echo "  Foundry source pinned at: $FOUNDRY_DIR"
-echo "  Manual re-init:           $PYTHON $FOUNDRY_DIR/tools/setup.py init $PROJECT_DIR"
+echo "  Foundry payload pinned at: $FOUNDRY_DIR"
+echo "  Manual re-init:            $PYTHON $SETUP_PY init $PROJECT_DIR"
 echo ""
 
 CHANGES=false

@@ -1,10 +1,11 @@
-"""Tests for per-project foundry cache and skill grouping.
+"""Tests for per-project foundry payload and skill grouping.
 
 Covers:
 - SKILL_GROUPS shape + default contents
 - HIDDEN_SKILLS excludes copilot-* from visible menu
-- _self_copy_foundry_source populates <project>/.claude/foundry/
-- Self-copy is idempotent and skips when already inside target
+- _install_foundry_payload writes setup.py + foundry.tar.gz to <project>/.foundry/
+- Payload install is idempotent and skips when REPO_ROOT lives inside target
+- Migrates away from legacy <project>/.claude/foundry/ exploded tree
 - Absolute-path messages in copilot install hook
 """
 
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 import shutil
 import sys
+import tarfile
 from pathlib import Path
 
 import pytest
@@ -77,66 +79,161 @@ class TestHiddenSkills:
             assert skill not in setup_py.HIDDEN_SKILLS
 
 
-class TestFoundrySelfCopy:
-    """Verify _self_copy_foundry_source populates .claude/foundry/ atomically."""
+class TestFoundryPayloadInstall:
+    """Verify _install_foundry_payload writes the .foundry/ payload correctly."""
 
-    def test_copies_tree_to_claude_foundry(self, tmp_path: Path):
-        setup_py._self_copy_foundry_source(tmp_path)
-        target = tmp_path / ".claude" / "foundry"
-        assert target.is_dir()
-        # Key files must be present
-        assert (target / "tools" / "setup.py").is_file()
-        assert (target / "rules").is_dir()
-        assert (target / "skills").is_dir()
-        assert (target / "mcp-configs" / "mcp-servers.json").is_file()
+    def test_writes_tarball_and_setup_py(self, tmp_path: Path):
+        setup_py._install_foundry_payload(tmp_path)
+        foundry_dir = tmp_path / ".foundry"
+        assert foundry_dir.is_dir()
+        assert (foundry_dir / "setup.py").is_file()
+        assert (foundry_dir / "foundry.tar.gz").is_file()
 
-    def test_skips_build_artifacts(self, tmp_path: Path):
-        setup_py._self_copy_foundry_source(tmp_path)
-        target = tmp_path / ".claude" / "foundry"
-        # These directories should NOT be copied
-        assert not (target / ".git").exists()
-        assert not (target / ".venv").exists()
-        assert not (target / "__pycache__").exists()
-        # node_modules in vscode-copilot-mcp should be pruned
-        if (target / "vscode-copilot-mcp").exists():
-            assert not (target / "vscode-copilot-mcp" / "node_modules").exists()
-            assert not (target / "vscode-copilot-mcp" / "out").exists()
+    def test_setup_py_matches_running_script(self, tmp_path: Path):
+        """The deployed setup.py must be a copy of the canonical tools/setup.py."""
+        setup_py._install_foundry_payload(tmp_path)
+        deployed = (tmp_path / ".foundry" / "setup.py").read_bytes()
+        canonical = (REPO_ROOT / "tools" / "setup.py").read_bytes()
+        assert deployed == canonical
+
+    def test_tarball_contains_setup_py_and_skills(self, tmp_path: Path):
+        setup_py._install_foundry_payload(tmp_path)
+        with tarfile.open(tmp_path / ".foundry" / "foundry.tar.gz", "r:gz") as tf:
+            names = tf.getnames()
+        # Tarball uses a top-level wrapper directory
+        assert any(n.endswith("/tools/setup.py") for n in names)
+        assert any("/skills/" in n for n in names)
+        assert any(n.endswith("/mcp-configs/mcp-servers.json") for n in names)
+
+    def test_tarball_excludes_build_artifacts(self, tmp_path: Path):
+        setup_py._install_foundry_payload(tmp_path)
+        with tarfile.open(tmp_path / ".foundry" / "foundry.tar.gz", "r:gz") as tf:
+            names = tf.getnames()
+        for forbidden in (".git/", "__pycache__/", ".venv/", "/.claude/", "node_modules/"):
+            assert not any(forbidden in n for n in names), (
+                f"tarball contains {forbidden}"
+            )
+
+    def test_adds_gitignore_entry(self, tmp_path: Path):
+        setup_py._install_foundry_payload(tmp_path)
+        gitignore = (tmp_path / ".gitignore").read_text(encoding="utf-8")
+        assert ".foundry/" in gitignore
+
+    def test_gitignore_entry_not_duplicated(self, tmp_path: Path):
+        (tmp_path / ".gitignore").write_text(".foundry/\n", encoding="utf-8")
+        setup_py._install_foundry_payload(tmp_path)
+        content = (tmp_path / ".gitignore").read_text(encoding="utf-8")
+        assert content.count(".foundry/") == 1
 
     def test_idempotent(self, tmp_path: Path):
-        """Running twice should leave the same result."""
-        setup_py._self_copy_foundry_source(tmp_path)
-        first_contents = sorted(
-            p.relative_to(tmp_path / ".claude" / "foundry")
-            for p in (tmp_path / ".claude" / "foundry").rglob("*")
+        """Running twice yields the same payload structure."""
+        setup_py._install_foundry_payload(tmp_path)
+        first_paths = sorted(
+            p.relative_to(tmp_path).as_posix()
+            for p in (tmp_path / ".foundry").rglob("*")
             if p.is_file()
         )
-        setup_py._self_copy_foundry_source(tmp_path)
-        second_contents = sorted(
-            p.relative_to(tmp_path / ".claude" / "foundry")
-            for p in (tmp_path / ".claude" / "foundry").rglob("*")
+        setup_py._install_foundry_payload(tmp_path)
+        second_paths = sorted(
+            p.relative_to(tmp_path).as_posix()
+            for p in (tmp_path / ".foundry").rglob("*")
             if p.is_file()
         )
-        assert first_contents == second_contents
+        assert first_paths == second_paths
 
-    def test_no_leftover_staging_or_backup(self, tmp_path: Path):
-        setup_py._self_copy_foundry_source(tmp_path)
-        claude_dir = tmp_path / ".claude"
-        assert not (claude_dir / ".foundry.new").exists()
-        assert not (claude_dir / ".foundry.old").exists()
+    def test_no_leftover_tmp_tarball(self, tmp_path: Path):
+        """The intermediate .tmp file used for atomic-rename must not survive."""
+        setup_py._install_foundry_payload(tmp_path)
+        assert not (tmp_path / ".foundry" / "foundry.tar.gz.tmp").exists()
 
-    def test_skips_when_running_inside_target(self, tmp_path: Path, monkeypatch):
-        """If REPO_ROOT is already inside <project>/.claude/foundry/, don't copy."""
-        # Arrange: stage a fake target and point REPO_ROOT at a subdirectory
-        target = tmp_path / ".claude" / "foundry"
-        target.mkdir(parents=True)
-        (target / "marker.txt").write_text("pre-existing")
-        monkeypatch.setattr(setup_py, "REPO_ROOT", target)
+    def test_migrates_legacy_claude_foundry(self, tmp_path: Path):
+        """A pre-existing <project>/.claude/foundry/ tree must be removed."""
+        legacy = tmp_path / ".claude" / "foundry"
+        legacy.mkdir(parents=True)
+        (legacy / "marker.txt").write_text("legacy junk")
+        (legacy / "skills").mkdir()
 
-        # Act: call the self-copy — should be a no-op, marker preserved
-        setup_py._self_copy_foundry_source(tmp_path)
+        setup_py._install_foundry_payload(tmp_path)
 
-        assert (target / "marker.txt").is_file()
-        assert (target / "marker.txt").read_text() == "pre-existing"
+        assert not legacy.exists(), "legacy .claude/foundry/ must be removed on install"
+        assert (tmp_path / ".foundry" / "foundry.tar.gz").is_file()
+
+    def test_migrates_legacy_staging_dirs(self, tmp_path: Path):
+        """Old .claude/.foundry.{new,old} staging dirs must be cleaned up."""
+        for stale in (".foundry.new", ".foundry.old"):
+            d = tmp_path / ".claude" / stale
+            d.mkdir(parents=True)
+            (d / "leftover.txt").write_text("from a crashed update")
+
+        setup_py._install_foundry_payload(tmp_path)
+
+        assert not (tmp_path / ".claude" / ".foundry.new").exists()
+        assert not (tmp_path / ".claude" / ".foundry.old").exists()
+
+    def test_feature_gated_tools_extracted_when_enabled(self, tmp_path: Path):
+        """Feature-gated `tools/*` paths must persist at .foundry/tools/<path>."""
+        setup_py._install_foundry_payload(
+            tmp_path, selected_features=["minimax-delegate"]
+        )
+        delegate_dir = tmp_path / ".foundry" / "tools" / "delegate"
+        assert delegate_dir.is_dir()
+        assert (delegate_dir / "run.sh").is_file()
+        assert (delegate_dir / "lib.sh").is_file()
+
+    def test_feature_gated_tools_absent_when_disabled(self, tmp_path: Path):
+        """Without the feature toggle, no tools/* extraction happens."""
+        setup_py._install_foundry_payload(tmp_path, selected_features=[])
+        assert not (tmp_path / ".foundry" / "tools").exists()
+
+    def test_skips_when_repo_root_inside_target(self, tmp_path: Path, monkeypatch):
+        """Don't write payload if REPO_ROOT is already inside the project."""
+        fake_root = tmp_path / ".foundry-source"
+        fake_root.mkdir()
+        monkeypatch.setattr(setup_py, "REPO_ROOT", fake_root)
+
+        setup_py._install_foundry_payload(tmp_path)
+
+        # Nothing should have been written under .foundry/
+        assert not (tmp_path / ".foundry" / "foundry.tar.gz").exists()
+        assert not (tmp_path / ".foundry" / "setup.py").exists()
+
+    def test_migration_from_inside_legacy_location(
+        self, tmp_path: Path, monkeypatch
+    ):
+        """When invoked by the OLD update-foundry.sh, the new setup.py runs
+        from inside <project>/.claude/foundry/. That run must:
+          1. NOT rmtree the legacy dir mid-run (it's the dir we're in)
+          2. Still install the new .foundry/ payload
+          3. Schedule legacy cleanup for atexit (deferred until after exit)
+        """
+        legacy = tmp_path / ".claude" / "foundry"
+        legacy.parent.mkdir(parents=True)
+        shutil.copytree(REPO_ROOT, legacy, ignore=shutil.ignore_patterns(
+            ".git", "__pycache__", ".venv", "venv", "node_modules",
+            "results", ".foundry", ".claude",
+        ))
+
+        monkeypatch.setattr(setup_py, "REPO_ROOT", legacy)
+
+        registered: list[tuple] = []
+        import atexit as _atexit
+        monkeypatch.setattr(
+            _atexit,
+            "register",
+            lambda fn, *args, **kw: registered.append((fn, args, kw)),
+        )
+
+        setup_py._install_foundry_payload(tmp_path)
+
+        # (1) Legacy still exists — deletion was deferred
+        assert legacy.is_dir(), "legacy dir must NOT be removed mid-run"
+        # (2) New payload was installed
+        assert (tmp_path / ".foundry" / "foundry.tar.gz").is_file()
+        assert (tmp_path / ".foundry" / "setup.py").is_file()
+        # (3) atexit cleanup was scheduled for the legacy dir
+        assert any(
+            args and str(args[0]) == str(legacy) for _, args, _ in registered
+        ), f"expected atexit cleanup of {legacy}, got: {registered}"
 
 
 class TestCopilotInstallMessagePath:
@@ -179,7 +276,7 @@ class TestCopilotInstallMessagePath:
 
 
 class TestUpdateFoundryScript:
-    """Verify update-foundry.sh uses the per-project cache model."""
+    """Verify update-foundry.sh targets the new <project>/.foundry/ payload layout."""
 
     SCRIPT = REPO_ROOT / "skills" / "update-foundry" / "scripts" / "update-foundry.sh"
 
@@ -191,28 +288,32 @@ class TestUpdateFoundryScript:
         )
         assert result.returncode == 0, f"bash syntax error:\n{result.stderr}"
 
-    def test_script_uses_per_project_foundry_dir(self):
+    def test_script_targets_dot_foundry_dir(self):
+        """Should write under <project>/.foundry/, not the legacy .claude/foundry/."""
         content = self.SCRIPT.read_text(encoding="utf-8")
-        assert "FOUNDRY_DIR=" in content
-        assert ".claude/foundry" in content
+        assert "PROJECT_DIR/.foundry" in content
+        # The legacy path must not appear as a write target anymore
+        assert ".claude/foundry" not in content
 
-    def test_script_does_atomic_swap(self):
+    def test_script_writes_tarball_and_setup_py(self):
         content = self.SCRIPT.read_text(encoding="utf-8")
-        # Should stage in .foundry.new, back up as .foundry.old, swap via mv
-        assert ".foundry.new" in content
-        assert ".foundry.old" in content
+        assert "foundry.tar.gz" in content
+        assert "tools/setup.py" in content
+
+    def test_script_does_atomic_tarball_swap(self):
+        content = self.SCRIPT.read_text(encoding="utf-8")
+        # Stage as .new, back up as .old, mv into place
+        assert "foundry.tar.gz.new" in content
+        assert "foundry.tar.gz.old" in content
 
     def test_script_rolls_back_on_setup_failure(self):
         content = self.SCRIPT.read_text(encoding="utf-8")
         assert "rolling back" in content.lower() or "roll back" in content.lower()
 
-    def test_script_does_not_use_mktemp_for_foundry(self):
-        """Old behavior was to use mktemp + trap cleanup; new behavior persists."""
+    def test_script_invokes_deployed_setup_py(self):
+        """Must run <project>/.foundry/setup.py, not python -m or anything else."""
         content = self.SCRIPT.read_text(encoding="utf-8")
-        # The script should not create a mktemp dir for the foundry tree
-        # (it may still use temp for the tarball download, which is fine)
-        # Specifically: the old "TMPDIR=$(mktemp -d)" pattern should be gone
-        assert "TMPDIR=$(mktemp -d)" not in content
+        assert '"$SETUP_PY" init' in content
 
     def test_script_prints_manual_reinit_hint(self):
         content = self.SCRIPT.read_text(encoding="utf-8")

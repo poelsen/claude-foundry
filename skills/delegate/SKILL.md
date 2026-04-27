@@ -6,11 +6,11 @@ model: any
 
 # Delegate — MiniMax Secondary Claude
 
-Use this skill when the user wants to **offload work to a secondary Claude Code session running on MiniMax** instead of burning Anthropic / Copilot quota. The underlying scripts live in `tools/delegate/` (or `.claude/foundry/tools/delegate/` in installed projects). Read `tools/delegate/README.md` for full reference.
+Use this skill when the user wants to **offload work to a secondary Claude Code session running on MiniMax** instead of burning Anthropic / Copilot quota. The underlying scripts live in `tools/delegate/` in the foundry source repo, or `.foundry/tools/delegate/` in deployed projects. Read `tools/delegate/README.md` for full reference.
 
 ## Prerequisite
 
-The user must have a MiniMax API key in `tools/delegate/.env` (copy from `.env.example`). If `.env` is missing, stop and tell them to set it up first.
+The user must have a MiniMax API key in `tools/delegate/.env` (or `.foundry/tools/delegate/.env` in deployed projects), copied from the `.env.example` sibling. If `.env` is missing, stop and tell them to set it up first.
 
 ## Subcommand routing
 

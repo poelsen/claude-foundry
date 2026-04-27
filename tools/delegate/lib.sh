@@ -17,7 +17,7 @@ DELEGATE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # REPO_ROOT is the git repo of the INVOKING cwd (target project), not of
 # the script's location. This lets one deployed copy of these scripts —
-# e.g. $TARGET/.claude/foundry/tools/delegate/ — operate on any project
+# e.g. $TARGET/.foundry/tools/delegate/ — operate on any project
 # the user cd-s into before invocation.
 REPO_ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)" \
     || die "not inside a git repository (cwd=$PWD) — cd into the target project first"

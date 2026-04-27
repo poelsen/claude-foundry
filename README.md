@@ -49,31 +49,30 @@ From any configured project, run the `/update-foundry` slash command inside a Cl
 /update-foundry-interactive    # Full interactive menu to add/change selections
 ```
 
-`/update-foundry` checks the GitHub releases API, downloads the latest tarball, extracts it to **`<project>/.claude/foundry/`**, and runs that extracted setup.py non-interactively using the saved manifest. Works the same regardless of how you bootstrapped.
+`/update-foundry` checks the GitHub releases API, downloads the latest tarball to **`<project>/.foundry/foundry.tar.gz`**, refreshes the sibling `setup.py`, and runs it non-interactively using the saved manifest. Works the same regardless of how you bootstrapped.
 
 ### Where foundry lives after install
 
-Every project gets its own pinned copy of the foundry source tree at:
+Every project gets a self-contained payload at:
 
 ```
-<project>/.claude/foundry/
-├── tools/setup.py                    # this project's setup.py (pinned)
-├── tools/install-copilot-mcp.sh
-├── rules/ rule-library/ agents/ commands/ skills/ hooks/
-├── mcp-configs/
-└── vscode-copilot-mcp/               # extension source + pre-built .vsix
+<project>/.foundry/                  # gitignored
+├── setup.py                         # extracted from the tarball below
+└── foundry.tar.gz                   # the pinned release
 ```
 
-**Why per-project?** Different projects can be on different foundry versions, and `setup.py` is always matched to the rest of the tree on disk. No user-level cache, no symlinks — one self-contained copy per project. You can delete the original bootstrap tarball immediately after the first `setup.py init`; everything you need is under `.claude/foundry/` from that point on.
+That's all. Nothing under `.claude/` belongs to foundry's machinery — `.claude/` only contains the artifacts foundry installed for *this project* (commands, skills, agents, rules, hooks). When `setup.py` runs, it detects the sibling tarball, extracts it to a tempdir for the duration of the run, and wipes the tempdir on exit — so Claude never trips over a duplicate copy of the foundry tree while traversing your project.
 
-The tree is refreshed atomically on every `/update-foundry` (staged under `.claude/.foundry.new/`, swapped into place only after a successful setup run; rolled back on failure).
+**Why per-project?** Different projects can be on different foundry versions, and `setup.py` is always matched to the tarball next to it. No user-level cache, no symlinks — one self-contained payload per project. The original bootstrap tarball you downloaded can be deleted as soon as the first install completes; `.foundry/` carries forward.
+
+On every `/update-foundry`, the tarball is replaced atomically (staged as `.foundry/foundry.tar.gz.new`, swapped via `mv` only after a successful setup run; rolled back on failure).
 
 ### Manual re-init
 
 To re-run setup.py manually (e.g. to toggle new skill groups, register a private source, or reconfigure):
 
 ```bash
-python3 <project>/.claude/foundry/tools/setup.py init <project>
+python3 <project>/.foundry/setup.py init <project>
 ```
 
 The post-init summary prints this exact command so you can copy-paste it from your terminal.
@@ -81,7 +80,7 @@ The post-init summary prints this exact command so you can copy-paste it from yo
 For batch updates across all known projects:
 
 ```bash
-python3 <project>/.claude/foundry/tools/setup.py update-all
+python3 <project>/.foundry/setup.py update-all
 ```
 
 ## CLAUDE.md Convention
@@ -510,7 +509,7 @@ To **disable** Copilot MCP on a project that previously had it enabled, run `set
 - **`code` shell command on PATH** — this is the *external* `code` executable used by `code --install-extension <vsix>`, NOT the integrated terminal panel inside VS Code. Install via VS Code: `Ctrl+Shift+P` → `Shell Command: Install 'code' command in PATH`, then restart your shell.
 - `bash`, `curl`, `python3`, `awk`, `mktemp` (for background-job watcher; standard on Linux/macOS/WSL/Git Bash)
 
-> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. On WSL: open VS Code with your WSL workspace attached, open a terminal inside VS Code, and run `<project>/.claude/foundry/tools/install-copilot-mcp.sh` from there. The integrated terminal sets up `PATH` so `code` is available even though it isn't in your standalone WSL shell.
+> **WSL caveat**: the `code` command from VS Code Server (`~/.vscode-server/bin/<hash>/bin/remote-cli/code`) only works **inside an integrated VS Code terminal session**, not from a plain WSL bash. On WSL: open VS Code with your WSL workspace attached, open a terminal inside VS Code, and re-run `python3 <project>/.foundry/setup.py init <project>` from there — the integrated terminal sets up `PATH` so `code` is available, and setup.py will trigger the extension install internally.
 
 ### After install (REQUIRED — the extension is disabled by default)
 

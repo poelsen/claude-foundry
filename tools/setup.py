@@ -62,7 +62,53 @@ def _ensure_utf8_stdio() -> None:
 _ensure_utf8_stdio()
 
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+_TARBALL_MODE = False
+_PAYLOAD_TARBALL: Path | None = None
+
+
+def _resolve_repo_root() -> Path:
+    """Resolve REPO_ROOT, switching between source and tarball modes.
+
+    Source mode: setup.py lives at <foundry-repo>/tools/setup.py with
+    sibling source dirs (commands/, skills/, ...) one level up.
+
+    Tarball mode: setup.py lives at <project>/.foundry/setup.py with a
+    sibling foundry.tar.gz. The tarball is extracted to a tempdir, which
+    becomes REPO_ROOT for this run. The tempdir is wiped at process exit.
+
+    Detection: a sibling `foundry.tar.gz` next to setup.py implies tarball
+    mode. Anything else implies source mode.
+    """
+    import atexit
+    import tarfile
+    import tempfile
+
+    global _TARBALL_MODE, _PAYLOAD_TARBALL
+    setup_dir = Path(__file__).resolve().parent
+    sibling_tarball = setup_dir / "foundry.tar.gz"
+
+    if sibling_tarball.is_file():
+        _TARBALL_MODE = True
+        _PAYLOAD_TARBALL = sibling_tarball
+        tmpdir = Path(tempfile.mkdtemp(prefix="foundry-"))
+        atexit.register(shutil.rmtree, str(tmpdir), ignore_errors=True)
+        with tarfile.open(sibling_tarball, "r:gz") as tf:
+            try:
+                tf.extractall(tmpdir, filter="data")
+            except TypeError:
+                # Python < 3.12 lacks the filter kwarg
+                tf.extractall(tmpdir)
+        # Strip a single top-level wrapper dir if present (matches GitHub
+        # release tarball convention: `claude-foundry-vX.Y.Z/...`).
+        entries = [p for p in tmpdir.iterdir() if not p.name.startswith(".")]
+        if len(entries) == 1 and entries[0].is_dir():
+            return entries[0]
+        return tmpdir
+
+    return setup_dir.parent
+
+
+REPO_ROOT = _resolve_repo_root()
 
 
 class GoBack(Exception):
@@ -1958,101 +2004,248 @@ def cmd_init(
         prefixes = ", ".join(s["prefix"] for s in private_sources)
         print(f"  Private sources: {len(private_sources)} ({prefixes}, {total_private} files)")
 
-    # ── Per-project foundry self-copy ────────────────────────────────
-    # Pin a copy of the foundry source tree to <project>/.claude/foundry/
-    # so manual re-runs of setup.py always match this project's version,
-    # and the user doesn't need the original bootstrap tarball anymore.
-    # Skip when we're already running from inside the target (e.g. the
-    # update-foundry.sh flow staged the tree before invoking us).
-    _self_copy_foundry_source(project, selected_features)
+    # ── Per-project foundry payload ──────────────────────────────────
+    # Drop a self-contained copy of setup.py + the foundry source tarball
+    # into <project>/.foundry/ so manual re-runs always match this
+    # project's version. Migrates away from the legacy .claude/foundry/
+    # exploded tree which Claude could traverse and find duplicates of.
+    _install_foundry_payload(project, selected_features)
 
     return True
 
 
-def _self_copy_foundry_source(project: Path, selected_features: list[str] | None = None) -> None:
-    """Copy REPO_ROOT tree to <project>/.claude/foundry/.
+_PAYLOAD_SKIP_NAMES = {
+    ".git", "__pycache__", ".pytest_cache", ".venv", "venv",
+    "node_modules", "out", ".vscode-test", "dist", "build",
+    ".coverage", "results", ".claude",
+    ".foundry", ".foundry.new", ".foundry.old", "foundry",
+}
 
-    Idempotent and safe to call at the end of every ``setup.py init`` run.
-    Skips when REPO_ROOT is already inside the target (avoids copying a
-    directory onto itself). Uses an atomic swap via a staging directory so
-    a crash mid-copy doesn't leave the foundry cache in a broken state.
+
+def _install_foundry_payload(
+    project: Path, selected_features: list[str] | None = None,
+) -> None:
+    """Install foundry payload (tarball + setup.py) at <project>/.foundry/.
+
+    Writes:
+      <project>/.foundry/setup.py        — copy of the running script
+      <project>/.foundry/foundry.tar.gz  — tarball of REPO_ROOT (or copy
+                                           of the source tarball in
+                                           tarball mode)
+
+    Migrates: removes any legacy <project>/.claude/foundry/ tree and the
+    obsolete .claude/.foundry.{new,old} staging dirs from older versions.
+
+    Ensures <project>/.gitignore lists `.foundry/`.
+
+    Skipped when REPO_ROOT lives inside the target project (running
+    setup.py from a deployed payload against its own project — the
+    payload is already canonical, no need to rewrite it).
 
     Args:
         project: Target project directory.
-        selected_features: Keys from OPTIONAL_FEATURES the user opted into.
-            Paths mapped in FEATURE_PATHS for features NOT in this list are
-            excluded from the self-copy.
+        selected_features: Keys from OPTIONAL_FEATURES the user opted
+            into. Paths mapped in FEATURE_PATHS for features NOT in
+            this list are excluded from the source-mode tarball build.
     """
+    import atexit
+
     selected_features = selected_features or []
-    target = (project / ".claude" / "foundry").resolve()
+    project = project.resolve()
 
-    # Skip when source and target overlap — either direction would cause
-    # shutil.copytree to recurse into its own staging dir.
-    # - REPO_ROOT inside target: /update-foundry.sh already staged us there.
-    # - target inside REPO_ROOT: running setup against the foundry repo itself;
-    #   the source already lives at REPO_ROOT so caching it is pointless.
+    legacy_root = project / ".claude" / "foundry"
+    foundry_dir = project / ".foundry"
+
+    # Detect the migration boundary case: an old update-foundry.sh
+    # extracted the new release into <project>/.claude/foundry/ and
+    # invoked us from there. We can't delete the dir we're running from
+    # mid-run (Linux survives via inode refcounting but it's racy;
+    # Windows fails silently). Defer the legacy cleanup to atexit so the
+    # dir is wiped only after Python exits.
+    running_from_legacy = False
+    if legacy_root.is_dir():
+        try:
+            REPO_ROOT.relative_to(legacy_root)
+            running_from_legacy = True
+        except ValueError:
+            pass
+        if not running_from_legacy:
+            shutil.rmtree(legacy_root, ignore_errors=True)
+            print(f"  Removed legacy foundry copy: {legacy_root}")
+
+    for stale in (
+        project / ".claude" / ".foundry.new",
+        project / ".claude" / ".foundry.old",
+        project / ".claude" / ".foundry-release.tar.gz",
+    ):
+        if stale.exists():
+            if stale.is_dir():
+                shutil.rmtree(stale, ignore_errors=True)
+            else:
+                stale.unlink()
+
+    # Skip when REPO_ROOT is already canonical (deployed setup.py running
+    # against its own project — payload is in place, nothing to write).
     try:
-        REPO_ROOT.relative_to(target)
+        REPO_ROOT.relative_to(foundry_dir)
         return
     except ValueError:
         pass
-    try:
-        target.relative_to(REPO_ROOT)
-        return
-    except ValueError:
-        pass
 
-    # Compute absolute paths to exclude based on deselected features.
+    # Skip when running setup.py from the foundry repo against itself
+    # (no point tarballing the source we're sitting on into ./foundry/
+    # inside it). The legacy-running case is allowed through — we still
+    # need to install the new payload in that one.
+    if not running_from_legacy:
+        try:
+            REPO_ROOT.relative_to(project)
+            return
+        except ValueError:
+            pass
+
+    foundry_dir.mkdir(parents=True, exist_ok=True)
+
+    # Tarball: in tarball mode we already have the canonical artifact next
+    # to the running setup.py — just make sure it lives at the canonical
+    # path. In source mode, build a fresh tarball from REPO_ROOT.
+    target_tarball = foundry_dir / "foundry.tar.gz"
+    if _TARBALL_MODE and _PAYLOAD_TARBALL is not None and _PAYLOAD_TARBALL.is_file():
+        if _PAYLOAD_TARBALL.resolve() != target_tarball.resolve():
+            shutil.copy2(_PAYLOAD_TARBALL, target_tarball)
+    else:
+        _build_foundry_tarball(REPO_ROOT, target_tarball, selected_features)
+
+    # setup.py copy: always refresh from REPO_ROOT so it matches the tarball
+    src_setup = REPO_ROOT / "tools" / "setup.py"
+    dst_setup = foundry_dir / "setup.py"
+    shutil.copy2(src_setup, dst_setup)
+
+    # Feature-gated `tools/*` paths (e.g. tools/delegate/) need a stable,
+    # invokable location since the tarball-mode tempdir is wiped on exit.
+    # Extract them to <project>/.foundry/<path>. Skills/commands deploy
+    # via the standard copy_skills/copy_commands path and don't need this.
+    _install_feature_tool_paths(project, foundry_dir, selected_features)
+
+    _ensure_gitignore_entry(project / ".gitignore", ".foundry/")
+
+    # If we were invoked from inside the legacy .claude/foundry/ tree,
+    # defer its removal until after Python exits — we can't safely rmtree
+    # the dir we're executing from while it's still in use.
+    if running_from_legacy:
+        atexit.register(shutil.rmtree, str(legacy_root), True)
+        print(f"  Legacy {legacy_root} will be removed on exit")
+
+    print(f"  Foundry payload installed at: {foundry_dir}")
+    print(f"    Manual re-init: python3 {dst_setup} init {project}")
+
+
+def _install_feature_tool_paths(
+    project: Path, foundry_dir: Path, selected_features: list[str],
+) -> None:
+    """Extract feature-gated `tools/*` entries into <project>/.foundry/tools/.
+
+    Tools (e.g. tools/delegate/run.sh) are user-invokable scripts that
+    must persist after the tarball-mode tempdir is wiped. Only entries
+    under `tools/` from FEATURE_PATHS are extracted here — skills and
+    commands are deployed by their own copy_* helpers.
+    """
+    for key, paths in FEATURE_PATHS.items():
+        if key not in selected_features:
+            continue
+        for rel in paths:
+            if not rel.startswith("tools/"):
+                continue
+            src = REPO_ROOT / rel
+            if not src.exists():
+                continue
+            dst = foundry_dir / rel
+            if dst.is_dir():
+                shutil.rmtree(dst, ignore_errors=True)
+            elif dst.exists():
+                dst.unlink()
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if src.is_dir():
+                shutil.copytree(src, dst)
+            else:
+                shutil.copy2(src, dst)
+
+
+def _build_foundry_tarball(
+    src_root: Path,
+    out_path: Path,
+    selected_features: list[str] | None = None,
+) -> None:
+    """Build a gzipped tarball of `src_root` at `out_path`.
+
+    Excludes caches/build artifacts, the maintainer's local `.claude/`
+    dev install, and any feature-gated paths the user didn't opt into.
+    The tarball uses a top-level wrapper directory `claude-foundry-<ver>/`
+    matching the GitHub release tarball convention.
+
+    Writes to a `.tmp` sibling first and atomically renames into place
+    so a crash mid-build never leaves a partial tarball.
+    """
+    import tarfile
+
+    selected_features = selected_features or []
     excluded_abs: set[str] = set()
     for key, paths in FEATURE_PATHS.items():
         if key in selected_features:
             continue
         for rel in paths:
-            excluded_abs.add(str((REPO_ROOT / rel).resolve()))
+            excluded_abs.add(str((src_root / rel).resolve()))
 
-    target.parent.mkdir(parents=True, exist_ok=True)
-    staging = target.parent / ".foundry.new"
-    if staging.exists():
-        shutil.rmtree(staging, ignore_errors=True)
+    arc_root = f"claude-foundry-{read_version()}"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
+    if tmp_path.exists():
+        tmp_path.unlink()
 
-    # Copy REPO_ROOT tree, excluding build artifacts, caches, the
-    # foundry-cache dirs (belt-and-braces against self-recursion), and
-    # optional-feature paths the user didn't opt into.
-    def _ignore(src: str, names: list[str]) -> list[str]:
-        skip = {
-            ".git", "__pycache__", ".pytest_cache", ".venv", "venv",
-            "node_modules", "out", ".vscode-test", "dist", "build",
-            ".coverage", "results",
-            ".foundry.new", ".foundry.old", "foundry",
-        }
-        result = [n for n in names if n in skip]
-        # Also skip feature-gated subdirectories at their exact src path.
-        src_abs = str(Path(src).resolve())
-        for n in names:
-            if str((Path(src_abs) / n).resolve()) in excluded_abs:
-                result.append(n)
-        return result
-
-    shutil.copytree(REPO_ROOT, staging, ignore=_ignore, symlinks=False)
-
-    # Atomic swap: move target aside, promote staging, wipe old
-    backup = target.parent / ".foundry.old"
-    if backup.exists():
-        shutil.rmtree(backup, ignore_errors=True)
-    if target.exists():
-        target.rename(backup)
     try:
-        staging.rename(target)
-    except OSError:
-        # Rollback if promotion fails
-        if backup.exists() and not target.exists():
-            backup.rename(target)
-        raise
-    if backup.exists():
-        shutil.rmtree(backup, ignore_errors=True)
+        with tarfile.open(tmp_path, "w:gz") as tf:
+            for root, dirs, files in os.walk(src_root, topdown=True):
+                root_path = Path(root)
+                # Prune subdirs in-place to skip caches and feature-gated paths
+                kept_dirs = []
+                for d in dirs:
+                    if d in _PAYLOAD_SKIP_NAMES:
+                        continue
+                    if str((root_path / d).resolve()) in excluded_abs:
+                        continue
+                    kept_dirs.append(d)
+                dirs[:] = kept_dirs
 
-    print(f"  Foundry source cached at: {target}")
-    print(f"    Manual re-init: python3 {target}/tools/setup.py init {project}")
+                for fname in files:
+                    if fname in _PAYLOAD_SKIP_NAMES:
+                        continue
+                    fpath = root_path / fname
+                    if str(fpath.resolve()) in excluded_abs:
+                        continue
+                    arcname = f"{arc_root}/{fpath.relative_to(src_root).as_posix()}"
+                    tf.add(fpath, arcname=arcname, recursive=False)
+        tmp_path.replace(out_path)
+    except Exception:
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
+
+
+def _ensure_gitignore_entry(gitignore: Path, entry: str) -> None:
+    """Append `entry` to `gitignore` if not already present.
+
+    Matches both `.foundry/` and `.foundry` style entries to avoid duplicates.
+    """
+    needle = entry.rstrip("/")
+    existing = gitignore.read_text(encoding="utf-8") if gitignore.is_file() else ""
+    for line in existing.splitlines():
+        if line.strip().rstrip("/") == needle:
+            return
+    if existing and not existing.endswith("\n"):
+        existing += "\n"
+    gitignore.write_text(
+        existing + "\n# claude-foundry payload\n" + entry + "\n",
+        encoding="utf-8",
+    )
 
 
 def cmd_update_all(force: bool = False) -> None:
