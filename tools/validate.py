@@ -275,6 +275,14 @@ class Validator:
                     f.name for f in (self.root / "commands").glob("*.md")
                     if any(f.stem.startswith(f"{s}-") for s in gated_skills)
                 }
+                # Commands gated behind an OPTIONAL_FEATURES toggle (e.g.
+                # commands/delegate.md under "minimax-delegate") shouldn't
+                # be expected either — features default OFF in the smoke run.
+                feature_paths = getattr(setup_module, "FEATURE_PATHS", {})
+                for paths in feature_paths.values():
+                    for rel in paths:
+                        if rel.startswith("commands/") and rel.endswith(".md"):
+                            gated_cmds.add(Path(rel).name)
                 missing_cmds = (source_cmds - deployed_cmds) - gated_cmds
                 if missing_cmds:
                     self.error(f"Smoke: commands not deployed: {', '.join(sorted(missing_cmds))}")

@@ -237,7 +237,7 @@ LEARNED_SKILLS_DIR = REPO_ROOT / "skills" / "learned"
 SKILLS = [
     "clickhouse-io", "gui-threading", "python-qt-gui",
     "megamind-deep", "megamind-creative", "megamind-adversarial", "megamind-financial",
-    "minimax-multimodal",
+    "minimax-multimodal", "delegate",
     "update-foundry", "learn", "learn-recall", "snapshot-list",
     "private-list", "private-remove",
     "prj-new", "prj-list", "prj-pause", "prj-resume", "prj-done", "prj-delete",
@@ -293,7 +293,17 @@ FEATURE_PATHS: dict[str, list[str]] = {
 # Skills that should be auto-added to the selection when a feature is
 # turned on. Still user-visible; they can uncheck if they really want.
 FEATURE_SUGGESTED_SKILLS: dict[str, list[str]] = {
-    "minimax-delegate": ["minimax-multimodal", "delegate"],
+    "minimax-delegate": ["minimax-multimodal"],
+}
+
+# Skills that MUST be installed when a feature is enabled — the feature
+# is non-functional without them. Auto-added on every run (interactive
+# and non-interactive), even if missing from a stale manifest. The user
+# cannot remove them while keeping the feature enabled. This heals the
+# stale-manifest case where a feature toggle exists but its required
+# skills predate when they were declared as required.
+FEATURE_REQUIRED_SKILLS: dict[str, list[str]] = {
+    "minimax-delegate": ["delegate"],
 }
 
 LSP_PLUGINS = {
@@ -1684,7 +1694,14 @@ def cmd_init(
                                 for i in saved_steps["features"]}
                     if "skills" in saved_steps:
                         for key in sel_keys:
-                            for skill in FEATURE_SUGGESTED_SKILLS.get(key, []):
+                            # Suggested + required skills both pre-checked here.
+                            # The required reconciliation later in finalize will
+                            # also re-add required skills if the user unchecks
+                            # them — the feature is non-functional without them.
+                            for skill in (
+                                FEATURE_SUGGESTED_SKILLS.get(key, [])
+                                + FEATURE_REQUIRED_SKILLS.get(key, [])
+                            ):
                                 if skill in SKILLS:
                                     saved_steps["skills"].add(SKILLS.index(skill))
 
@@ -1800,6 +1817,17 @@ def cmd_init(
                 selected_skills.append(skill)
     else:
         selected_skills = [s for s in selected_skills if s not in COPILOT_SKILLS]
+
+    # Reconcile feature-required skills: any feature that's enabled MUST
+    # have its required skills installed, regardless of what the manifest
+    # says. This heals stale manifests from before the skill was declared
+    # required (e.g. minimax-delegate enabled before PR #54 added the
+    # delegate skill — old manifests don't list it, but the feature is
+    # broken without it).
+    for feature in selected_features:
+        for skill in FEATURE_REQUIRED_SKILLS.get(feature, []):
+            if skill not in selected_skills:
+                selected_skills.append(skill)
 
     # ── Pre-check CLAUDE.md for non-interactive mode ──
     claude_md = project / "CLAUDE.md"
