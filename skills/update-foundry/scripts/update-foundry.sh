@@ -10,7 +10,9 @@
 set -euo pipefail
 
 CHECK_ONLY=false
+SWITCH=false
 INTERACTIVE_FLAG="--non-interactive"
+AGENT_FOUNDRY_REPO="poelsen/agent-foundry"
 
 # Parse flags
 ARGS=()
@@ -18,9 +20,21 @@ for arg in "$@"; do
     case "$arg" in
         --check) CHECK_ONLY=true ;;
         --interactive) INTERACTIVE_FLAG="" ;;
+        --switch) SWITCH=true ;;
         *) ARGS+=("$arg") ;;
     esac
 done
+
+# ── Deprecation notice ───────────────────────────────────────────────────
+cat <<'BANNER' >&2
+────────────────────────────────────────────────────────────────────
+  claude-foundry is DEPRECATED.
+  It is superseded by agent-foundry — a multi-CLI foundry supporting
+  Claude Code AND GitHub Copilot CLI (and the AGENTS.md ecosystem):
+      https://github.com/poelsen/agent-foundry
+  Migrate this project (one-way) with:   /update-foundry --switch
+────────────────────────────────────────────────────────────────────
+BANNER
 
 # pwd -W returns Windows-style paths under MSYS/git-bash so Python (Windows
 # native) can open them; plain pwd returns MSYS paths like /d/... which break.
@@ -66,6 +80,25 @@ if [[ ! -f "$MANIFEST" ]]; then
     exit 1
 fi
 
+# ── Switch: repoint this project to agent-foundry ─────────────────────
+# Rewrites the manifest's repo_url so the rest of this run (and every future
+# /update-foundry) pulls releases from agent-foundry. agent-foundry's setup.py
+# migrates the existing manifest (it backfills the `clis` key), so the project
+# is re-initialised cleanly on the new layout.
+if [[ "$SWITCH" == true ]]; then
+    echo ""
+    echo "Switching this project from claude-foundry → $AGENT_FOUNDRY_REPO ..."
+    MANIFEST_PATH="$MANIFEST" TARGET="$AGENT_FOUNDRY_REPO" $PYTHON - <<'PYEOF'
+import json, os
+path = os.environ['MANIFEST_PATH']
+manifest = json.load(open(path))
+manifest['repo_url'] = os.environ['TARGET']
+with open(path, 'w') as f:
+    json.dump(manifest, f, indent=2)
+print(f"  manifest repo_url → {os.environ['TARGET']}")
+PYEOF
+fi
+
 CURRENT_VERSION=$(MANIFEST_PATH="$MANIFEST" $PYTHON -c "import json, os; print(json.load(open(os.environ['MANIFEST_PATH']))['version'])")
 REPO_URL=$(MANIFEST_PATH="$MANIFEST" $PYTHON -c "import json, os; print(json.load(open(os.environ['MANIFEST_PATH']))['repo_url'])")
 
@@ -92,13 +125,22 @@ echo "Latest version: $LATEST_VERSION"
 echo "Release: $RELEASE_URL"
 
 if [[ "$CURRENT_VERSION" == "$LATEST_VERSION" ]]; then
-    echo ""
-    echo "Already up to date."
-    exit 0
+    if [[ "$SWITCH" == true ]]; then
+        echo ""
+        echo "Version tags match, but switching repositories — installing $REPO_URL anyway."
+    else
+        echo ""
+        echo "Already up to date."
+        exit 0
+    fi
 fi
 
 echo ""
-echo "Update available: $CURRENT_VERSION → $LATEST_VERSION"
+if [[ "$SWITCH" == true ]]; then
+    echo "Installing agent-foundry $LATEST_VERSION (migrating from claude-foundry $CURRENT_VERSION)"
+else
+    echo "Update available: $CURRENT_VERSION → $LATEST_VERSION"
+fi
 
 if [[ "$CHECK_ONLY" == true ]]; then
     exit 0
@@ -190,7 +232,12 @@ NEW_SKILLS=$(ls "$CLAUDE_DIR/skills/" 2>/dev/null | sort || true)
 
 echo ""
 echo "═══════════════════════════════════════════"
-echo "Update complete: $CURRENT_VERSION → $LATEST_VERSION"
+if [[ "$SWITCH" == true ]]; then
+    echo "Migrated to agent-foundry $LATEST_VERSION (was claude-foundry $CURRENT_VERSION)"
+    echo "Future /update-foundry runs now pull from $REPO_URL"
+else
+    echo "Update complete: $CURRENT_VERSION → $LATEST_VERSION"
+fi
 echo "═══════════════════════════════════════════"
 echo "  Foundry payload pinned at: $FOUNDRY_DIR"
 echo "  Manual re-init:            $PYTHON $SETUP_PY init $PROJECT_DIR"
