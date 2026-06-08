@@ -1,5 +1,19 @@
 # Claude Code Foundry
 
+> # ⚠️ DEPRECATED — superseded by [agent-foundry](https://github.com/poelsen/agent-foundry)
+>
+> claude-foundry has been succeeded by **[agent-foundry](https://github.com/poelsen/agent-foundry)**, a
+> multi-CLI foundry that supports **Claude Code AND GitHub Copilot CLI** (plus the
+> `AGENTS.md` ecosystem), with the same rules/agents/skills split cleanly into
+> portable `common/` and per-CLI adapters.
+>
+> **Migrate an existing project in one command** (from a configured project, inside Claude Code):
+> ```
+> /update-foundry --switch
+> ```
+> This repoints the project at agent-foundry; all future `/update-foundry` runs pull from there.
+> This repo will receive no further releases beyond the final deprecation release.
+
 > **Early alpha.** Under active development. The current rule set is most mature for **Python** and **PySide6/Qt** projects. Other languages (C, C++, Rust, Go, TypeScript) have base rules but are less battle-tested. Expect breaking changes.
 
 A framework for configuring [Claude Code](https://docs.anthropic.com/en/docs/claude-code) across different project types and programming languages. Provides modular rules, specialized agents, reusable skills, tool hooks, and slash commands — all selected per-project based on what you're building.
