@@ -96,6 +96,20 @@ manifest['repo_url'] = os.environ['TARGET']
 with open(path, 'w') as f:
     json.dump(manifest, f, indent=2)
 print(f"  manifest repo_url → {os.environ['TARGET']}")
+
+# agent-foundry renamed the foundry header markers (claude-foundry →
+# agent-foundry). Rewrite them in CLAUDE.md so agent-foundry's setup.py
+# recognizes its own marker and updates the header in place, instead of
+# skipping the project as "missing the agent-foundry marker".
+project = os.path.dirname(os.path.dirname(path))
+claude_md = os.path.join(project, 'CLAUDE.md')
+if os.path.exists(claude_md):
+    txt = open(claude_md, encoding='utf-8').read()
+    new = (txt.replace('<!-- claude-foundry -->', '<!-- agent-foundry -->')
+              .replace('<!-- /claude-foundry -->', '<!-- /agent-foundry -->'))
+    if new != txt:
+        open(claude_md, 'w', encoding='utf-8').write(new)
+        print('  CLAUDE.md markers → agent-foundry')
 PYEOF
 fi
 
