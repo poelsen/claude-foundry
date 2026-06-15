@@ -277,3 +277,25 @@ fi
 if [[ "$CHANGES" == false ]]; then
     echo "  Version bumped, configuration unchanged"
 fi
+
+# ── Migration call-to-action (the whole point of this final release) ─────
+# Printed LAST so it's the call-to-action the user actually sees, not a
+# banner that scrolled off at the start.
+if [[ "$SWITCH" != true ]]; then
+    cat <<'MIGRATE'
+
+════════════════════════════════════════════════════════════════════
+  ⚠  claude-foundry is DEPRECATED — this was its FINAL release.
+
+      ▶  MIGRATE NOW:    /update-foundry --switch
+
+  That one command repoints this project to agent-foundry (multi-CLI:
+  Claude Code + GitHub Copilot CLI), rewrites the markers in place, and
+  makes every future /update-foundry pull from the active repo.
+  https://github.com/poelsen/agent-foundry
+════════════════════════════════════════════════════════════════════
+MIGRATE
+else
+    echo ""
+    echo "  ✓ Migrated. Future /update-foundry runs now come from agent-foundry."
+fi

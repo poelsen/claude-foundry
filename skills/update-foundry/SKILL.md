@@ -38,6 +38,13 @@ Show the script output to the user verbatim. After a successful run:
 - Rule changes take effect next interaction
 - Agent/skill changes load on demand
 
+**After a NON-migration update, your summary MUST end with the migration command
+as the headline next step — do not soften it to "you may want to migrate when
+convenient."** Make it the centerpiece, e.g.:
+
+> ▶ **To migrate to agent-foundry, run: `/update-foundry --switch`** — one command
+> moves this project to the active multi-CLI foundry; all future updates come from there.
+
 After a **migration**, all future `/update-foundry` runs pull from
 agent-foundry automatically (the manifest's `repo_url` was repointed). If the
 script fails, help the user troubleshoot from the error output.
